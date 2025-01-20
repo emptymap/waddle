@@ -1,7 +1,7 @@
 import argparse
 
 from .config import DEFAULT_COMP_AUDIO_DURATION
-from .process import process_multi_files
+from .processor import process_multi_files
 
 
 def main():
