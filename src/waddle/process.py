@@ -26,6 +26,45 @@ def select_reference_audio(audio_paths: list) -> str:
     return gmt_files[0]
 
 
+def process_single_file(
+    aligned_audio_path: str,
+    output_dir: str,
+    speaker_file: str,
+) -> str:
+    """
+    Process a single audio file: normalize, detect speech, and transcribe.
+
+    Args:
+        aligned_audio_path (str): Path to the aligned audio file.
+        output_dir (str): Output directory for processed files.
+        speaker_file (str): Original speaker file name.
+
+    Returns:
+        str: Path to the combined speaker audio file.
+    """
+    # Normalize audio
+    print(f"[INFO] Normalizing {aligned_audio_path}")
+    normalize_audio(aligned_audio_path, aligned_audio_path)
+
+    # Detect speech segments
+    print(f"[INFO] Detecting speech {aligned_audio_path}")
+    detect_speech_segments(aligned_audio_path)
+
+    # Transcribe segments and combine
+    print(f"[INFO] Transcribing {aligned_audio_path}")
+    speaker_name = os.path.splitext(os.path.basename(speaker_file))[0]
+    segs_folder_path = os.path.join(output_dir, "segs")
+    combined_speaker_path = os.path.join(output_dir, f"{speaker_name}.wav")
+    transcription_path = os.path.join(output_dir, f"{speaker_name}.srt")
+    process_segments(
+        segs_folder_path,
+        combined_speaker_path,
+        transcription_path,
+    )
+
+    return combined_speaker_path
+
+
 def process_multi_files(
     reference_path: str,
     directory: str,
@@ -78,8 +117,9 @@ def process_multi_files(
     combined_speaker_paths = []
 
     for file_index, speaker_file in enumerate(audio_files):
+        print(f"[INFO] {file_index + 1}/{len(audio_files)} Processing: {speaker_file}")
+
         # 1) Align each speaker audio to the reference
-        print(f"{file_index + 1}/{len(audio_files)}, Step 1: Aligning {speaker_file}")
         aligned_audio_path = align_speaker_to_reference(
             reference_path,
             speaker_file,
@@ -88,33 +128,10 @@ def process_multi_files(
             out_duration=out_duration,
         )
 
-        # 2) Normalize, detect speech, transcribe
-        print(
-            f"{file_index + 1}/{len(audio_files)}, Step 2: Normalizing {aligned_audio_path}"
+        # 2) Process the aligned audio file
+        combined_speaker_path = process_single_file(
+            aligned_audio_path, output_dir, speaker_file
         )
-        normalize_audio(aligned_audio_path, aligned_audio_path)
-
-        # 3) Detect speech segments
-        print(
-            f"{file_index + 1}/{len(audio_files)}, Step 3: Detecting speech {aligned_audio_path}"
-        )
-        detect_speech_segments(aligned_audio_path)
-
-        # 4) Transcribe segments
-        print(
-            f"{file_index + 1}/{len(audio_files)}, Step 4: Transcribing {aligned_audio_path}"
-        )
-        speaker_name = os.path.splitext(os.path.basename(speaker_file))[0]
-        segs_folder_path = os.path.join(output_dir, "segs")
-        combined_speaker_path = os.path.join(output_dir, f"{speaker_name}.wav")
-        transcription_path = os.path.join(output_dir, f"{speaker_name}.srt")
-        process_segments(
-            segs_folder_path,
-            combined_speaker_path,
-            transcription_path,
-        )
-
-        # Save the combined speaker audio path
         combined_speaker_paths.append(combined_speaker_path)
 
     audio_prefix = os.path.basename(audio_files[0]).split("-")[0]
