@@ -15,7 +15,7 @@ def chunk_audio(
 
     os.makedirs(output_dir, exist_ok=True)
     for i, start in enumerate(
-        tqdm(range(0, len(audio), chunk_length_ms), desc="Chunking audio")
+        tqdm(range(0, len(audio), chunk_length_ms), desc="[INFO] Chunking audio")
     ):
         chunk = audio[start : start + chunk_length_ms]
         chunk_path = os.path.join(output_dir, f"chunk_{str(i).zfill(8)}.wav")
@@ -31,7 +31,7 @@ def chunk_concat(chunks_dir: str, output_path: str):
     ]
     final_audio = AudioSegment.empty()
 
-    for chunk_file in tqdm(chunk_files, desc="Concatenating chunks"):
+    for chunk_file in tqdm(chunk_files, desc="[INFO] Concatenating chunks"):
         final_audio += AudioSegment.from_file(chunk_file)
 
     final_audio.export(output_path, format="wav")

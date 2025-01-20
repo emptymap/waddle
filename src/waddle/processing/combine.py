@@ -19,6 +19,16 @@ def combine_segments_into_audio(
         total_duration (float): Total duration (in seconds) of the final audio.
     """
     segment_files = sorted(glob(os.path.join(segs_folder_path, "*.wav")))
+    if not segment_files:
+        print("\033[93m[WARNING] No segment files found for combining.\033[0m")
+
+        # Output a dummy audio file
+        final_audio = AudioSegment.silent(duration=10)
+        final_audio.export(combined_audio_path, format="wav")
+
+        # Clean up segs folder
+        shutil.rmtree(segs_folder_path, ignore_errors=True)
+        return
     end_mses = [
         int(os.path.basename(f).split("_")[2].split(".")[0]) for f in segment_files
     ]

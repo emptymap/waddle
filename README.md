@@ -1,6 +1,9 @@
+### Updated `README.md` with Single-File Process Support
+
+```markdown
 # Waddle 🦆
 
-**Waddle** is a preprocessor for podcasts, developed specifically for [RubberDuck.fm](https://rubberduck.fm). It streamlines the process of aligning, normalizing, and transcribing podcast audio files from multiple speakers.
+**Waddle** is a preprocessor for podcasts, developed specifically for [RubberDuck.fm](https://rubberduck.fm). It streamlines the process of aligning, normalizing, and transcribing podcast audio files from multiple speakers or individual audio files.
 
 ![Demo](./assets/demo.gif)
 
@@ -10,7 +13,7 @@
 - **Normalization**: Ensures consistent audio quality by normalizing audio levels.
 - **Remove Noise**: Cleans up audio by reducing background noise for clearer output using [`DeepFilterNet`](https://github.com/Rikorose/DeepFilterNet).
 - **Subtitle Generation**: Generates SRT subtitle files for transcription using [`whisper.cpp`](https://github.com/ggerganov/whisper.cpp).
-
+- **Single File Processing**: Process a single audio file for normalization, speech detection, and subtitle generation.
 
 ## Prerequisites
 
@@ -35,7 +38,6 @@ Before using **Waddle**, ensure the following requirements are installed:
 
 3. **Other Dependencies**:
    - If you run `./scripts/setup-waddle.sh` as shown in the installation steps below, the required dependencies, [`DeepFilterNet`](https://github.com/Rikorose/DeepFilterNet) and [`whisper.cpp`](https://github.com/ggerganov/whisper.cpp), will be installed automatically.
-
 
 ## Installation
 
@@ -65,7 +67,6 @@ Before using **Waddle**, ensure the following requirements are installed:
    waddle
    ```
 
-
 ## Advanced Usage
 
 Use the CLI to customize the processing:
@@ -75,43 +76,69 @@ waddle [options]
 ```
 
 ### Options:
-- `-d`, `--directory`: Directory containing audio files (default: `./`).
+- `-a`, `--audio`: Path to a single audio file to process. When provided, Waddle processes only this file in single-file mode.
+- `-d`, `--directory`: Directory containing audio files (used in multi-file mode, default: `./`).
 - `-r`, `--reference`: Path to the reference audio file (default: `None`).
-- `-o`, `--output`: Path to save the audio file (default: `combined_audio.wav`).
+- `-o`, `--output`: Path to save the output. For single-file mode, this is the directory for saving results. For multi-file mode, it is the synthesized audio file path.
 - `-c`, `--comp_duration`: Duration (in seconds) for alignment comparison (default: `10`).
 - `-od`, `--out_duration`: Duration (in seconds) for the output audio (default: `None`).
 - `-nc`, `--no-convert`: Skip converting audio files to WAV format.
 
-
 ## Example Commands
 
+### Podcast Preprocessing
+
+
 1. **Basic Command**:
-   Process audio files in the `audios` directory:
+   Navigate to the folder containing your audio files and run:
    ```bash
-   waddle -d ./audios
+   waddle
    ```
 
-2. **Specify a Reference File**:
+   This will process all audio files in the current directory, aligning, normalizing, and generating combined outputs.
+
+2. **Specify a Directory**:
+   Process audio files in a specific directory:
+   ```bash
+   waddle -d /path/to/audio/files
+   ```
+
+3. **Specify a Reference File**:
    Provide a custom reference audio file:
    ```bash
-   waddle -d ./audios -r ./audios/GMT-Reference.wav
+   waddle -r /path/to/GMT-Reference.wav
    ```
 
-3. **Customize Output Duration**:
+4. **Customize Output Duration**:
    Limit the output audio file duration to 30 seconds for testing:
    ```bash
-   waddle -d ./audios -od 30
+   waddle -d /path/to/audio/files -od 30
    ```
 
-4. **Skip Conversion**:
+5. **Skip Conversion**:
    If your audio files are already in WAV format:
    ```bash
-   waddle -d ./audios -nc
+   waddle -d /path/to/audio/files -nc
    ```
+
+### Single-File Preprocessing
+
+Process a single audio file:
+```bash
+waddle --audio path/to/audio.wav --output path/to/output/dir
+```
+
+This processes the specified file, normalizes it, detects speech segments, and generates an SRT file for subtitles.
 
 
 ## Output Files
 
+### Podcast Preprocessing
 - **Combined Audio**: A single audio file with all speakers combined.
 - **Subtitle**: An SRT file with transcriptions for each speaker.
 - **Each Speaker**: Individual audio files for each speaker with noise reduction.
+
+
+### Single-File Preprocessing
+- **Processed Audio**: The processed single audio file.
+- **Subtitle**: An SRT file with transcription for the audio file.
