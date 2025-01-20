@@ -4,7 +4,6 @@ from glob import glob
 
 from .audios.align_offset import align_speaker_to_reference
 from .audios.call_tools import convert_to_wav
-from .audios.effects import normalize_audio
 from .config import DEFAULT_COMP_AUDIO_DURATION, DEFAULT_OUT_AUDIO_DURATION
 from .processing.combine import combine_audio_files, combine_srt_files
 from .processing.segment import detect_speech_segments, process_segments
@@ -30,6 +29,7 @@ def process_single_file(
     aligned_audio_path: str,
     output_dir: str,
     speaker_file: str,
+    out_duration: float = None,
 ) -> str:
     """
     Process a single audio file: normalize, detect speech, and transcribe.
@@ -42,8 +42,7 @@ def process_single_file(
     Returns:
         str: Path to the combined speaker audio file.
     """
-    normalize_audio(aligned_audio_path, aligned_audio_path)
-    detect_speech_segments(aligned_audio_path)
+    detect_speech_segments(aligned_audio_path, out_duration=out_duration)
 
     # Transcribe segments and combine
     speaker_name = os.path.splitext(os.path.basename(speaker_file))[0]

@@ -23,6 +23,7 @@ def detect_speech_segments(
     chunk_size_ms: int = int(DEFAULT_CHUNK_DURATION * 1000),
     buffer_size_ms: int = int(DEFAULT_BUFFER_DURATION * 1000),
     target_dBFS: float = DEFAULT_TARGET_DB,
+    out_duration: float = None,
 ) -> list:
     """
     Detect "loud" segments in an audio file (above threshold_db).
@@ -34,12 +35,13 @@ def detect_speech_segments(
         chunk_size_ms (int): Size of the audio chunk in milliseconds.
         buffer_size_ms (int): Buffer size in milliseconds for segment merging.
         target_dBFS (float): Desired mean dBFS for normalized audio segments.
+        out_duration (float): Duration of the output audio in seconds.
 
     Returns:
         list: List of (start_sec, end_sec) for each detected segment.
     """
     audio = AudioSegment.from_file(audio_path)
-    duration = len(audio)  # Duration in ms
+    duration = int(out_duration * 1000) if out_duration else len(audio)
 
     segments = []
     current_segment = None
@@ -124,50 +126,14 @@ def detect_speech_segments(
         # Remove_noise is called twice, but this is done because accuracy is poor if it is not written for each sentence.
         remove_noise(seg_audio_path, seg_audio_path)
 
+    # Clean up audio
+    os.remove(audio_path)
+
     print(
         f"[INFO] Global normalization applied with gain adjustment: {gain_adjustment} dB"
     )
 
-    # Clean up
-    os.remove(audio_path)
-
     return merged_segments
-
-
-def process_segment_transcription(
-    transcribe_file_path: str, start_offset: int, transcription_entries: list
-) -> None:
-    """
-    Adjust timestamps in a segment's transcription file by adding the start offset,
-    then append entries to the shared list.
-
-    Args:
-        transcribe_file_path (str): Path to the .srt transcription file.
-        start_offset (float): Offset in seconds to add to each timestamp.
-        transcription_entries (list): Output list for adjusted transcription entries.
-    """
-    if not os.path.isfile(transcribe_file_path):
-        print(f"[Warning] SRT file not found for segment: {transcribe_file_path}")
-        return
-
-    with open(transcribe_file_path, "r", encoding="utf-8") as srt_file:
-        blocks = srt_file.read().strip().split("\n\n")
-
-    for block in blocks:
-        lines = block.split("\n")
-        if len(lines) < 3:
-            continue
-
-        # Extract timestamps and text
-        _, timestamps, *text_lines = lines
-        s_timestamp, e_timestamp = timestamps.split(" --> ")
-        text = " ".join(text_lines)
-
-        # Adjust timestamps
-        adjusted_start = format_time(start_offset + time_to_seconds(s_timestamp))
-        adjusted_end = format_time(start_offset + time_to_seconds(e_timestamp))
-
-        transcription_entries.append((adjusted_start, adjusted_end, text))
 
 
 def process_segments(
@@ -223,3 +189,39 @@ def process_segments(
         segs_folder_path,
         combined_audio_path,
     )
+
+
+def process_segment_transcription(
+    transcribe_file_path: str, start_offset: int, transcription_entries: list
+) -> None:
+    """
+    Adjust timestamps in a segment's transcription file by adding the start offset,
+    then append entries to the shared list.
+
+    Args:
+        transcribe_file_path (str): Path to the .srt transcription file.
+        start_offset (float): Offset in seconds to add to each timestamp.
+        transcription_entries (list): Output list for adjusted transcription entries.
+    """
+    if not os.path.isfile(transcribe_file_path):
+        print(f"[Warning] SRT file not found for segment: {transcribe_file_path}")
+        return
+
+    with open(transcribe_file_path, "r", encoding="utf-8") as srt_file:
+        blocks = srt_file.read().strip().split("\n\n")
+
+    for block in blocks:
+        lines = block.split("\n")
+        if len(lines) < 3:
+            continue
+
+        # Extract timestamps and text
+        _, timestamps, *text_lines = lines
+        s_timestamp, e_timestamp = timestamps.split(" --> ")
+        text = " ".join(text_lines)
+
+        # Adjust timestamps
+        adjusted_start = format_time(start_offset + time_to_seconds(s_timestamp))
+        adjusted_end = format_time(start_offset + time_to_seconds(e_timestamp))
+
+        transcription_entries.append((adjusted_start, adjusted_end, text))

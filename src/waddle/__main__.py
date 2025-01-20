@@ -1,5 +1,6 @@
 import argparse
 import os
+import shutil
 
 from .config import DEFAULT_COMP_AUDIO_DURATION
 from .processor import process_multi_files, process_single_file
@@ -61,17 +62,25 @@ def main():
         # Single-file mode
         if not os.path.isfile(args.audio):
             raise FileNotFoundError(f"Audio file not found: {args.audio}")
-        if not args.output:
+        output_dir = args.output
+        if not output_dir:
             output_dir = os.path.join("./", "out")
             os.makedirs(output_dir, exist_ok=True)
 
-        print(f"[INFO] Processing single audio file: {args.audio}")
+        # Copy the audio file to the output directory
+        audio_file_name = os.path.basename(args.audio)
+        output_audio_path = os.path.join(output_dir, audio_file_name)
+        print(f"[INFO] Copying audio file to: {output_audio_path}")
+        shutil.copy(args.audio, output_audio_path)
+
+        print(f"[INFO] Processing single audio file: {output_audio_path}")
         process_single_file(
-            aligned_audio_path=args.audio,
-            output_dir=args.output,
+            aligned_audio_path=output_audio_path,
+            output_dir=output_dir,
             speaker_file=os.path.basename(args.audio),
+            out_duration=args.out_duration,
         )
-        print(f"[INFO] Processed single audio file saved in: {args.output}")
+        print(f"[INFO] Processed single audio file saved in: {output_dir}")
     else:
         # Multi-file mode
         process_multi_files(
