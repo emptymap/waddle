@@ -1,7 +1,7 @@
 import argparse
 
 from .config import DEFAULT_COMP_AUDIO_DURATION
-from .process import process_audio_files
+from .process import process_multi_files
 
 
 def main():
@@ -48,7 +48,7 @@ def main():
     )
     args = parser.parse_args()
 
-    process_audio_files(
+    process_multi_files(
         reference_path=args.reference,
         directory=args.directory,
         output_path=args.output,

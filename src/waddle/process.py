@@ -26,7 +26,7 @@ def select_reference_audio(audio_paths: list) -> str:
     return gmt_files[0]
 
 
-def process_audio_files(
+def process_multi_files(
     reference_path: str,
     directory: str,
     output_path: str,
