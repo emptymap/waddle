@@ -52,9 +52,7 @@ def detect_speech_segments(
 
     for i in tqdm(
         range(0, duration, chunk_size_ms),
-        desc="Detecting speech segments",
-        dynamic_ncols=True,
-        bar_format="{l_bar}{bar:50}{r_bar}",
+        desc="[INFO] Detecting speech segments",
     ):
         chunk = audio[i : i + chunk_size_ms]
         if not chunk.dBFS > threshold_db:
@@ -193,7 +191,7 @@ def process_segments(
 
     for idx, segs_file_path in tqdm(
         enumerate(segs_file_paths),
-        desc=f"Transcribing {len(segs_file_paths)} segments",
+        desc=f"[INFO] Transcribing {len(segs_file_paths)} segments",
         total=len(segs_file_paths),
         dynamic_ncols=True,
         bar_format="{l_bar}{bar:50}{r_bar}",

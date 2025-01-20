@@ -42,16 +42,10 @@ def process_single_file(
     Returns:
         str: Path to the combined speaker audio file.
     """
-    # Normalize audio
-    print(f"[INFO] Normalizing {aligned_audio_path}")
     normalize_audio(aligned_audio_path, aligned_audio_path)
-
-    # Detect speech segments
-    print(f"[INFO] Detecting speech {aligned_audio_path}")
     detect_speech_segments(aligned_audio_path)
 
     # Transcribe segments and combine
-    print(f"[INFO] Transcribing {aligned_audio_path}")
     speaker_name = os.path.splitext(os.path.basename(speaker_file))[0]
     segs_folder_path = os.path.join(output_dir, "segs")
     combined_speaker_path = os.path.join(output_dir, f"{speaker_name}.wav")
