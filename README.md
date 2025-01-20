@@ -10,7 +10,6 @@
 - **Normalization**: Ensures consistent audio quality by normalizing audio levels.
 - **Remove Noise**: Cleans up audio by reducing background noise for clearer output using [`DeepFilterNet`](https://github.com/Rikorose/DeepFilterNet).
 - **Subtitle Generation**: Generates SRT subtitle files for transcription using [`whisper.cpp`](https://github.com/ggerganov/whisper.cpp).
-- **Single File Processing**: Process a single audio file for normalization, speech detection, and subtitle generation.
 
 ## Prerequisites
 
