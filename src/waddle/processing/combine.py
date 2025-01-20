@@ -20,9 +20,7 @@ def combine_segments_into_audio(
     """
     segment_files = sorted(glob(os.path.join(segs_folder_path, "*.wav")))
     if not segment_files:
-        print(
-            "\033[93m[WARNING] No segment files found for combining.\033[0m"
-        )  # Yellow text
+        print("\033[93m[WARNING] No segment files found for combining.\033[0m")
 
         # Output a dummy audio file
         final_audio = AudioSegment.silent(duration=10)

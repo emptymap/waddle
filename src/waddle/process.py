@@ -112,12 +112,13 @@ def process_multi_files(
     audio_files = [f for f in audio_files if f != reference_path and "GMT" not in f]
     if not audio_files:
         raise ValueError("No speaker audio files found in the directory.")
-    print(f"[INFO] Found {len(audio_files)} speaker audio files.")
 
     combined_speaker_paths = []
 
     for file_index, speaker_file in enumerate(audio_files):
-        print(f"[INFO] {file_index + 1}/{len(audio_files)} Processing: {speaker_file}")
+        print(
+            f"\033[92m[INFO] Processing file {file_index + 1} of {len(audio_files)}: {speaker_file}\033[0m"
+        )
 
         # 1) Align each speaker audio to the reference
         aligned_audio_path = align_speaker_to_reference(
