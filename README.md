@@ -32,7 +32,14 @@ Before using **Waddle**, ensure the following requirements are installed:
      - Download and install FFmpeg from [FFmpeg Downloads](https://ffmpeg.org/download.html).
      - Ensure FFmpeg is added to your system's PATH.
 
-3. **Other Dependencies**:
+3. **fmt** (A C++ formatting library for compiling `whisper.cpp`):
+   - **MacOS**:
+     ```bash
+     brew install fmt
+     ```
+   - For other platforms, follow installation instructions from [fmt GitHub repository](https://github.com/fmtlib/fmt).
+
+4. **Other Dependencies**:
    - If you run `./scripts/setup-waddle.sh` as shown in the installation steps below, the required dependencies, [`DeepFilterNet`](https://github.com/Rikorose/DeepFilterNet) and [`whisper.cpp`](https://github.com/ggerganov/whisper.cpp), will be installed automatically.
 
 ## Installation
