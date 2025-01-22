@@ -111,7 +111,10 @@ def combine_srt_files(input_dir: str, output_file: str) -> None:
     all_entries = []
 
     for srt_file in srt_files:
-        speaker_name = os.path.basename(srt_file).split("-")[1].split(".")[0]
+        if "-" in srt_file:
+            speaker_name = os.path.basename(srt_file).split("-")[1].split(".")[0]
+        else:
+            speaker_name = os.path.basename(srt_file).split(".")[0]
         srt_path = os.path.join(input_dir, srt_file)
         all_entries.extend(parse_srt(srt_path, speaker_name))
 
