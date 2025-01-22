@@ -60,7 +60,7 @@ Before using **Waddle**, ensure the following requirements are installed:
 
 1. **Prepare Audio Files**:
    - Upload each speaker's audio files in the `audios` directory.
-   - Use the naming convention: `ep{N}-{SpeakerName}.[wav|aifc|mp4]`.
+   - Use the naming convention: `ep{N}-{SpeakerName}.[wav|aifc|m4a|mp4]`.
      - Example: `ep1-Alice.wav`, `ep1-Bob.aifc`
    - Include a reference audio file that covers the entire podcast. The reference file name must start with `GMT` (e.g., a Zoom recording).
 
