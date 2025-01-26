@@ -27,6 +27,10 @@ def convert_to_wav(folder_path: str) -> None:
                 input_path = os.path.join(root, file)
                 output_path = os.path.splitext(input_path)[0] + ".wav"
 
+                if os.path.exists(output_path):
+                    print(f"Skipping {input_path}: WAV file already exists.")
+                    continue
+
                 # Convert to WAV using ffmpeg
                 print(f"Converting {input_path} to {output_path}...")
                 try:
