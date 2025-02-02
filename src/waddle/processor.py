@@ -1,9 +1,10 @@
 import os
 import shutil
 from glob import glob
+import concurrent.futures
 
-from waddle.audacity import AudacityClient
 
+from .audacity import AudacityClient
 from .audios.align_offset import align_speaker_to_reference
 from .audios.call_tools import convert_to_wav
 from .config import DEFAULT_COMP_AUDIO_DURATION, DEFAULT_OUT_AUDIO_DURATION
@@ -111,10 +112,8 @@ def preprocess_multi_files(
     timelines: list[SpeechTimeline] = []
     segments_dir_list = []
 
-    for file_index, speaker_file in enumerate(audio_files):
-        print(
-            f"\033[92m[INFO] Processing file {file_index + 1} of {len(audio_files)}: {speaker_file}\033[0m"
-        )
+    def process_file(speaker_file):
+        print(f"\033[92m[INFO] Processing file: {speaker_file}\033[0m")
 
         # 1) Align each speaker audio to the reference
         aligned_audio_path = align_speaker_to_reference(
@@ -130,6 +129,12 @@ def preprocess_multi_files(
             aligned_audio_path, out_duration=out_duration
         )
 
+        return segments_dir, timeline
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        results = list(executor.map(process_file, audio_files))
+
+    for segments_dir, timeline in results:
         segments_dir_list.append(segments_dir)
         timelines.append(timeline)
 

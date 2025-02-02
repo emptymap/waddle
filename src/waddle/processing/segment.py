@@ -47,7 +47,8 @@ def detect_speech_timeline(
     current_segment = None
 
     # Create a clean 'chunks' folder
-    chunks_folder = os.path.join(os.path.dirname(audio_path), "chunks")
+    identifier = os.path.splitext(os.path.basename(audio_path))[0]
+    chunks_folder = os.path.join(os.path.dirname(audio_path), "chunks", identifier)
     if os.path.exists(chunks_folder):
         shutil.rmtree(chunks_folder)
     os.makedirs(chunks_folder)

@@ -95,7 +95,8 @@ def remove_noise(input_path: str, output_path: str) -> None:
     project_root = get_project_root()
     deep_filter_path = os.path.join(project_root, "tools/deep-filter")
     output_dir = os.path.dirname(output_path)
-    tmp_file_path = os.path.join(output_dir, "tmp.wav")
+    tmp_file = os.path.basename(input_path).replace(".wav", "_tmp.wav")
+    tmp_file_path = os.path.join(output_dir, tmp_file)
 
     # Check if the tool exists
     if not os.path.exists(deep_filter_path):
