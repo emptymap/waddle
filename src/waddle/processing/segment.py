@@ -14,17 +14,17 @@ from ..config import (
     DEFAULT_THRESHOLD_DB,
 )
 from ..utils import format_time, time_to_seconds
-from .combine import combine_segments_into_audio
+from .combine import combine_segments_into_audio, SpeechTimeline
 
 
-def detect_speech_segments(
+def detect_speech_timeline(
     audio_path: str,
     threshold_db: float = DEFAULT_THRESHOLD_DB,
     chunk_size_ms: int = int(DEFAULT_CHUNK_DURATION * 1000),
     buffer_size_ms: int = int(DEFAULT_BUFFER_DURATION * 1000),
     target_dBFS: float = DEFAULT_TARGET_DB,
     out_duration: float = None,
-) -> list:
+) -> tuple[str, SpeechTimeline]:
     """
     Detect "loud" segments in an audio file (above threshold_db).
     Includes one chunk before and after as a buffer, and normalizes segments to have a global mean dBFS of target_dBFS.
@@ -101,7 +101,8 @@ def detect_speech_segments(
             )
 
     # Save segment to disk
-    segs_folder = os.path.join(os.path.dirname(audio_path), "segs")
+    audio_file_name = os.path.splitext(os.path.basename(audio_path))[0]
+    segs_folder = os.path.join(os.path.dirname(audio_path), f"{audio_file_name}_segs")
     if os.path.exists(segs_folder):
         shutil.rmtree(segs_folder)
     os.makedirs(segs_folder)
@@ -133,7 +134,7 @@ def detect_speech_segments(
         f"[INFO] Global normalization applied with gain adjustment: {gain_adjustment} dB"
     )
 
-    return merged_segments
+    return segs_folder, merged_segments
 
 
 def process_segments(

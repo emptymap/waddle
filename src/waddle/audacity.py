@@ -6,6 +6,8 @@ from contextlib import contextmanager
 import time
 
 
+logging.basicConfig()
+
 logger = logging.getLogger(__name__)
 
 logger.setLevel(logging.DEBUG)
@@ -39,7 +41,7 @@ class AudacityClient:
                 os.system("killall -9 'Audacity' 2>/dev/null")
                 if os.system("open -a Audacity") != 0:
                     raise RuntimeError("Audacity failed to start")
-                time.sleep(2)
+                time.sleep(10)
             case _:
                 to_name = "/tmp/audacity_script_pipe.to." + str(os.getuid())
                 from_name = "/tmp/audacity_script_pipe.from." + str(os.getuid())
@@ -49,9 +51,13 @@ class AudacityClient:
                 "Audacity script pipe not found. Please ensure Audacity is running."
             )
         logger.debug(f"Connecting to Audacity: {to_name}, {from_name}")
-        with open(to_name, "w") as to_file, open(from_name, "rt") as from_file:
-            logger.debug("Connected to Audacity")
-            yield AudacityClient(to_file, from_file, eof)
+        try:
+            with open(to_name, "w") as to_file, open(from_name, "rt") as from_file:
+                logger.debug("Connected to Audacity")
+                yield AudacityClient(to_file, from_file, eof)
+        except Exception as e:
+            logger.error(f"Failed to connect to Audacity: {e}")
+            raise RuntimeError("Audacity connection failed")
 
     def _send(self, message: str):
         logger.debug(f"Sending message: {message}")
@@ -72,6 +78,7 @@ class AudacityClient:
         self._send(command)
         # TODO(shumbo): Implement a timeout
         response = self._receive()
+        logger.debug(f"Received response: {response}")
         time.sleep(1)
         return response
 

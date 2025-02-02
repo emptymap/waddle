@@ -9,10 +9,11 @@ from .audios.call_tools import convert_to_wav
 from .config import DEFAULT_COMP_AUDIO_DURATION, DEFAULT_OUT_AUDIO_DURATION
 from .processing.combine import (
     combine_audio_files,
-    combine_segments_into_audio,
+    combine_segments_into_audio_with_timeline,
     combine_srt_files,
+    merge_timelines,
 )
-from .processing.segment import detect_speech_segments, process_segments
+from .processing.segment import detect_speech_timeline, process_segments, SpeechTimeline
 
 
 def select_reference_audio(audio_paths: list) -> str:
@@ -29,23 +30,6 @@ def select_reference_audio(audio_paths: list) -> str:
     if not gmt_files:
         raise ValueError("No reference audio file found and no GMT file exists.")
     return gmt_files[0]
-
-
-def preprocess_single_file(
-    aligned_audio_path: str,
-    output_dir: str,
-    speaker_file: str,
-    out_duration: float = None,
-) -> str:
-    detect_speech_segments(aligned_audio_path, out_duration=out_duration)
-
-    # Transcribe segments and combine
-    speaker_name = os.path.splitext(os.path.basename(speaker_file))[0]
-    segs_folder_path = os.path.join(output_dir, "segs")
-    combined_speaker_path = os.path.join(output_dir, f"{speaker_name}.wav")
-
-    combine_segments_into_audio(segs_folder_path, combined_speaker_path)
-    return combined_speaker_path
 
 
 def process_single_file(
@@ -65,7 +49,7 @@ def process_single_file(
     Returns:
         str: Path to the combined speaker audio file.
     """
-    detect_speech_segments(aligned_audio_path, out_duration=out_duration)
+    detect_speech_timeline(aligned_audio_path, out_duration=out_duration)
 
     # Transcribe segments and combine
     speaker_name = os.path.splitext(os.path.basename(speaker_file))[0]
@@ -82,26 +66,37 @@ def process_single_file(
 
 
 def preprocess_multi_files(
-    reference_path: str,
-    directory: str,
-    output_path: str,
+    reference_path: str | None,
+    audio_source_directory: str | None,
+    output_dir: str,
     comp_duration: float = DEFAULT_COMP_AUDIO_DURATION,
     out_duration: float = DEFAULT_OUT_AUDIO_DURATION,
     convert: bool = True,
 ) -> None:
-    if directory is not None and not os.path.exists(directory):
-        raise FileNotFoundError(f"Directory not found: {directory}")
+    if audio_source_directory is not None and not os.path.exists(
+        audio_source_directory
+    ):
+        raise FileNotFoundError(
+            f"Audio source directory not found: {audio_source_directory}"
+        )
 
-    output_dir = os.path.join(directory, "out")
-    shutil.rmtree(output_dir, ignore_errors=True)
+    output_dir = os.path.abspath(output_dir)
+    if os.path.exists(output_dir):
+        shutil.rmtree(output_dir, ignore_errors=True)
     os.makedirs(output_dir, exist_ok=True)
+
+    # Workspace for temporary files
+    workspace = os.path.join(audio_source_directory, "workspace")
+    # Recreate the workspace
+    shutil.rmtree(workspace, ignore_errors=True)
+    os.makedirs(workspace, exist_ok=True)
 
     # Convert to WAV files if the flag is set
     if convert:
         print("[INFO] Converting audio files to WAV format...")
-        convert_to_wav(directory)
+        convert_to_wav(audio_source_directory)
 
-    audio_files = sorted(glob(os.path.join(directory, "*.wav")))
+    audio_files = sorted(glob(os.path.join(audio_source_directory, "*.wav")))
     if not audio_files:
         raise ValueError("No audio files found in the directory.")
 
@@ -113,7 +108,8 @@ def preprocess_multi_files(
     if not audio_files:
         raise ValueError("No speaker audio files found in the directory.")
 
-    processed_files = []
+    timelines: list[SpeechTimeline] = []
+    segments_dir_list = []
 
     for file_index, speaker_file in enumerate(audio_files):
         print(
@@ -124,30 +120,42 @@ def preprocess_multi_files(
         aligned_audio_path = align_speaker_to_reference(
             reference_path,
             speaker_file,
-            output_dir,
+            workspace,
             comp_duration=comp_duration,
             out_duration=out_duration,
         )
 
         # 2) Preprocess the aligned audio file
-        processed_file = preprocess_single_file(
-            aligned_audio_path, output_dir, speaker_file, out_duration=out_duration
+        segments_dir, timeline = detect_speech_timeline(
+            aligned_audio_path, out_duration=out_duration
         )
 
-        processed_files.append(processed_file)
+        segments_dir_list.append(segments_dir)
+        timelines.append(timeline)
 
-    print("[INFO] Creating Audacity project...")
+    merged_timeline = merge_timelines(timelines)
+
+    processed_files = []
+    for audio_file_path, segments_dir in zip(audio_files, segments_dir_list):
+        audio_file_name = os.path.splitext(os.path.basename(audio_file_path))[0]
+        target_audio_path = os.path.join(output_dir, f"{audio_file_name}.wav")
+        combine_segments_into_audio_with_timeline(
+            segments_dir,
+            target_audio_path,
+            merged_timeline,
+        )
+        processed_files.append(target_audio_path)
+
     project_path = os.path.join(output_dir, "project.aup")
     with AudacityClient.new() as client:
         client.new_project()
         for file in processed_files:
             client.import2(file)
-
-        client.select_all()
-        client.truncate_silence(-40, 2)  # this is a conservative value
-
         client.save_project2(project_path)
         client.close()
+
+    # Clean up workspace
+    shutil.rmtree(workspace, ignore_errors=True)
 
 
 def postprocess_audacity_project(project_path: str, output_dir: str) -> None:

@@ -44,8 +44,8 @@ def do_single(args):
 def do_preprocess(args):
     preprocess_multi_files(
         reference_path=args.reference,
-        directory=args.directory,
-        output_path=args.output,
+        audio_source_directory=args.directory,
+        output_dir=args.output or "./out",
         comp_duration=args.comp_duration,
         out_duration=args.out_duration,
         convert=not args.no_convert,
