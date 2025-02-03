@@ -13,6 +13,6 @@ data/
 tools/
 tmp/
 
-tests/outputs/
-
 .env*
+
+tests/ep0/out
