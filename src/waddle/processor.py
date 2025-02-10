@@ -1,19 +1,22 @@
+import concurrent.futures
 import os
 import shutil
 from glob import glob
-import concurrent.futures
 
-
-from .audios.align_offset import align_speaker_to_reference
-from .audios.call_tools import convert_to_wav
-from .config import DEFAULT_COMP_AUDIO_DURATION, DEFAULT_OUT_AUDIO_DURATION
-from .processing.combine import (
+from waddle.audios.align_offset import align_speaker_to_reference
+from waddle.audios.call_tools import convert_to_wav
+from waddle.config import DEFAULT_COMP_AUDIO_DURATION, DEFAULT_OUT_AUDIO_DURATION
+from waddle.processing.combine import (
     combine_audio_files,
     combine_segments_into_audio_with_timeline,
     combine_srt_files,
     merge_timelines,
 )
-from .processing.segment import detect_speech_timeline, process_segments, SpeechTimeline
+from waddle.processing.segment import (
+    SpeechTimeline,
+    detect_speech_timeline,
+    process_segments,
+)
 
 
 def select_reference_audio(audio_paths: list) -> str:

@@ -1,6 +1,6 @@
 import argparse
 
-from .config import DEFAULT_COMP_AUDIO_DURATION
+from waddle.config import DEFAULT_COMP_AUDIO_DURATION
 
 
 def create_waddle_parser():

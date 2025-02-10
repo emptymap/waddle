@@ -31,7 +31,7 @@ allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/waddle"]
-
+    
 [tool.hatch.envs.default.scripts]
 cli = "uv run python src/waddle/__main__.py {args}"
 lint-test = "uv ruff check --fix | uv run pytest --cov=src --cov-report=html --cov-report=term-missing --cov-config=pyproject.toml"

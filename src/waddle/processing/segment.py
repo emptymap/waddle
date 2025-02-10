@@ -6,15 +6,15 @@ import numpy as np
 from pydub import AudioSegment
 from tqdm import tqdm
 
-from ..audios.call_tools import remove_noise, transcribe
-from ..config import (
+from waddle.audios.call_tools import remove_noise, transcribe
+from waddle.config import (
     DEFAULT_BUFFER_DURATION,
     DEFAULT_CHUNK_DURATION,
     DEFAULT_TARGET_DB,
     DEFAULT_THRESHOLD_DB,
 )
-from ..utils import format_time, time_to_seconds
-from .combine import SpeechTimeline, combine_segments_into_audio
+from waddle.processing.combine import SpeechTimeline, combine_segments_into_audio
+from waddle.utils import format_time, time_to_seconds
 
 
 def detect_speech_timeline(

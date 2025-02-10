@@ -5,7 +5,11 @@ import numpy as np
 import soundfile as sf
 from scipy import signal
 
-from ..config import DEFAULT_COMP_AUDIO_DURATION, DEFAULT_OUT_AUDIO_DURATION, DEFAULT_SR
+from waddle.config import (
+    DEFAULT_COMP_AUDIO_DURATION,
+    DEFAULT_OUT_AUDIO_DURATION,
+    DEFAULT_SR,
+)
 
 
 def find_offset_via_cross_correlation(ref_audio: str, spk_audio: str) -> int:

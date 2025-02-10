@@ -3,7 +3,7 @@ import os
 from pydub import AudioSegment
 from tqdm import tqdm
 
-from ..config import DEFAULT_CHUNK_DURATION
+from waddle.config import DEFAULT_CHUNK_DURATION
 
 
 def chunk_audio(
