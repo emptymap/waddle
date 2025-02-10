@@ -31,13 +31,12 @@ jobs:
       - name: Run tests with coverage
         run: |
           export PYTHONPATH=$(pwd)/src
-          uv run pytest --cov=src --cov-report=html --cov-report=term-missing --cov-config=pyproject.toml
+          uv run pytest --cov=src --junitxml=pytest.xml --cov-report "xml:coverage.xml" --cov-report=term-missing --cov-config=pyproject.toml
 
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
+      - name: Pytest coverage comment
+        uses: MishaKav/pytest-coverage-comment@main
         with:
-          name: coverage-report
-          path: htmlcov/
+          pytest-xml-coverage-path: ./coverage.xml
 
       - name: Run checks
         run: |
