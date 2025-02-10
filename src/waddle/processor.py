@@ -73,7 +73,8 @@ def preprocess_multi_files(
     audio_source_directory: str | None,
     output_dir: str,
     comp_duration: float = DEFAULT_COMP_AUDIO_DURATION,
-    out_duration: float = DEFAULT_OUT_AUDIO_DURATION,
+    start_seconds: int = 0,
+    out_duration: int = DEFAULT_OUT_AUDIO_DURATION,
     convert: bool = True,
 ) -> None:
     if audio_source_directory is not None and not os.path.exists(audio_source_directory):
@@ -119,6 +120,7 @@ def preprocess_multi_files(
             speaker_file,
             workspace,
             comp_duration=comp_duration,
+            start_seconds=start_seconds,
             out_duration=out_duration,
         )
 

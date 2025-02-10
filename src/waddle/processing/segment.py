@@ -42,7 +42,7 @@ def detect_speech_timeline(
         list: List of (start_sec, end_sec) for each detected segment.
     """
     audio = AudioSegment.from_file(audio_path)
-    duration = int(out_duration * 1000) if out_duration else len(audio)
+    duration_ms = int(out_duration * 1000) if out_duration else len(audio)
 
     segments = []
     current_segment = None
@@ -55,7 +55,7 @@ def detect_speech_timeline(
     os.makedirs(chunks_folder)
 
     for i in tqdm(
-        range(0, duration, chunk_size_ms),
+        range(0, duration_ms, chunk_size_ms),
         desc="[INFO] Detecting speech segments",
     ):
         chunk = audio[i : i + chunk_size_ms]
@@ -72,7 +72,7 @@ def detect_speech_timeline(
 
         if chunk.dBFS > threshold_db:
             start_ms = max(0, i - buffer_size_ms)
-            end_ms = min(duration, i + chunk_size_ms + buffer_size_ms)
+            end_ms = min(duration_ms, i + chunk_size_ms + buffer_size_ms)
             if current_segment is None:
                 current_segment = [start_ms, end_ms]
             else:
@@ -100,15 +100,19 @@ def detect_speech_timeline(
     os.makedirs(segs_folder)
 
     # Calculate the mean dBFS for all segments
-    mean_dBFS = []
+    dBFSs = []
     for seg in merged_segments:
         seg_audio = audio[seg[0] : seg[1]]
-        mean_dBFS.append(seg_audio.dBFS)
-    global_mean_dBFS = np.mean(mean_dBFS)
-    print(f"[INFO] Global mean dBFS before normalization: {global_mean_dBFS}")
+        if seg_audio.dBFS > -70:
+            dBFSs.append(seg_audio.max_dBFS)
+    print(f"[INFO] {audio_file_name} has {len(dBFSs)}, {dBFSs}")
+    dBFS_mean = np.sqrt(np.mean(np.array(dBFSs) ** 2)) * -1
+    # dBFS_mean = np.mean(dBFSs)
+    print(f"[INFO] Global mean dBFS before normalization: {dBFS_mean}")
 
     # Calculate gain adjustment to achieve target_dBFS
-    gain_adjustment = target_dBFS - global_mean_dBFS
+    # gain_adjustment = target_dBFS - dBFS_mean
+    gain_adjustment = -10.0 - dBFS_mean
 
     # Apply normalization to all segments
     for seg in merged_segments:

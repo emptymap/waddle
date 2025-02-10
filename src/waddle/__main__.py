@@ -47,6 +47,7 @@ def do_preprocess(args):
         audio_source_directory=args.directory,
         output_dir=args.output or "./out",
         comp_duration=args.comp_duration,
+        start_seconds=args.start_seconds,
         out_duration=args.out_duration,
         convert=not args.no_convert,
     )

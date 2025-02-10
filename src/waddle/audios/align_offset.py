@@ -82,9 +82,10 @@ def align_speaker_to_reference(
     output_dir: str = "out",
     sample_rate: int = DEFAULT_SR,
     comp_duration: int = DEFAULT_COMP_AUDIO_DURATION,
+    start_seconds: int = 0,
     out_duration: int = DEFAULT_OUT_AUDIO_DURATION,
 ) -> str:
-    # 1) Load short segments for cross-correlation
+    # Load short segments for cross-correlation
     ref_audio, _ = librosa.load(reference_path, sr=sample_rate, mono=True, duration=comp_duration)
     spk_audio, _ = librosa.load(speaker_path, sr=sample_rate, mono=True, duration=comp_duration)
 
@@ -94,14 +95,14 @@ def align_speaker_to_reference(
     if np.max(np.abs(spk_audio)) > 0:
         spk_audio /= np.max(np.abs(spk_audio))
 
-    # 2) Compute offset
+    ref_full, _ = librosa.load(
+        reference_path, sr=sample_rate, mono=True, offset=start_seconds, duration=out_duration
+    )
+    spk_full, _ = librosa.load(
+        speaker_path, sr=sample_rate, mono=True, offset=start_seconds, duration=out_duration
+    )
+
     offset = find_offset_via_cross_correlation(ref_audio, spk_audio)
-
-    # 3) Load full audio
-    ref_full, _ = librosa.load(reference_path, sr=sample_rate, mono=True, duration=out_duration)
-    spk_full, _ = librosa.load(speaker_path, sr=sample_rate, mono=True, duration=out_duration)
-
-    # 4) Shift speaker
     aligned_speaker = shift_audio(spk_full, offset, len(ref_full))
 
     # 5) Save the aligned track

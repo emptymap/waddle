@@ -63,6 +63,13 @@ def create_waddle_parser():
         help="Duration in seconds for alignment comparison (default: 10s).",
     )
     preprocess_parser.add_argument(
+        "-s",
+        "--start_seconds",
+        type=int,
+        default=0,
+        help="Start time in seconds for the audio segment (default: 0).",
+    )
+    preprocess_parser.add_argument(
         "-od",
         "--out_duration",
         type=int,
