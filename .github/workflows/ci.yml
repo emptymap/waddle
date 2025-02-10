@@ -42,6 +42,7 @@ jobs:
         uses: MishaKav/pytest-coverage-comment@main
         with:
           pytest-xml-coverage-path: ./coverage.xml
+          coverage-path-prefix: src/
 
       - name: Run checks
         run: |
