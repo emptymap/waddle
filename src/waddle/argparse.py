@@ -32,7 +32,7 @@ def create_waddle_parser():
 
     preprocess_parser = subparsers.add_parser(
         "preprocess",
-        description="Preprocess audio files and generate an audacity project.",
+        description="Preprocess audio files.",
     )
     preprocess_parser.add_argument(
         "-d",

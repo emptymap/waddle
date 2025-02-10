@@ -4,7 +4,6 @@ from glob import glob
 import concurrent.futures
 
 
-from .audacity import AudacityClient
 from .audios.align_offset import align_speaker_to_reference
 from .audios.call_tools import convert_to_wav
 from .config import DEFAULT_COMP_AUDIO_DURATION, DEFAULT_OUT_AUDIO_DURATION
@@ -150,14 +149,6 @@ def preprocess_multi_files(
             merged_timeline,
         )
         processed_files.append(target_audio_path)
-
-    project_path = os.path.join(output_dir, "project.aup")
-    with AudacityClient.new() as client:
-        client.new_project()
-        for file in processed_files:
-            client.import2(file)
-        client.save_project2(project_path)
-        client.close()
 
     # Clean up workspace
     shutil.rmtree(workspace, ignore_errors=True)

@@ -5,9 +5,7 @@ description = "A podcast preprocessing library for aligning, normalizing, and tr
 readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "MIT" }
-authors = [
-    { name = "Masamune Ishihara", email = "mwishiha@ucsc.edu" }
-]
+authors = [{ name = "Masamune Ishihara", email = "mwishiha@ucsc.edu" }]
 dependencies = [
     "chardet>=5.2.0",
     "fastdtw>=0.3.4",
@@ -25,14 +23,9 @@ dependencies = [
 waddle = "waddle.__main__:main"
 
 [dependency-groups]
-dev = [
-    "pytest>=8.3.4",
-]
+dev = ["pytest>=8.3.4"]
 
-[tool.pytest.ini_options]
-addopts = "--cov=src --cov-report=html --cov-report=term-missing --cov-config=pyproject.toml"
 
 [tool.coverage.run]
 source = ["src"]
 omit = ["*/tests/*", "*_test.py"]
-
