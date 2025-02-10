@@ -22,9 +22,25 @@ dependencies = [
 [project.scripts]
 waddle = "waddle.__main__:main"
 
-[dependency-groups]
-dev = ["pytest>=8.3.4"]
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/waddle"]
+
+[tool.hatch.envs.default.scripts]
+cli = "uv run python src/waddle/__main__.py {args}"
+lint-test = "uv ruff check --fix | uv run pytest --cov=src --cov-report=html --cov-report=term-missing --cov-config=pyproject.toml"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.4",
+    "ruff>=0.9.5",
+]
 
 [tool.coverage.run]
 source = ["src"]
