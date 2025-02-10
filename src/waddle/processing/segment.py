@@ -27,7 +27,8 @@ def detect_speech_timeline(
 ) -> tuple[str, SpeechTimeline]:
     """
     Detect "loud" segments in an audio file (above threshold_db).
-    Includes one chunk before and after as a buffer, and normalizes segments to have a global mean dBFS of target_dBFS.
+    Includes one chunk before and after as a buffer, and normalizes segments to have a global mean
+    dBFS of target_dBFS.
 
     Args:
         audio_path (str): Path to the audio file.
@@ -115,7 +116,8 @@ def detect_speech_timeline(
         normalized_audio = seg_audio.apply_gain(gain_adjustment)
         seg_audio_path = os.path.join(segs_folder, f"seg_{seg[0]}_{seg[1]}.wav")
         normalized_audio.export(seg_audio_path, format="wav")
-        # Remove_noise is called twice, but this is done because accuracy is poor if it is not written for each sentence.
+        # Remove_noise is called twice, but this is done because accuracy is poor
+        # if it is not written for each sentence.
         remove_noise(seg_audio_path, seg_audio_path)
 
     # Clean up audio
@@ -158,8 +160,8 @@ def process_segments(
     segs_file_paths = sorted(glob(os.path.join(segs_folder_path, "*.wav")))
     transcription_entries = []
 
-    for idx, segs_file_path in tqdm(
-        enumerate(segs_file_paths),
+    for segs_file_path in tqdm(
+        segs_file_paths,
         desc=f"[INFO] Transcribing {len(segs_file_paths)} segments",
         total=len(segs_file_paths),
         dynamic_ncols=True,

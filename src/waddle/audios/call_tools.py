@@ -22,7 +22,7 @@ def convert_to_wav(folder_path: str) -> None:
     valid_extensions = (".m4a", ".aifc", ".mp4")
 
     # Find all valid files in the current directory and subdirectories
-    for root, dirs, files in os.walk(folder_path):
+    for root, _, files in os.walk(folder_path):
         for file in files:
             if file.endswith(valid_extensions):
                 input_path = os.path.join(root, file)

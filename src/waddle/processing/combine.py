@@ -99,7 +99,8 @@ def adjust_pos_to_timeline(timeline: SpeechTimeline, pos: int) -> int:
             # if `start_ms` is before this segment, it doesn't matter
             break
         if start < pos <= end:
-            # `start_ms` is within this segment. Add the valid time in this segment to `running_total` and return
+            # `start_ms` is within this segment.
+            # Add the valid time in this segment to `running_total` and return
             return running_total + (pos - start)
         # end < start_ms must hold
         # Add the length of this segment to `running_total`

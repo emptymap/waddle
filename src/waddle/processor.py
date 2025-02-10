@@ -211,7 +211,8 @@ def process_multi_files(
 
     for file_index, speaker_file in enumerate(audio_files):
         print(
-            f"\033[92m[INFO] Processing file {file_index + 1} of {len(audio_files)}: {speaker_file}\033[0m"
+            f"\033[92m[INFO] Processing file {file_index + 1} of "
+            "{len(audio_files)}: {speaker_file}\033[0m"
         )
 
         # 1) Align each speaker audio to the reference
