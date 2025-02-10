@@ -19,27 +19,27 @@ dependencies = [
     "torch>=2.5.1",
     "tqdm>=4.67.1",
 ]
+
 [project.scripts]
 waddle = "waddle.__main__:main"
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[tool.hatch.metadata]
-allow-direct-references = true
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/waddle"]
-    
-[tool.hatch.envs.default.scripts]
-cli = "uv run python src/waddle/__main__.py {args}"
-lint-test = "uv ruff check --fix | uv run pytest --cov=src --cov-report=html --cov-report=term-missing --cov-config=pyproject.toml"
 
 [dependency-groups]
 dev = [
     "pytest>=8.3.4",
     "ruff>=0.9.5",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
 ]
 
 [tool.coverage.run]

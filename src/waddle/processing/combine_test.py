@@ -1,4 +1,4 @@
-from waddle.processing.combine import merge_timelines, adjust_pos_to_timeline
+from waddle.processing.combine import adjust_pos_to_timeline, merge_timelines
 
 
 def test_merge_timelines_01():

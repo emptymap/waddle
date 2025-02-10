@@ -64,9 +64,7 @@ def detect_speech_timeline(
                 current_segment = None
             continue
 
-        temp_chunk_path = os.path.join(
-            chunks_folder, f"chunk_{i}_{i + chunk_size_ms}.wav"
-        )
+        temp_chunk_path = os.path.join(chunks_folder, f"chunk_{i}_{i + chunk_size_ms}.wav")
         chunk.export(temp_chunk_path, format="wav")
         remove_noise(temp_chunk_path, temp_chunk_path)
         chunk = AudioSegment.from_file(temp_chunk_path)
@@ -123,9 +121,7 @@ def detect_speech_timeline(
     # Clean up audio
     os.remove(audio_path)
 
-    print(
-        f"[INFO] Global normalization applied with gain adjustment: {gain_adjustment} dB"
-    )
+    print(f"[INFO] Global normalization applied with gain adjustment: {gain_adjustment} dB")
 
     return segs_folder, merged_segments
 
@@ -177,16 +173,12 @@ def process_segments(
         transcribe(segs_file_path, srt_output_path, language=language)
 
         # Adjust transcription timestamps
-        process_segment_transcription(
-            srt_output_path, start_seconds, transcription_entries
-        )
+        process_segment_transcription(srt_output_path, start_seconds, transcription_entries)
         os.remove(srt_output_path)
 
     # Create a single SRT file from all segments
     with open(transcription_output_path, "w", encoding="utf-8") as srt_out:
-        for idx, (start_time, end_time, text) in enumerate(
-            transcription_entries, start=1
-        ):
+        for idx, (start_time, end_time, text) in enumerate(transcription_entries, start=1):
             srt_out.write(f"{idx}\n")
             srt_out.write(f"{start_time} --> {end_time}\n")
             srt_out.write(f"{text}\n\n")

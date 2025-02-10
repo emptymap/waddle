@@ -36,12 +36,8 @@ def compute_offset(
     Load short segments of ref/speaker, normalize, cross-correlate, return offset in samples.
     """
     # 1) Load short portion for cross-correlation
-    ref_audio, _ = librosa.load(
-        reference_path, sr=sample_rate, mono=True, duration=comp_duration
-    )
-    spk_audio, _ = librosa.load(
-        speaker_path, sr=sample_rate, mono=True, duration=comp_duration
-    )
+    ref_audio, _ = librosa.load(reference_path, sr=sample_rate, mono=True, duration=comp_duration)
+    spk_audio, _ = librosa.load(speaker_path, sr=sample_rate, mono=True, duration=comp_duration)
 
     # 2) Normalize amplitude (optional, helps cross-correlation)
     if np.max(np.abs(ref_audio)) > 0:
@@ -89,12 +85,8 @@ def align_speaker_to_reference(
     out_duration: int = DEFAULT_OUT_AUDIO_DURATION,
 ) -> str:
     # 1) Load short segments for cross-correlation
-    ref_audio, _ = librosa.load(
-        reference_path, sr=sample_rate, mono=True, duration=comp_duration
-    )
-    spk_audio, _ = librosa.load(
-        speaker_path, sr=sample_rate, mono=True, duration=comp_duration
-    )
+    ref_audio, _ = librosa.load(reference_path, sr=sample_rate, mono=True, duration=comp_duration)
+    spk_audio, _ = librosa.load(speaker_path, sr=sample_rate, mono=True, duration=comp_duration)
 
     # Normalize
     if np.max(np.abs(ref_audio)) > 0:
@@ -106,12 +98,8 @@ def align_speaker_to_reference(
     offset = find_offset_via_cross_correlation(ref_audio, spk_audio)
 
     # 3) Load full audio
-    ref_full, _ = librosa.load(
-        reference_path, sr=sample_rate, mono=True, duration=out_duration
-    )
-    spk_full, _ = librosa.load(
-        speaker_path, sr=sample_rate, mono=True, duration=out_duration
-    )
+    ref_full, _ = librosa.load(reference_path, sr=sample_rate, mono=True, duration=out_duration)
+    spk_full, _ = librosa.load(speaker_path, sr=sample_rate, mono=True, duration=out_duration)
 
     # 4) Shift speaker
     aligned_speaker = shift_audio(spk_full, offset, len(ref_full))
