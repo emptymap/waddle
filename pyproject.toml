@@ -16,6 +16,7 @@ dependencies = [
     "numpy==1.26.4",
     "polars>=1.17.1",
     "pydub>=0.25.1",
+    "pytest-cov>=6.0.0",
     "soundfile>=0.12.1",
     "torch>=2.5.1",
     "tqdm>=4.67.1",
@@ -27,3 +28,11 @@ waddle = "waddle.__main__:main"
 dev = [
     "pytest>=8.3.4",
 ]
+
+[tool.pytest.ini_options]
+addopts = "--cov=src --cov-report=html --cov-report=term-missing --cov-config=pyproject.toml"
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["*/tests/*", "*_test.py"]
+

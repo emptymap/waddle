@@ -14,7 +14,7 @@ from ..config import (
     DEFAULT_THRESHOLD_DB,
 )
 from ..utils import format_time, time_to_seconds
-from .combine import combine_segments_into_audio, SpeechTimeline
+from .combine import SpeechTimeline, combine_segments_into_audio
 
 
 def detect_speech_timeline(
@@ -91,15 +91,7 @@ def detect_speech_timeline(
     shutil.rmtree(chunks_folder)
 
     # Merge overlapping/adjacent segments
-    merged_segments = []
-    for seg in segments:
-        if not merged_segments or seg[0] > merged_segments[-1][1]:
-            merged_segments.append(seg)
-        else:
-            merged_segments[-1] = (
-                merged_segments[-1][0],
-                max(merged_segments[-1][1], seg[1]),
-            )
+    merged_segments = merge_segments(segments)
 
     # Save segment to disk
     audio_file_name = os.path.splitext(os.path.basename(audio_path))[0]
@@ -136,6 +128,19 @@ def detect_speech_timeline(
     )
 
     return segs_folder, merged_segments
+
+
+def merge_segments(segments: SpeechTimeline) -> SpeechTimeline:
+    merged_segments = []
+    for seg in segments:
+        if not merged_segments or seg[0] > merged_segments[-1][1]:
+            merged_segments.append(seg)
+        else:
+            merged_segments[-1] = (
+                merged_segments[-1][0],
+                max(merged_segments[-1][1], seg[1]),
+            )
+    return merged_segments
 
 
 def process_segments(
