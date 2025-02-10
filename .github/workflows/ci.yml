@@ -28,7 +28,7 @@ jobs:
       - name: Run tests with coverage
         run: |
           export PYTHONPATH=$(pwd)/src
-          uv pytest --cov=src --cov-report=html --cov-report=term-missing --cov-config=pyproject.toml
+          uv run pytest --cov=src --cov-report=html --cov-report=term-missing --cov-config=pyproject.toml
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
@@ -38,5 +38,5 @@ jobs:
 
       - name: Run checks
         run: |
-          uv ruff check
-          uv ruff format
+          uv run ruff check
+          uv run ruff format
