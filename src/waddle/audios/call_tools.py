@@ -1,5 +1,6 @@
 import os
 import subprocess
+import threading
 
 
 def get_project_root() -> str:
@@ -21,7 +22,7 @@ def convert_to_wav(folder_path: str) -> None:
     valid_extensions = (".m4a", ".aifc", ".mp4")
 
     # Find all valid files in the current directory and subdirectories
-    for root, dirs, files in os.walk(folder_path):
+    for root, _, files in os.walk(folder_path):
         for file in files:
             if file.endswith(valid_extensions):
                 input_path = os.path.join(root, file)
@@ -87,6 +88,9 @@ def ensure_sampling_rate(
         raise
 
 
+deep_filter_install_lock = threading.Lock()
+
+
 def remove_noise(input_path: str, output_path: str) -> None:
     """
     Enhance audio by removing noise using DeepFilterNet.
@@ -99,14 +103,14 @@ def remove_noise(input_path: str, output_path: str) -> None:
     tmp_file_path = os.path.join(output_dir, tmp_file)
 
     # Check if the tool exists
-    if not os.path.exists(deep_filter_path):
-        command = os.path.join(project_root, "scripts/install-deep-filter.sh")
-        print(
-            f"DeepFilterNet tool not found. Run the following command to install it: {command}"
-        )
-        # Even if we run this command, it will not print output
-        subprocess.run(command, check=True)
-        raise FileNotFoundError(f"DeepFilterNet tool not found: {deep_filter_path}")
+    with deep_filter_install_lock:
+        if not os.path.exists(deep_filter_path):
+            command = os.path.join(project_root, "scripts/install-deep-filter.sh")
+            print(
+                f"DeepFilterNet tool not found. Run the following command to install it: {command}"
+            )
+            # Even if we run this command, it will not print output
+            subprocess.run(command, check=True)
 
     # Ensure input is 48kHz and 16-bit
     ensure_sampling_rate(input_path, tmp_file_path, target_rate=48000)
@@ -114,13 +118,14 @@ def remove_noise(input_path: str, output_path: str) -> None:
     # Run the DeepFilterNet tool without printing its output
     command = [deep_filter_path, tmp_file_path, "-o", output_dir]
     try:
-        subprocess.run(
-            command, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-        )
+        subprocess.run(command, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         os.rename(tmp_file_path, output_path)
     except subprocess.CalledProcessError as e:
         print(f"Error running DeepFilterNet: {e}")
         raise
+
+
+whisper_install_lock = threading.Lock()
 
 
 def transcribe(input_path: str, output_path: str, language: str = "ja") -> None:
@@ -130,25 +135,21 @@ def transcribe(input_path: str, output_path: str, language: str = "ja") -> None:
     # Paths
     project_root = get_project_root()
     whisper_bin = os.path.join(project_root, "tools/whisper.cpp/build/bin/whisper-cli")
-    whisper_model = os.path.join(
-        project_root, "tools/whisper.cpp/models/ggml-large-v3.bin"
-    )
+    whisper_model = os.path.join(project_root, "tools/whisper.cpp/models/ggml-large-v3.bin")
     temp_audio_path = f"{os.path.splitext(input_path)[0]}_16k_16bit.wav"
 
     # Check if the Whisper binary exists
-    if not os.path.exists(whisper_bin):
-        command = os.path.join(project_root, "scripts/install-whisper-cpp.sh")
-        print(
-            f"Whisper-cli binary not found. Run the following command to install it: {command}"
-        )
-        subprocess.run(command, check=True)
-        raise FileNotFoundError(f"Whisper-cli binary not found: {whisper_bin}")
+    with whisper_install_lock:
+        if not os.path.exists(whisper_bin):
+            command = os.path.join(project_root, "scripts/install-whisper-cpp.sh")
+            print(
+                f"Whisper-cli binary not found. Run the following command to install it: {command}"
+            )
+            subprocess.run(command, check=True)
 
     # Check if the Whisper model exists
     if not os.path.exists(whisper_model):
-        raise FileNotFoundError(
-            f"Whisper model not found. Please ensure {whisper_model} exists."
-        )
+        raise FileNotFoundError(f"Whisper model not found. Please ensure {whisper_model} exists.")
 
     # Ensure input is 16kHz and 16-bit
     ensure_sampling_rate(input_path, temp_audio_path, target_rate=16000)
@@ -167,9 +168,7 @@ def transcribe(input_path: str, output_path: str, language: str = "ja") -> None:
         output_path,
     ]
     try:
-        subprocess.run(
-            command, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-        )
+        subprocess.run(command, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         os.replace(f"{output_path}.srt", output_path)
     except subprocess.CalledProcessError as e:
         print(f"Error running Whisper-cli: {e}")

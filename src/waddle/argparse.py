@@ -1,6 +1,6 @@
 import argparse
 
-from .config import DEFAULT_COMP_AUDIO_DURATION
+from waddle.config import DEFAULT_COMP_AUDIO_DURATION
 
 
 def create_waddle_parser():
@@ -50,7 +50,10 @@ def create_waddle_parser():
         "-o",
         "--output",
         default=None,
-        help="Path to save the output. For single-file mode, this is the directory to save results. For multi-file mode, it is the synthesized audio file path.",
+        help=(
+            "Path to save the output. For single-file mode, this is the directory to save results. "
+            "For multi-file mode, it is the synthesized audio file path."
+        ),
     )
     preprocess_parser.add_argument(
         "-c",

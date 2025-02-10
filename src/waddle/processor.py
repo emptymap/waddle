@@ -1,19 +1,22 @@
+import concurrent.futures
 import os
 import shutil
 from glob import glob
-import concurrent.futures
 
-
-from .audios.align_offset import align_speaker_to_reference
-from .audios.call_tools import convert_to_wav
-from .config import DEFAULT_COMP_AUDIO_DURATION, DEFAULT_OUT_AUDIO_DURATION
-from .processing.combine import (
+from waddle.audios.align_offset import align_speaker_to_reference
+from waddle.audios.call_tools import convert_to_wav
+from waddle.config import DEFAULT_COMP_AUDIO_DURATION, DEFAULT_OUT_AUDIO_DURATION
+from waddle.processing.combine import (
     combine_audio_files,
     combine_segments_into_audio_with_timeline,
     combine_srt_files,
     merge_timelines,
 )
-from .processing.segment import detect_speech_timeline, process_segments, SpeechTimeline
+from waddle.processing.segment import (
+    SpeechTimeline,
+    detect_speech_timeline,
+    process_segments,
+)
 
 
 def select_reference_audio(audio_paths: list) -> str:
@@ -73,12 +76,8 @@ def preprocess_multi_files(
     out_duration: float = DEFAULT_OUT_AUDIO_DURATION,
     convert: bool = True,
 ) -> None:
-    if audio_source_directory is not None and not os.path.exists(
-        audio_source_directory
-    ):
-        raise FileNotFoundError(
-            f"Audio source directory not found: {audio_source_directory}"
-        )
+    if audio_source_directory is not None and not os.path.exists(audio_source_directory):
+        raise FileNotFoundError(f"Audio source directory not found: {audio_source_directory}")
 
     output_dir = os.path.abspath(output_dir)
     if os.path.exists(output_dir):
@@ -140,7 +139,7 @@ def preprocess_multi_files(
     merged_timeline = merge_timelines(timelines)
 
     processed_files = []
-    for audio_file_path, segments_dir in zip(audio_files, segments_dir_list):
+    for audio_file_path, segments_dir in zip(audio_files, segments_dir_list, strict=False):
         audio_file_name = os.path.splitext(os.path.basename(audio_file_path))[0]
         target_audio_path = os.path.join(output_dir, f"{audio_file_name}.wav")
         combine_segments_into_audio_with_timeline(
@@ -212,7 +211,8 @@ def process_multi_files(
 
     for file_index, speaker_file in enumerate(audio_files):
         print(
-            f"\033[92m[INFO] Processing file {file_index + 1} of {len(audio_files)}: {speaker_file}\033[0m"
+            f"\033[92m[INFO] Processing file {file_index + 1} of "
+            "{len(audio_files)}: {speaker_file}\033[0m"
         )
 
         # 1) Align each speaker audio to the reference
@@ -225,9 +225,7 @@ def process_multi_files(
         )
 
         # 2) Process the aligned audio file
-        combined_speaker_path = process_single_file(
-            aligned_audio_path, output_dir, speaker_file
-        )
+        combined_speaker_path = process_single_file(aligned_audio_path, output_dir, speaker_file)
         combined_speaker_paths.append(combined_speaker_path)
 
     audio_prefix = os.path.basename(audio_files[0]).split("-")[0]

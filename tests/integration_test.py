@@ -1,10 +1,11 @@
-import wave
-import waddle
-import os
-import waddle.argparse
-import waddle.__main__
-import tempfile
 import glob
+import os
+import tempfile
+import wave
+
+import waddle
+import waddle.__main__
+import waddle.argparse
 
 dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -30,12 +31,10 @@ def test_integration_preprocess():
         lengths = list()
         for wav_file in wav_files:
             lengths.append(get_wav_duration(wav_file))
-        assert all(
-            length == lengths[0] for length in lengths[1:]
-        ), "Not all processed audio files have the same length"
+        assert all(length == lengths[0] for length in lengths[1:]), (
+            "Not all processed audio files have the same length"
+        )
 
         reference_file = glob.glob(os.path.join(dir, "ep0", "GMT*"))[0]
         reference_length = get_wav_duration(reference_file)
-        assert (
-            lengths[0] < reference_length
-        ), "Length of processed audio is not less than reference"
+        assert lengths[0] < reference_length, "Length of processed audio is not less than reference"

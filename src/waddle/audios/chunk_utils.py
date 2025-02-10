@@ -3,12 +3,10 @@ import os
 from pydub import AudioSegment
 from tqdm import tqdm
 
-from ..config import DEFAULT_CHUNK_DURATION
+from waddle.config import DEFAULT_CHUNK_DURATION
 
 
-def chunk_audio(
-    input_path: str, output_dir: str, chunk_length: int = DEFAULT_CHUNK_DURATION
-):
+def chunk_audio(input_path: str, output_dir: str, chunk_length: int = DEFAULT_CHUNK_DURATION):
     """Splits audio into chunks and saves them in the specified directory."""
     audio = AudioSegment.from_file(input_path)
     chunk_length_ms = chunk_length * 1000
@@ -25,9 +23,7 @@ def chunk_audio(
 def chunk_concat(chunks_dir: str, output_path: str):
     """Concatenates all audio chunks in the given directory into a single file."""
     chunk_files = [
-        os.path.join(chunks_dir, f)
-        for f in sorted(os.listdir(chunks_dir))
-        if f.endswith(".wav")
+        os.path.join(chunks_dir, f) for f in sorted(os.listdir(chunks_dir)) if f.endswith(".wav")
     ]
     final_audio = AudioSegment.empty()
 

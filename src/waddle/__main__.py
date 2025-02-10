@@ -1,8 +1,8 @@
 import os
 import shutil
 
-from .argparse import create_waddle_parser
-from .processor import preprocess_multi_files, process_single_file
+from waddle.argparse import create_waddle_parser
+from waddle.processor import preprocess_multi_files, process_single_file
 
 
 def main():

@@ -6,15 +6,15 @@ import numpy as np
 from pydub import AudioSegment
 from tqdm import tqdm
 
-from ..audios.call_tools import remove_noise, transcribe
-from ..config import (
+from waddle.audios.call_tools import remove_noise, transcribe
+from waddle.config import (
     DEFAULT_BUFFER_DURATION,
     DEFAULT_CHUNK_DURATION,
     DEFAULT_TARGET_DB,
     DEFAULT_THRESHOLD_DB,
 )
-from ..utils import format_time, time_to_seconds
-from .combine import SpeechTimeline, combine_segments_into_audio
+from waddle.processing.combine import SpeechTimeline, combine_segments_into_audio
+from waddle.utils import format_time, time_to_seconds
 
 
 def detect_speech_timeline(
@@ -27,7 +27,8 @@ def detect_speech_timeline(
 ) -> tuple[str, SpeechTimeline]:
     """
     Detect "loud" segments in an audio file (above threshold_db).
-    Includes one chunk before and after as a buffer, and normalizes segments to have a global mean dBFS of target_dBFS.
+    Includes one chunk before and after as a buffer, and normalizes segments to have a global mean
+    dBFS of target_dBFS.
 
     Args:
         audio_path (str): Path to the audio file.
@@ -64,9 +65,7 @@ def detect_speech_timeline(
                 current_segment = None
             continue
 
-        temp_chunk_path = os.path.join(
-            chunks_folder, f"chunk_{i}_{i + chunk_size_ms}.wav"
-        )
+        temp_chunk_path = os.path.join(chunks_folder, f"chunk_{i}_{i + chunk_size_ms}.wav")
         chunk.export(temp_chunk_path, format="wav")
         remove_noise(temp_chunk_path, temp_chunk_path)
         chunk = AudioSegment.from_file(temp_chunk_path)
@@ -117,15 +116,14 @@ def detect_speech_timeline(
         normalized_audio = seg_audio.apply_gain(gain_adjustment)
         seg_audio_path = os.path.join(segs_folder, f"seg_{seg[0]}_{seg[1]}.wav")
         normalized_audio.export(seg_audio_path, format="wav")
-        # Remove_noise is called twice, but this is done because accuracy is poor if it is not written for each sentence.
+        # Remove_noise is called twice, but this is done because accuracy is poor
+        # if it is not written for each sentence.
         remove_noise(seg_audio_path, seg_audio_path)
 
     # Clean up audio
     os.remove(audio_path)
 
-    print(
-        f"[INFO] Global normalization applied with gain adjustment: {gain_adjustment} dB"
-    )
+    print(f"[INFO] Global normalization applied with gain adjustment: {gain_adjustment} dB")
 
     return segs_folder, merged_segments
 
@@ -162,8 +160,8 @@ def process_segments(
     segs_file_paths = sorted(glob(os.path.join(segs_folder_path, "*.wav")))
     transcription_entries = []
 
-    for idx, segs_file_path in tqdm(
-        enumerate(segs_file_paths),
+    for segs_file_path in tqdm(
+        segs_file_paths,
         desc=f"[INFO] Transcribing {len(segs_file_paths)} segments",
         total=len(segs_file_paths),
         dynamic_ncols=True,
@@ -177,16 +175,12 @@ def process_segments(
         transcribe(segs_file_path, srt_output_path, language=language)
 
         # Adjust transcription timestamps
-        process_segment_transcription(
-            srt_output_path, start_seconds, transcription_entries
-        )
+        process_segment_transcription(srt_output_path, start_seconds, transcription_entries)
         os.remove(srt_output_path)
 
     # Create a single SRT file from all segments
     with open(transcription_output_path, "w", encoding="utf-8") as srt_out:
-        for idx, (start_time, end_time, text) in enumerate(
-            transcription_entries, start=1
-        ):
+        for idx, (start_time, end_time, text) in enumerate(transcription_entries, start=1):
             srt_out.write(f"{idx}\n")
             srt_out.write(f"{start_time} --> {end_time}\n")
             srt_out.write(f"{text}\n\n")

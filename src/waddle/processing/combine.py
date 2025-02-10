@@ -33,9 +33,7 @@ def combine_segments_into_audio(
         # Clean up segs folder
         shutil.rmtree(segs_folder_path, ignore_errors=True)
         return
-    end_mses = [
-        int(os.path.basename(f).split("_")[2].split(".")[0]) for f in segment_files
-    ]
+    end_mses = [int(os.path.basename(f).split("_")[2].split(".")[0]) for f in segment_files]
     max_end_ms = max(end_mses)
     final_audio = AudioSegment.silent(duration=max_end_ms)
 
@@ -101,7 +99,8 @@ def adjust_pos_to_timeline(timeline: SpeechTimeline, pos: int) -> int:
             # if `start_ms` is before this segment, it doesn't matter
             break
         if start < pos <= end:
-            # `start_ms` is within this segment. Add the valid time in this segment to `running_total` and return
+            # `start_ms` is within this segment.
+            # Add the valid time in this segment to `running_total` and return
             return running_total + (pos - start)
         # end < start_ms must hold
         # Add the length of this segment to `running_total`
@@ -119,14 +118,10 @@ def combine_audio_files(aligned_audio_paths: list, output_audio_path: str) -> No
     """
     combined_audio = None
     # Sort for making max duration audio
-    aligned_audio_paths.sort(
-        key=lambda x: AudioSegment.from_file(x).duration_seconds, reverse=True
-    )
+    aligned_audio_paths.sort(key=lambda x: AudioSegment.from_file(x).duration_seconds, reverse=True)
     for path in aligned_audio_paths:
         audio = AudioSegment.from_file(path)
-        combined_audio = (
-            audio if combined_audio is None else combined_audio.overlay(audio)
-        )
+        combined_audio = audio if combined_audio is None else combined_audio.overlay(audio)
 
     if combined_audio:
         combined_audio.export(output_audio_path, format="wav")

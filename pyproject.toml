@@ -19,12 +19,29 @@ dependencies = [
     "torch>=2.5.1",
     "tqdm>=4.67.1",
 ]
+
 [project.scripts]
 waddle = "waddle.__main__:main"
 
-[dependency-groups]
-dev = ["pytest>=8.3.4"]
+[tool.uv]
+package = true
 
+
+[dependency-groups]
+dev = ["pytest>=8.3.4", "ruff>=0.9.5"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E", # pycodestyle errors
+    "W", # pycodestyle warnings
+    "F", # pyflakes
+    "I", # isort
+    "B", # flake8-bugbear
+]
 
 [tool.coverage.run]
 source = ["src"]
