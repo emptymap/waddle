@@ -152,10 +152,6 @@ def preprocess_multi_files(
     shutil.rmtree(workspace, ignore_errors=True)
 
 
-def postprocess_audacity_project(project_path: str, output_dir: str) -> None:
-    pass
-
-
 def process_multi_files(
     reference_path: str,
     directory: str,
