@@ -18,6 +18,25 @@ def get_wav_duration(filename):
         return duration
 
 
+def test_integration_single():
+    parser = waddle.argparse.create_waddle_parser()
+    with tempfile.TemporaryDirectory() as tmpdir:
+        input_file = "ep12-masa.wav"
+        input_file_path = os.path.join(dir, "ep0", input_file)
+
+        args = parser.parse_args(["single", input_file_path, "--output", tmpdir])
+        waddle.__main__.do_single(args)
+
+        output_file = os.path.join(tmpdir, input_file)
+        assert os.path.exists(output_file), "Output file was not created"
+
+        with wave.open(output_file, "r") as wav_file:
+            assert wav_file.getnchannels() > 0, "Invalid number of channels"
+            assert wav_file.getsampwidth() > 0, "Invalid sample width"
+            assert wav_file.getframerate() > 0, "Invalid frame rate"
+            assert wav_file.getnframes() > 0, "No frames in output file"
+
+
 def test_integration_preprocess():
     parser = waddle.argparse.create_waddle_parser()
     with tempfile.TemporaryDirectory() as tmpdir:
