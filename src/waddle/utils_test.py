@@ -59,3 +59,8 @@ def test_parse_audio_filename():
     assert parse_audio_filename("../folder/seg_1_200.wav") == (1, 200), (
         "parse_name('../folder/seg_1_200.wav') is failed."
     )
+
+    # _ is used in the folder name
+    assert parse_audio_filename("tmp/kzjirwe_klae256_wj1/seg_1_200.wav") == (1, 200), (
+        "parse_name('tmp/kzjirwe_klae256_wj1/seg_1_200.wav') is failed."
+    )
