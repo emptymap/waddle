@@ -62,7 +62,7 @@ def test_integration_single_file_not_found():
         # Ensure that the error message contains 'Audio file not found'
         expected_error_message = f"Audio file not found: {input_file_path}"
         assert expected_error_message in result.stderr, (
-            f"Expected error message '{expected_error_message}' not found in stderr:\n{result.stderr}"
+            f"Expected '{expected_error_message}' not found in stderr:\n{result.stderr}"
         )
 
 
