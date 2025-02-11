@@ -14,7 +14,7 @@ from waddle.config import (
     DEFAULT_THRESHOLD_DB,
 )
 from waddle.processing.combine import SpeechTimeline, combine_segments_into_audio
-from waddle.utils import format_audio_filename, format_time, time_to_seconds
+from waddle.utils import format_audio_filename, format_time, parse_audio_filename, time_to_seconds
 
 
 def detect_speech_timeline(
@@ -173,7 +173,7 @@ def process_segments(
         dynamic_ncols=True,
         bar_format="{l_bar}{bar:50}{r_bar}",
     ):
-        _, start, _ = os.path.basename(segs_file_path).split("_")
+        start, _ = parse_audio_filename(segs_file_path)
         start_seconds = float(start) / 1000
 
         # Transcribe segment
