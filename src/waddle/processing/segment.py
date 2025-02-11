@@ -14,7 +14,7 @@ from waddle.config import (
     DEFAULT_THRESHOLD_DB,
 )
 from waddle.processing.combine import SpeechTimeline, combine_segments_into_audio
-from waddle.utils import format_time, time_to_seconds
+from waddle.utils import format_audio_filename, format_time, time_to_seconds
 
 
 def detect_speech_timeline(
@@ -66,7 +66,9 @@ def detect_speech_timeline(
                 current_segment = None
             continue
 
-        temp_chunk_path = os.path.join(chunks_folder, f"chunk_{i}_{i + chunk_size_ms}.wav")
+        temp_chunk_path = os.path.join(
+            chunks_folder, format_audio_filename("chunk", i, i + chunk_size_ms)
+        )
         chunk.export(temp_chunk_path, format="wav")
         remove_noise(temp_chunk_path, temp_chunk_path)
         chunk = AudioSegment.from_file(temp_chunk_path)
