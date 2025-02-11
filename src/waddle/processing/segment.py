@@ -118,7 +118,9 @@ def detect_speech_timeline(
     for seg in merged_segments:
         seg_audio = audio[seg[0] : seg[1]]
         normalized_audio = seg_audio.apply_gain(gain_adjustment)
-        seg_audio_path = os.path.join(segs_folder_path, f"seg_{seg[0]}_{seg[1]}.wav")
+        seg_audio_path = os.path.join(
+            segs_folder_path, format_audio_filename("seg", seg[0], seg[1])
+        )
         normalized_audio.export(seg_audio_path, format="wav")
         # Remove_noise is called twice, but this is done because accuracy is poor
         # if it is not written for each sentence.
