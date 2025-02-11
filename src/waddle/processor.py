@@ -52,11 +52,10 @@ def process_single_file(
     Returns:
         str: Path to the combined speaker audio file.
     """
-    detect_speech_timeline(aligned_audio_path, out_duration=out_duration)
+    segs_folder_path, _ = detect_speech_timeline(aligned_audio_path, out_duration=out_duration)
 
     # Transcribe segments and combine
     speaker_name = os.path.splitext(os.path.basename(speaker_file))[0]
-    segs_folder_path = os.path.join(output_dir, "segs")
     combined_speaker_path = os.path.join(output_dir, f"{speaker_name}.wav")
     transcription_path = os.path.join(output_dir, f"{speaker_name}.srt")
     process_segments(
