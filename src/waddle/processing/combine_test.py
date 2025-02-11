@@ -238,38 +238,47 @@ def test_parse_srt_multiple_entries():
         check_srt_entry(entries[2], "00:00:10.000", "00:00:15.000", "Speaker: I'm fine, thanks.")
 
 
-def test_merge_timelines_01():
-    # separated
+def test_merge_timelines_separated_segments():
+    """Test merging timelines where segments are completely separate."""
     segments = [
         [(0, 100)],
         [(200, 300)],
     ]
-    assert merge_timelines(segments) == [(0, 100), (200, 300)]
+    expected = [(0, 100), (200, 300)]
+    result = merge_timelines(segments)
+    assert result == expected, f"Expected {expected}, but got {result}"
 
 
-def test_merge_timelines_02():
-    # connected
+def test_merge_timelines_continuous_segments():
+    """Test merging timelines where segments are directly connected."""
     segments = [
         [(0, 100)],
         [(100, 200)],
         [(200, 300)],
     ]
-    assert merge_timelines(segments) == [(0, 300)]
+    expected = [(0, 300)]
+    result = merge_timelines(segments)
+    assert result == expected, f"Expected {expected}, but got {result}"
 
 
-def test_merge_timelines_03():
+def test_merge_timelines_non_overlapping_segments():
+    """Test merging timelines with non-overlapping segments."""
     segments = [
         [(0, 100)],
         [(200, 300)],
         [(400, 500)],
     ]
-    assert merge_timelines(segments) == [(0, 100), (200, 300), (400, 500)]
+    expected = [(0, 100), (200, 300), (400, 500)]
+    result = merge_timelines(segments)
+    assert result == expected, f"Expected {expected}, but got {result}"
 
 
-def test_merge_timelines_04():
-    # overlapping
+def test_merge_timelines_overlapping_segments():
+    """Test merging timelines where segments overlap."""
     segments = [
         [(200, 400)],
         [(0, 300)],
     ]
-    assert merge_timelines(segments) == [(0, 400)]
+    expected = [(0, 400)]
+    result = merge_timelines(segments)
+    assert result == expected, f"Expected {expected}, but got {result}"
