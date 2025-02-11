@@ -56,6 +56,20 @@ def mock_shutil():
         yield mock_rmtree
 
 
+@pytest.fixture
+def create_dummy_segments():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        segs_folder = os.path.join(temp_dir, "segments")
+        os.makedirs(segs_folder, exist_ok=True)
+
+        for i in range(3):
+            AudioSegment.silent(duration=500).export(
+                os.path.join(segs_folder, f"chunk_{i * 200}_{(i + 1) * 200}.wav"), format="wav"
+            )
+
+        yield segs_folder
+
+
 def test_combine_segments_into_audio_no_files():
     with tempfile.TemporaryDirectory() as temp_dir:
         segs_folder = os.path.join(temp_dir, "empty_segments")
@@ -63,6 +77,17 @@ def test_combine_segments_into_audio_no_files():
         output_audio = os.path.join(temp_dir, "output.wav")
 
         combine_segments_into_audio(segs_folder, output_audio)
+        assert os.path.exists(output_audio), "Output audio file was not created."
+
+        with wave.open(output_audio, "r") as wf:
+            assert wf.getnframes() > 0, "Output audio file is empty."
+
+
+def test_combine_segments_into_audio(create_dummy_segments):
+    with tempfile.TemporaryDirectory() as temp_dir:
+        output_audio = os.path.join(temp_dir, "output.wav")
+        combine_segments_into_audio(create_dummy_segments, output_audio)
+
         assert os.path.exists(output_audio), "Output audio file was not created."
 
         with wave.open(output_audio, "r") as wf:
