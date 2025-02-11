@@ -9,6 +9,7 @@ from pydub import AudioSegment
 from waddle.processing.combine import (
     adjust_pos_to_timeline,
     combine_segments_into_audio,
+    combine_segments_into_audio_with_timeline,
     merge_timelines,
 )
 
@@ -92,6 +93,15 @@ def test_combine_segments_into_audio(create_dummy_segments):
 
         with wave.open(output_audio, "r") as wf:
             assert wf.getnframes() > 0, "Output audio file is empty."
+
+
+def test_combine_segments_into_audio_with_timeline(create_dummy_segments):
+    with tempfile.TemporaryDirectory() as temp_dir:
+        output_audio = os.path.join(temp_dir, "output.wav")
+        timeline = [(0, 100), (150, 250)]
+        combine_segments_into_audio_with_timeline(create_dummy_segments, output_audio, timeline)
+
+        assert os.path.exists(output_audio), "Output audio file was not created."
 
 
 def test_merge_timelines_01():
