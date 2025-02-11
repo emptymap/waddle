@@ -86,6 +86,21 @@ def test_combine_segments_into_audio_with_timeline(create_dummy_segments):
         assert os.path.exists(output_audio), "Output audio file was not created."
 
 
+def test_combine_segments_into_audio_with_timeline_no_files():
+    """Test handling of an empty segment folder in combine_segments_into_audio_with_timeline."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        segs_folder = os.path.join(temp_dir, "empty_segments")
+        os.makedirs(segs_folder, exist_ok=True)
+        output_audio = os.path.join(temp_dir, "output.wav")
+        timeline = [(0, 100), (150, 250)]
+
+        combine_segments_into_audio_with_timeline(segs_folder, output_audio, timeline)
+
+        assert os.path.exists(output_audio), (
+            "Output silent audio file should be created when no segments are available."
+        )
+
+
 def test_adjust_pos_to_timeline_starting_from_zero():
     """Test adjust_pos_to_timeline where segments start from 0."""
     segments = [(0, 200), (300, 500)]
@@ -322,6 +337,33 @@ def test_combine_srt_files_with_missing_speaker():
         expected_content = (
             "1\n00:00:00.000 --> 00:00:05.000\nfile1: Hello world.\n\n"
             "2\n00:00:05.000 --> 00:00:10.000\nfile2: How are you?\n\n"
+        )
+
+        assert content == expected_content, f"Unexpected SRT content: {content}"
+
+
+def test_combine_srt_files_with_hyphenated_names():
+    """Test combining SRT files that contain hyphenated speaker names."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        srt_files = {
+            "ep0-speaker1.srt": "1\n00:00:00,000 --> 00:00:05,000\nHello world.\n\n",
+            "ep0-speaker2.srt": "1\n00:00:05,000 --> 00:00:10,000\nHow are you?\n\n",
+        }
+
+        for filename, content in srt_files.items():
+            with open(os.path.join(temp_dir, filename), "w", encoding="utf-8") as f:
+                f.write(content)
+
+        output_srt = os.path.join(temp_dir, "combined.srt")
+        combine_srt_files(temp_dir, output_srt)
+
+        assert os.path.exists(output_srt), "Combined SRT file was not created."
+        with open(output_srt, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        expected_content = (
+            "1\n00:00:00.000 --> 00:00:05.000\nspeaker1: Hello world.\n\n"
+            "2\n00:00:05.000 --> 00:00:10.000\nspeaker2: How are you?\n\n"
         )
 
         assert content == expected_content, f"Unexpected SRT content: {content}"
