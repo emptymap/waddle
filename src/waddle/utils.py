@@ -25,5 +25,5 @@ def format_time(seconds: float) -> str:
     hh = int(seconds // 3600)
     mm = int((seconds % 3600) // 60)
     ss = int(seconds % 60)
-    ms = int((seconds % 1) * 1000)
+    ms = round((seconds % 1) * 1000)
     return f"{hh:02}:{mm:02}:{ss:02},{ms:03}"
