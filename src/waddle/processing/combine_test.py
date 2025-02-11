@@ -14,6 +14,7 @@ from waddle.processing.combine import (
     combine_segments_into_audio,
     combine_segments_into_audio_with_timeline,
     merge_timelines,
+    parse_srt,
 )
 
 
@@ -185,6 +186,56 @@ def test_combine_audio_files_with_numpy_verification():
         np.testing.assert_array_equal(
             output_audio, expected_audio, "Combined audio does not match expected waveform."
         )
+
+
+def test_parse_srt_empty_file():
+    """Test parsing an empty SRT file."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        srt_file = os.path.join(temp_dir, "empty.srt")
+        with open(srt_file, "w") as f:
+            f.write("")  # Empty file
+
+        assert parse_srt(srt_file, "Speaker") == [], (
+            "Parsing an empty file should return an empty list."
+        )
+
+
+def check_srt_entry(entry: tuple, expected_start: str, expected_end: str, expected_text: str):
+    assert entry[0] == expected_start, f"Start time mismatch: {entry[0]} != {expected_start}"
+    assert entry[1] == expected_end, f"End time mismatch: {entry[1]} != {expected_end}"
+    assert entry[2] == expected_text, f"Text mismatch: {entry[2]} != {expected_text}"
+
+
+def test_parse_srt_single_entry():
+    """Test parsing an SRT file with a single entry."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        srt_file = os.path.join(temp_dir, "single.srt")
+        with open(srt_file, "w") as f:
+            f.write("1\n00:00:00,000 --> 00:00:05,000\nHello world.\n\n")
+
+        entries = parse_srt(srt_file, "Speaker")
+        assert len(entries) == 1, "Single entry should be parsed."
+
+        check_srt_entry(entries[0], "00:00:00.000", "00:00:05.000", "Speaker: Hello world.")
+
+
+def test_parse_srt_multiple_entries():
+    """Test parsing an SRT file with multiple entries."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        srt_file = os.path.join(temp_dir, "multiple.srt")
+        with open(srt_file, "w") as f:
+            f.write(
+                "1\n00:00:00,000 --> 00:00:05,000\nHello world.\n\n"
+                "2\n00:00:05,000 --> 00:00:10,000\nHow are you?\n\n"
+                "3\n00:00:10,000 --> 00:00:15,000\nI'm fine, thanks.\n\n"
+            )
+
+        entries = parse_srt(srt_file, "Speaker")
+        assert len(entries) == 3, "Three entries should be parsed."
+
+        check_srt_entry(entries[0], "00:00:00.000", "00:00:05.000", "Speaker: Hello world.")
+        check_srt_entry(entries[1], "00:00:05.000", "00:00:10.000", "Speaker: How are you?")
+        check_srt_entry(entries[2], "00:00:10.000", "00:00:15.000", "Speaker: I'm fine, thanks.")
 
 
 def test_merge_timelines_01():
