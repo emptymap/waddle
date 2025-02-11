@@ -5,6 +5,8 @@ from typing import TypeAlias
 
 from pydub import AudioSegment
 
+from waddle.utils import parse_audio_filename
+
 SpeechSegment: TypeAlias = tuple[int, int]
 SpeechTimeline: TypeAlias = list[SpeechSegment]
 
@@ -33,13 +35,13 @@ def combine_segments_into_audio(
         # Clean up segs folder
         shutil.rmtree(segs_folder_path, ignore_errors=True)
         return
-    end_mses = [int(os.path.basename(f).split("_")[2].split(".")[0]) for f in segment_files]
+    end_mses = [parse_audio_filename(f)[1] for f in segment_files]
     max_end_ms = max(end_mses)
     final_audio = AudioSegment.silent(duration=max_end_ms)
 
     for segment_file in segment_files:
         segment_audio = AudioSegment.from_file(segment_file)
-        start_ms = int(os.path.basename(segment_file).split("_")[1].split(".")[0])
+        start_ms, _ = parse_audio_filename(segment_file)
         final_audio = final_audio.overlay(segment_audio, position=start_ms)
 
     final_audio.export(combined_audio_path, format="wav")
@@ -70,7 +72,7 @@ def combine_segments_into_audio_with_timeline(
 
     for segment_file in segment_files:
         segment_audio = AudioSegment.from_file(segment_file)
-        start_ms = int(os.path.basename(segment_file).split("_")[1].split(".")[0])
+        start_ms, _ = parse_audio_filename(segment_file)
         final_audio = final_audio.overlay(
             segment_audio, position=adjust_pos_to_timeline(timeline, start_ms)
         )
