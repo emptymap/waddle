@@ -156,7 +156,8 @@ def parse_srt(file_path: str, speaker_name: str) -> list:
 
         # Convert timestamps for sorting
         start_time_for_sorting = start.replace(",", ".")
-        entries.append((start_time_for_sorting, end, text_with_speaker))
+        end_time_for_sorting = end.replace(",", ".")
+        entries.append((start_time_for_sorting, end_time_for_sorting, text_with_speaker))
     return entries
 
 
