@@ -26,30 +26,6 @@ def find_offset_via_cross_correlation(ref_audio: str, spk_audio: str) -> int:
     return offset
 
 
-def compute_offset(
-    reference_path: str,
-    speaker_path: str,
-    sample_rate: int = DEFAULT_SR,
-    comp_duration: int = DEFAULT_COMP_AUDIO_DURATION,
-) -> int:
-    """
-    Load short segments of ref/speaker, normalize, cross-correlate, return offset in samples.
-    """
-    # 1) Load short portion for cross-correlation
-    ref_audio, _ = librosa.load(reference_path, sr=sample_rate, mono=True, duration=comp_duration)
-    spk_audio, _ = librosa.load(speaker_path, sr=sample_rate, mono=True, duration=comp_duration)
-
-    # 2) Normalize amplitude (optional, helps cross-correlation)
-    if np.max(np.abs(ref_audio)) > 0:
-        ref_audio /= np.max(np.abs(ref_audio))
-    if np.max(np.abs(spk_audio)) > 0:
-        spk_audio /= np.max(np.abs(spk_audio))
-
-    # 3) Cross-correlation offset
-    offset_samples = find_offset_via_cross_correlation(ref_audio, spk_audio)
-    return offset_samples
-
-
 def shift_audio(spk_audio: str, offset: int, ref_length: int) -> np.ndarray:
     """
     Shift the spk_audio by 'offset' samples relative to the reference track.
