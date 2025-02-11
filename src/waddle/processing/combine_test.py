@@ -1,7 +1,6 @@
 import os
 import tempfile
 import wave
-from unittest import mock
 
 import numpy as np
 import pytest
@@ -17,26 +16,6 @@ from waddle.processing.combine import (
     merge_timelines,
     parse_srt,
 )
-
-
-@pytest.fixture
-def mock_glob():
-    with mock.patch("waddle.processing.combine.glob") as mock_glob:
-        mock_glob.return_value = [f"/fake/path/seg_{i}_{i + 100}.wav" for i in range(0, 500, 100)]
-        yield mock_glob
-
-
-@pytest.fixture
-def mock_os_path():
-    with mock.patch("os.path.basename") as mock_basename:
-        mock_basename.side_effect = lambda x: os.path.basename(x)  # Returns actual filename
-        yield mock_basename
-
-
-@pytest.fixture
-def mock_shutil():
-    with mock.patch("shutil.rmtree") as mock_rmtree:
-        yield mock_rmtree
 
 
 @pytest.fixture
