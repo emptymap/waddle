@@ -1,7 +1,7 @@
 import os
 import shutil
 from glob import glob
-from typing import TypeAlias
+from typing import Optional, TypeAlias
 
 from pydub import AudioSegment
 
@@ -129,7 +129,7 @@ def combine_audio_files(aligned_audio_paths: list, output_audio_path: str) -> No
         combined_audio.export(output_audio_path, format="wav")
 
 
-def parse_srt(file_path: str, speaker_name: str) -> list:
+def parse_srt(file_path: str, speaker_name: Optional[str] = None) -> list:
     """
     Parse an SRT file, attach speaker name to each text line,
     and return a list of (start_time_for_sorting, end_timestamp, text_with_speaker).
@@ -154,12 +154,13 @@ def parse_srt(file_path: str, speaker_name: str) -> list:
         timestamp = lines[1]
         start, end = timestamp.split(" --> ")
         text = " ".join(lines[2:])
-        text_with_speaker = f"{speaker_name}: {text}"
+        if speaker_name:
+            text = f"{speaker_name}: {text}"
 
         # Convert timestamps for sorting
         start_time_for_sorting = start.replace(",", ".")
         end_time_for_sorting = end.replace(",", ".")
-        entries.append((start_time_for_sorting, end_time_for_sorting, text_with_speaker))
+        entries.append((start_time_for_sorting, end_time_for_sorting, text))
     return entries
 
 
