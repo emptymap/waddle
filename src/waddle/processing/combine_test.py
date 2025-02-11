@@ -104,6 +104,33 @@ def test_combine_segments_into_audio_with_timeline(create_dummy_segments):
         assert os.path.exists(output_audio), "Output audio file was not created."
 
 
+def test_adjust_pos_to_timeline_starting_from_zero():
+    """Test adjust_pos_to_timeline where segments start from 0."""
+    segments = [(0, 200), (300, 500)]
+    assert adjust_pos_to_timeline(segments, 0) == 0, "Boundary adjustment at 0 failed."
+    assert adjust_pos_to_timeline(segments, 100) == 100, "Boundary adjustment at 100 failed."
+    assert adjust_pos_to_timeline(segments, 199) == 199, "Boundary adjustment at 199 failed."
+    assert adjust_pos_to_timeline(segments, 200) == 200, "Boundary adjustment at 200 failed."
+    assert adjust_pos_to_timeline(segments, 250) == 200, "Boundary adjustment at 250 failed."
+    assert adjust_pos_to_timeline(segments, 300) == 200, "Boundary adjustment at 300 failed."
+    assert adjust_pos_to_timeline(segments, 350) == 250, "Boundary adjustment at 350 failed."
+    assert adjust_pos_to_timeline(segments, 500) == 400, "Boundary adjustment at 500 failed."
+
+
+def test_adjust_pos_to_timeline_starting_from_nonzero():
+    segments = [(100, 300), (400, 500)]
+    assert adjust_pos_to_timeline(segments, 0) == 0, "Boundary adjustment at 0 failed."
+    assert adjust_pos_to_timeline(segments, 99) == 0, "Boundary adjustment at 99 failed."
+    assert adjust_pos_to_timeline(segments, 100) == 0, "Boundary adjustment at 100 failed."
+    assert adjust_pos_to_timeline(segments, 299) == 199, "Boundary adjustment at 299 failed."
+    assert adjust_pos_to_timeline(segments, 300) == 200, "Boundary adjustment at 300 failed."
+    assert adjust_pos_to_timeline(segments, 350) == 200, "Boundary adjustment at 350 failed."
+    assert adjust_pos_to_timeline(segments, 400) == 200, "Boundary adjustment at 400 failed."
+    assert adjust_pos_to_timeline(segments, 450) == 250, "Boundary adjustment at 450 failed."
+    assert adjust_pos_to_timeline(segments, 500) == 300, "Boundary adjustment at 500 failed."
+    assert adjust_pos_to_timeline(segments, 501) == 300, "Boundary adjustment at 501 failed."
+
+
 def test_merge_timelines_01():
     # separated
     segments = [
@@ -139,25 +166,3 @@ def test_merge_timelines_04():
         [(0, 300)],
     ]
     assert merge_timelines(segments) == [(0, 400)]
-
-
-def adjust_pos_to_timeline_01():
-    segments = [(0, 100), (200, 300)]
-    assert adjust_pos_to_timeline(segments, 0) == 0
-    assert adjust_pos_to_timeline(segments, 50) == 50
-    assert adjust_pos_to_timeline(segments, 100) == 100
-    assert adjust_pos_to_timeline(segments, 150) == 100
-    assert adjust_pos_to_timeline(segments, 200) == 100
-    assert adjust_pos_to_timeline(segments, 250) == 150
-    assert adjust_pos_to_timeline(segments, 300) == 200
-    assert adjust_pos_to_timeline(segments, 350) == 200
-    assert adjust_pos_to_timeline(segments, 400) == 200
-
-
-def adjust_pos_to_timeline_02():
-    segments = [(100, 300), (400, 500)]
-    assert adjust_pos_to_timeline(segments, 100) == 0
-    assert adjust_pos_to_timeline(segments, 300) == 200
-    assert adjust_pos_to_timeline(segments, 400) == 200
-    assert adjust_pos_to_timeline(segments, 450) == 250
-    assert adjust_pos_to_timeline(segments, 500) == 300
