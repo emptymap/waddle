@@ -16,6 +16,7 @@ from waddle.processing.combine import (
     merge_timelines,
     parse_srt,
 )
+from waddle.utils import format_audio_filename
 
 
 @pytest.fixture
@@ -24,9 +25,10 @@ def create_dummy_segments():
         segs_folder = os.path.join(temp_dir, "segments")
         os.makedirs(segs_folder, exist_ok=True)
 
-        for i in range(3):
-            AudioSegment.silent(duration=500).export(
-                os.path.join(segs_folder, f"chunk_{i * 200}_{(i + 1) * 200}.wav"), format="wav"
+        chunk_size_ms = 100
+        for i in range(0, 300, chunk_size_ms):
+            AudioSegment.silent(duration=100).export(
+                os.path.join(segs_folder, format_audio_filename("chunk", i, i + chunk_size_ms)),
             )
 
         yield segs_folder
