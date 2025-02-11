@@ -32,8 +32,6 @@ def create_dummy_segments():
                 os.path.join(segs_folder, format_audio_filename("seg", start, end)),
                 format="wav",
             )
-        # get list of all file inside seg_folder and .wav
-        print(f"Created dummy segments in {segs_folder}", os.listdir(segs_folder))
         return segs_folder
 
     return _create_dummy_segments
