@@ -26,20 +26,21 @@ def detect_speech_timeline(
     out_duration: float = None,
 ) -> tuple[str, SpeechTimeline]:
     """
-    Detect "loud" segments in an audio file (above threshold_db).
-    Includes one chunk before and after as a buffer, and normalizes segments to have a global mean
-    dBFS of target_dBFS.
+    Detects speech segments in an audio file based on a specified loudness threshold.
+    Each detected segment includes a buffer of audio before and after to ensure completeness.
+    The detected segments are normalized to achieve a global mean dBFS of target_dBFS.
 
     Args:
-        audio_path (str): Path to the audio file.
-        threshold_db (float): Loudness threshold in dBFS.
-        chunk_size_ms (int): Size of the audio chunk in milliseconds.
-        buffer_size_ms (int): Buffer size in milliseconds for segment merging.
-        target_dBFS (float): Desired mean dBFS for normalized audio segments.
-        out_duration (float): Duration of the output audio in seconds.
+        audio_path (str): Path to the input audio file.
+        threshold_db (float): Loudness threshold in dBFS for detecting speech.
+        chunk_size_ms (int): Duration of each audio chunk in milliseconds.
+        buffer_size_ms (int): Additional buffer duration in milliseconds for segment merging.
+        target_dBFS (float): Target loudness level (dBFS) for normalized audio segments.
+        out_duration (float, optional): Maximum duration of the processed output audio in seconds.
 
     Returns:
-        list: List of (start_sec, end_sec) for each detected segment.
+        segs_folder_path (str): Path to the directory containing the extracted speech segments.
+        merged_segments (SpeechTimeline): List of detected and merged speech segments.
     """
     audio = AudioSegment.from_file(audio_path)
     duration = int(out_duration * 1000) if out_duration else len(audio)
@@ -94,10 +95,10 @@ def detect_speech_timeline(
 
     # Save segment to disk
     audio_file_name = os.path.splitext(os.path.basename(audio_path))[0]
-    segs_folder = os.path.join(os.path.dirname(audio_path), f"{audio_file_name}_segs")
-    if os.path.exists(segs_folder):
-        shutil.rmtree(segs_folder)
-    os.makedirs(segs_folder)
+    segs_folder_path = os.path.join(os.path.dirname(audio_path), f"{audio_file_name}_segs")
+    if os.path.exists(segs_folder_path):
+        shutil.rmtree(segs_folder_path)
+    os.makedirs(segs_folder_path)
 
     # Calculate the mean dBFS for all segments
     mean_dBFS = []
@@ -114,7 +115,7 @@ def detect_speech_timeline(
     for seg in merged_segments:
         seg_audio = audio[seg[0] : seg[1]]
         normalized_audio = seg_audio.apply_gain(gain_adjustment)
-        seg_audio_path = os.path.join(segs_folder, f"seg_{seg[0]}_{seg[1]}.wav")
+        seg_audio_path = os.path.join(segs_folder_path, f"seg_{seg[0]}_{seg[1]}.wav")
         normalized_audio.export(seg_audio_path, format="wav")
         # Remove_noise is called twice, but this is done because accuracy is poor
         # if it is not written for each sentence.
@@ -125,7 +126,7 @@ def detect_speech_timeline(
 
     print(f"[INFO] Global normalization applied with gain adjustment: {gain_adjustment} dB")
 
-    return segs_folder, merged_segments
+    return segs_folder_path, merged_segments
 
 
 def merge_segments(segments: SpeechTimeline) -> SpeechTimeline:
