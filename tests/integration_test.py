@@ -10,17 +10,17 @@ import waddle.__main__
 dir = os.path.dirname(os.path.abspath(__file__))
 
 
+def run_waddle_command(args):
+    with patch.object(sys, "argv", args):
+        waddle.__main__.main()
+
+
 def get_wav_duration(filename):
     with wave.open(filename, "r") as wav_file:
         frames = wav_file.getnframes()
         rate = wav_file.getframerate()
         duration = frames / float(rate)
         return duration
-
-
-def run_waddle_command(args):
-    with patch.object(sys, "argv", args):
-        waddle.__main__.main()
 
 
 def test_integration_single():
@@ -39,6 +39,18 @@ def test_integration_single():
             assert wav_file.getsampwidth() > 0, "Invalid sample width"
             assert wav_file.getframerate() > 0, "Invalid frame rate"
             assert wav_file.getnframes() > 0, "No frames in output file"
+
+
+def test_integration_single_file_not_found():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        input_file_path = os.path.join(dir, "ep0", "non_existent.wav")
+
+        test_args = ["waddle", "single", input_file_path, "--output", tmpdir]
+
+        try:
+            run_waddle_command(test_args)
+        except FileNotFoundError as e:
+            assert "Audio file not found" in str(e), "Expected FileNotFoundError was not raised"
 
 
 def test_integration_preprocess():
