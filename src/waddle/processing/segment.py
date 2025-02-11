@@ -99,16 +99,17 @@ def detect_speech_timeline(
         shutil.rmtree(segs_folder)
     os.makedirs(segs_folder)
 
-    # Calculate the mean dBFS for all segments
-    mean_dBFS = []
+    # collect max_dBFS for each segment
+    max_dBFS_list = []
     for seg in merged_segments:
         seg_audio = audio[seg[0] : seg[1]]
-        mean_dBFS.append(seg_audio.dBFS)
-    global_mean_dBFS = np.mean(mean_dBFS)
-    print(f"[INFO] Global mean dBFS before normalization: {global_mean_dBFS}")
+        max_dBFS_list.append(seg_audio.dBFS)
 
-    # Calculate gain adjustment to achieve target_dBFS
-    gain_adjustment = target_dBFS - global_mean_dBFS
+    # calculate 95th percentile of max_dBFS
+    max_dBFS_95th_percentile = np.percentile(max_dBFS_list, 95)
+
+    # Calculate gain adjustment to achieve target_dBFS for 95th percentile
+    gain_adjustment = target_dBFS - max_dBFS_95th_percentile
 
     # Apply normalization to all segments
     for seg in merged_segments:
