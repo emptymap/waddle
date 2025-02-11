@@ -13,6 +13,7 @@ from waddle.processing.combine import (
     combine_audio_files,
     combine_segments_into_audio,
     combine_segments_into_audio_with_timeline,
+    combine_srt_files,
     merge_timelines,
     parse_srt,
 )
@@ -236,6 +237,94 @@ def test_parse_srt_multiple_entries():
         check_srt_entry(entries[0], "00:00:00.000", "00:00:05.000", "Speaker: Hello world.")
         check_srt_entry(entries[1], "00:00:05.000", "00:00:10.000", "Speaker: How are you?")
         check_srt_entry(entries[2], "00:00:10.000", "00:00:15.000", "Speaker: I'm fine, thanks.")
+
+
+def test_combine_srt_files_empty_directory():
+    """Test combining SRT files when the input directory is empty."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        output_srt = os.path.join(temp_dir, "combined.srt")
+
+        combine_srt_files(temp_dir, output_srt)
+
+        assert os.path.exists(output_srt), "Combined SRT file was not created."
+        with open(output_srt, "r", encoding="utf-8") as f:
+            content = f.read()
+        assert content == "", "Combined SRT file should be empty when no input SRT files exist."
+
+
+def test_combine_srt_files_single_file():
+    """Test combining a single SRT file."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        input_srt = os.path.join(temp_dir, "speaker1.srt")
+        output_srt = os.path.join(temp_dir, "combined.srt")
+
+        with open(input_srt, "w", encoding="utf-8") as f:
+            f.write("1\n00:00:00,000 --> 00:00:05,000\nHello world.\n\n")
+
+        combine_srt_files(temp_dir, output_srt)
+
+        assert os.path.exists(output_srt), "Combined SRT file was not created."
+        with open(output_srt, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        expected_content = "1\n00:00:00.000 --> 00:00:05.000\nspeaker1: Hello world.\n\n"
+        assert content == expected_content, f"Unexpected SRT content: {content}"
+
+
+def test_combine_srt_files_multiple_files():
+    """Test combining multiple SRT files and sorting by timestamps."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        srt_files = {
+            "speaker1.srt": "1\n00:00:05,000 --> 00:00:10,000\nHow are you?\n\n",
+            "speaker2.srt": "1\n00:00:00,000 --> 00:00:05,000\nHello world.\n\n",
+            "speaker3.srt": "1\n00:00:10,000 --> 00:00:15,000\nI'm fine, thanks.\n\n",
+        }
+
+        for filename, content in srt_files.items():
+            with open(os.path.join(temp_dir, filename), "w", encoding="utf-8") as f:
+                f.write(content)
+
+        output_srt = os.path.join(temp_dir, "combined.srt")
+        combine_srt_files(temp_dir, output_srt)
+
+        assert os.path.exists(output_srt), "Combined SRT file was not created."
+        with open(output_srt, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        expected_content = (
+            "1\n00:00:00.000 --> 00:00:05.000\nspeaker2: Hello world.\n\n"
+            "2\n00:00:05.000 --> 00:00:10.000\nspeaker1: How are you?\n\n"
+            "3\n00:00:10.000 --> 00:00:15.000\nspeaker3: I'm fine, thanks.\n\n"
+        )
+
+        assert content == expected_content, f"Unexpected SRT content: {content}"
+
+
+def test_combine_srt_files_with_missing_speaker():
+    """Test combining SRT files when filenames do not contain a speaker name."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        srt_files = {
+            "file1.srt": "1\n00:00:00,000 --> 00:00:05,000\nHello world.\n\n",
+            "file2.srt": "1\n00:00:05,000 --> 00:00:10,000\nHow are you?\n\n",
+        }
+
+        for filename, content in srt_files.items():
+            with open(os.path.join(temp_dir, filename), "w", encoding="utf-8") as f:
+                f.write(content)
+
+        output_srt = os.path.join(temp_dir, "combined.srt")
+        combine_srt_files(temp_dir, output_srt)
+
+        assert os.path.exists(output_srt), "Combined SRT file was not created."
+        with open(output_srt, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        expected_content = (
+            "1\n00:00:00.000 --> 00:00:05.000\nfile1: Hello world.\n\n"
+            "2\n00:00:05.000 --> 00:00:10.000\nfile2: How are you?\n\n"
+        )
+
+        assert content == expected_content, f"Unexpected SRT content: {content}"
 
 
 def test_merge_timelines_separated_segments():
