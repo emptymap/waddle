@@ -1,11 +1,11 @@
 import glob
 import os
+import sys
 import tempfile
 import wave
+from unittest.mock import patch
 
-import waddle
 import waddle.__main__
-import waddle.argparse
 
 dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -18,14 +18,18 @@ def get_wav_duration(filename):
         return duration
 
 
+def run_waddle_command(args):
+    with patch.object(sys, "argv", args):
+        waddle.__main__.main()
+
+
 def test_integration_single():
-    parser = waddle.argparse.create_waddle_parser()
     with tempfile.TemporaryDirectory() as tmpdir:
         input_file = "ep12-masa.wav"
         input_file_path = os.path.join(dir, "ep0", input_file)
 
-        args = parser.parse_args(["single", input_file_path, "--output", tmpdir])
-        waddle.__main__.do_single(args)
+        test_args = ["waddle", "single", input_file_path, "--output", tmpdir]
+        run_waddle_command(test_args)
 
         output_file = os.path.join(tmpdir, input_file)
         assert os.path.exists(output_file), "Output file was not created"
@@ -38,18 +42,21 @@ def test_integration_single():
 
 
 def test_integration_preprocess():
-    parser = waddle.argparse.create_waddle_parser()
     with tempfile.TemporaryDirectory() as tmpdir:
-        args = parser.parse_args(
-            ["preprocess", "--directory", os.path.join(dir, "ep0"), "--output", tmpdir]
-        )
-        waddle.__main__.do_preprocess(args)
+        test_args = [
+            "waddle",
+            "preprocess",
+            "--directory",
+            os.path.join(dir, "ep0"),
+            "--output",
+            tmpdir,
+        ]
+        run_waddle_command(test_args)
+
         wav_files = glob.glob(os.path.join(tmpdir, "*.wav"))
         assert len(wav_files) == 3, f"Expected 3 .wav files, but found {len(wav_files)}"
 
-        lengths = list()
-        for wav_file in wav_files:
-            lengths.append(get_wav_duration(wav_file))
+        lengths = [get_wav_duration(wav_file) for wav_file in wav_files]
         assert all(length == lengths[0] for length in lengths[1:]), (
             "Not all processed audio files have the same length"
         )
