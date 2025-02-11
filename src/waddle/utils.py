@@ -37,5 +37,5 @@ def format_audio_filename(prefix: str, start: int, end: int) -> str:
 def parse_audio_filename(filename: str) -> tuple:
     """Extract and return the start and end timestamps from a standardized audio filename."""
     parts = filename.split("_")
-    start_str, end_str = parts[1], parts[2].split(".")[0]
+    start_str, end_str = parts[-2], parts[-1].split(".")[0]
     return int(start_str), int(end_str)
