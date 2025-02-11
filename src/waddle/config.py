@@ -1,5 +1,3 @@
-DEFAULT_TEMP_DIR = "/tmp/podfect"
-
 DEFAULT_OUT_AUDIO_DURATION = 60 * 1  # seconds
 
 DEFAULT_COMP_AUDIO_DURATION = 60 * 20  # seconds
