@@ -1,21 +1,25 @@
 import glob
 import os
+import subprocess
 import sys
 import tempfile
 import wave
-from unittest.mock import patch
-
-import waddle.__main__
 
 dir = os.path.dirname(os.path.abspath(__file__))
 
 
 def run_waddle_command(args):
-    with patch.object(sys, "argv", args):
-        waddle.__main__.main()
+    """Runs the waddle command using subprocess and captures the output."""
+    result = subprocess.run(
+        [sys.executable, "-m", "waddle"] + args,
+        capture_output=True,
+        text=True,
+    )
+    return result
 
 
 def get_wav_duration(filename):
+    """Returns the duration of a WAV file."""
     with wave.open(filename, "r") as wav_file:
         frames = wav_file.getnframes()
         rate = wav_file.getframerate()
@@ -24,12 +28,15 @@ def get_wav_duration(filename):
 
 
 def test_integration_single():
+    """Tests single file processing in Waddle."""
     with tempfile.TemporaryDirectory() as tmpdir:
         input_file = "ep12-masa.wav"
         input_file_path = os.path.join(dir, "ep0", input_file)
 
-        test_args = ["waddle", "single", input_file_path, "--output", tmpdir]
-        run_waddle_command(test_args)
+        test_args = ["single", input_file_path, "--output", tmpdir]
+        result = run_waddle_command(test_args)
+
+        assert result.returncode == 0, f"Command failed with error: {result.stderr}"
 
         output_file = os.path.join(tmpdir, input_file)
         assert os.path.exists(output_file), "Output file was not created"
@@ -42,28 +49,30 @@ def test_integration_single():
 
 
 def test_integration_single_file_not_found():
+    """Tests handling of a missing input file by checking the expected FileNotFoundError."""
     with tempfile.TemporaryDirectory() as tmpdir:
         input_file_path = os.path.join(dir, "ep0", "non_existent.wav")
 
-        test_args = ["waddle", "single", input_file_path, "--output", tmpdir]
+        test_args = ["single", input_file_path, "--output", tmpdir]
+        result = run_waddle_command(test_args)
 
-        try:
-            run_waddle_command(test_args)
-        except FileNotFoundError as e:
-            assert "Audio file not found" in str(e), "Expected FileNotFoundError was not raised"
+        # Ensure that the command fails
+        assert result.returncode != 0, "Command should fail for missing file"
+
+        # Ensure that the error message contains 'Audio file not found'
+        expected_error_message = f"Audio file not found: {input_file_path}"
+        assert expected_error_message in result.stderr, (
+            f"Expected error message '{expected_error_message}' not found in stderr:\n{result.stderr}"
+        )
 
 
 def test_integration_preprocess():
+    """Tests the preprocess command for batch processing."""
     with tempfile.TemporaryDirectory() as tmpdir:
-        test_args = [
-            "waddle",
-            "preprocess",
-            "--directory",
-            os.path.join(dir, "ep0"),
-            "--output",
-            tmpdir,
-        ]
-        run_waddle_command(test_args)
+        test_args = ["preprocess", "--directory", os.path.join(dir, "ep0"), "--output", tmpdir]
+        result = run_waddle_command(test_args)
+
+        assert result.returncode == 0, f"Command failed with error: {result.stderr}"
 
         wav_files = glob.glob(os.path.join(tmpdir, "*.wav"))
         assert len(wav_files) == 3, f"Expected 3 .wav files, but found {len(wav_files)}"
