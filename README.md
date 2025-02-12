@@ -58,7 +58,7 @@ Before using **Waddle**, ensure the following requirements are installed:
 
 ## Usage
 
-### **Prepare Audio Files**:
+### Prepare Audio Files
    - Upload each speaker's audio files in the `audios` directory.
    - Use the naming convention: `ep{N}-{SpeakerName}.[wav|aifc|m4a|mp4]`.
      - Example: `ep1-Alice.wav`, `ep1-Bob.aifc`
@@ -125,3 +125,162 @@ Before using **Waddle**, ensure the following requirements are installed:
    ```bash
    waddle single /path/to/audio.wav -od 30
    ```
+
+
+## Developer Guide
+
+This section provides guidelines for developers contributing to **Waddle**. It includes setting up the development environment, running tests, and maintaining code quality.
+
+### Setting Up the Development Environment
+
+1. **Clone the Repository**
+   ```bash
+   git clone https://github.com/emptymap/waddle.git
+   cd waddle
+   ```
+
+2. **Install `uv` (Recommended)**
+   We use [`uv`](https://github.com/astral-sh/uv) as a fast package manager.
+   ```bash
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   ```
+
+
+### Running Tests
+
+We use `pytest` with coverage analysis to ensure code quality.
+
+- **Run all tests with coverage reporting:**
+  ```bash
+  uv run pytest --cov=src --cov-report=html
+  ```
+  This will generate a coverage report in `htmlcov/`.
+
+- **Run a specific test file:**
+  ```bash
+  uv run pytest tests/test_example.py
+  ```
+
+- **Run tests with verbose output:**
+  ```bash
+  uv run pytest -v
+  ```
+
+### Linting and Formatting
+
+We use `ruff` for linting and formatting.
+
+- **Fix linting issues and format code automatically:**
+  ```bash
+  uv run ruff check --fix | uv run ruff format
+  ```
+
+- **Check for linting errors without fixing:**
+  ```bash
+  uv run ruff check
+  ```
+
+- **Format code without running lint checks:**
+  ```bash
+  uv run ruff format
+  ```
+
+
+### Code Structure
+
+The **Waddle** repository is organized as follows:
+
+```
+waddle/
+├── pyproject.toml      # Project metadata, dependencies, and tool configurations
+├── scripts/            # Helper scripts for setup and processing
+│   ├── install-all-tools.sh   # Installs all required dependencies
+│   ├── install-deep-filter.sh # Installs DeepFilterNet for noise reduction
+│   ├── install-whisper-cpp.sh # Installs whisper.cpp for transcription
+│   ├── setup-waddle.sh        # Sets up the environment for Waddle
+│   └── transcribe.sh          # Helper script for transcribing audio
+├── src/                # Main library source code
+│   ├── waddle/         
+│   │   ├── __main__.py  # CLI entry point for Waddle
+│   │   ├── argparse.py  # Handles CLI arguments and command parsing
+│   │   ├── config.py    # Configuration settings for processing
+│   │   ├── processor.py # Core processing logic for audio preprocessing
+│   │   ├── utils.py     # Helper functions for audio handling
+│   │   ├── processing/  
+│   │   │   ├── combine.py   # Merges multiple audio sources
+│   │   │   ├── segment.py   # Segments audio into chunks
+│   │   ├── audios/
+│   │   │   ├── align_offset.py  # Synchronization logic for alignment
+│   │   │   ├── call_tools.py    # Interfaces with external audio tools
+│   │   ├── utils_test.py  # Unit tests for utilities
+│   └── waddle.egg-info/   # Packaging metadata for distribution
+├── tests/               # Unit and integration tests
+│   ├── integration_test.py   # End-to-end integration tests
+│   ├── ep0/             # Sample audio files for testing
+│   │   ├── GMT20250119-015233_Recording_1280x720.wav  # Reference audio
+│   │   ├── ep12-kotaro.wav  # Example speaker audio
+│   │   ├── ep12-masa.wav    # Example speaker audio
+│   │   ├── ep12-shun.wav    # Example speaker audio
+└── README.md           # Documentation for installation and usage
+```
+
+#### Key Files and Directories:
+
+- **`src/waddle/__main__.py`**  
+  - CLI entry point for running Waddle.
+  
+- **`src/waddle/processor.py`**  
+  - Core logic for aligning, normalizing, and transcribing audio.
+
+- **`src/waddle/processing/combine.py`**  
+  - Merges multiple speaker audio files into a single track.
+
+- **`src/waddle/processing/segment.py`**  
+  - Splits long audio into manageable segments.
+
+- **`src/waddle/audios/align_offset.py`**  
+  - Handles audio synchronization using a reference track.
+
+- **`tests/integration_test.py`**  
+  - Runs integration tests to validate the preprocessing pipeline.
+
+
+
+### Contributing
+
+1. **Create a Feature Branch**
+   ```bash
+   git checkout -b feature/my-new-feature
+   ```
+
+2. **Write Code & Add Tests**
+   - Ensure all functions are covered with tests in `tests/`.
+
+3. **Run Tests & Formatting**
+   ```bash
+   uv run pytest
+   uv run ruff check --fix
+   uv run ruff format
+   ```
+
+4. **Commit Changes**
+   ```bash
+   git add .
+   git commit -m "Add my new feature"
+   ```
+
+5. **Push and Create a Pull Request**
+   ```bash
+   git push origin feature/my-new-feature
+   ```
+   - Open a PR on GitHub and request a review.
+
+### CI/CD
+
+- **GitHub Actions** will run:
+  - `pytest` for tests
+  - `ruff check` for linting
+  - `ruff format` for formatting
+  - Code coverage report generation
+
+Ensure your changes pass CI before merging!
