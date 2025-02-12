@@ -10,6 +10,9 @@ from waddle.utils import parse_audio_filename
 SpeechSegment: TypeAlias = tuple[int, int]
 SpeechTimeline: TypeAlias = list[SpeechSegment]
 
+SrtEntry: TypeAlias = tuple[str, str, str]
+SrtEntries: TypeAlias = list[SrtEntry]
+
 
 def combine_segments_into_audio(
     segs_folder_path: str,
@@ -129,7 +132,7 @@ def combine_audio_files(aligned_audio_paths: list, output_audio_path: str) -> No
         combined_audio.export(output_audio_path, format="wav")
 
 
-def parse_srt(file_path: str, speaker_name: Optional[str] = None) -> list:
+def parse_srt(file_path: str, speaker_name: Optional[str] = None) -> SrtEntries:
     """
     Parse an SRT file, attach speaker name to each text line,
     and return a list of (start_time_for_sorting, end_timestamp, text_with_speaker).
@@ -141,7 +144,7 @@ def parse_srt(file_path: str, speaker_name: Optional[str] = None) -> list:
     Returns:
         list: List of tuples (start_time_for_sorting, end_timestamp, text_with_speaker).
     """
-    entries = []
+    entries: SrtEntries = []
     with open(file_path, "r", encoding="utf-8") as f:
         blocks = f.read().strip().split("\n\n")
 
@@ -169,7 +172,7 @@ def combine_srt_files(input_dir: str, output_file: str) -> None:
     """
 
     srt_files = [f for f in os.listdir(input_dir) if f.endswith(".srt")]
-    all_entries = []
+    all_entries: SrtEntries = []
 
     for srt_file in srt_files:
         if "-" in srt_file:
