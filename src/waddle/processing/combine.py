@@ -1,12 +1,17 @@
 import os
 import shutil
 from glob import glob
-from typing import TypeAlias
+from typing import Optional, TypeAlias
 
 from pydub import AudioSegment
 
+from waddle.utils import parse_audio_filename
+
 SpeechSegment: TypeAlias = tuple[int, int]
 SpeechTimeline: TypeAlias = list[SpeechSegment]
+
+SrtEntry: TypeAlias = tuple[str, str, str]
+SrtEntries: TypeAlias = list[SrtEntry]
 
 
 def combine_segments_into_audio(
@@ -33,13 +38,13 @@ def combine_segments_into_audio(
         # Clean up segs folder
         shutil.rmtree(segs_folder_path, ignore_errors=True)
         return
-    end_mses = [int(os.path.basename(f).split("_")[2].split(".")[0]) for f in segment_files]
+    end_mses = [parse_audio_filename(f)[1] for f in segment_files]
     max_end_ms = max(end_mses)
     final_audio = AudioSegment.silent(duration=max_end_ms)
 
     for segment_file in segment_files:
         segment_audio = AudioSegment.from_file(segment_file)
-        start_ms = int(os.path.basename(segment_file).split("_")[1].split(".")[0])
+        start_ms, _ = parse_audio_filename(segment_file)
         final_audio = final_audio.overlay(segment_audio, position=start_ms)
 
     final_audio.export(combined_audio_path, format="wav")
@@ -70,7 +75,7 @@ def combine_segments_into_audio_with_timeline(
 
     for segment_file in segment_files:
         segment_audio = AudioSegment.from_file(segment_file)
-        start_ms = int(os.path.basename(segment_file).split("_")[1].split(".")[0])
+        start_ms, _ = parse_audio_filename(segment_file)
         final_audio = final_audio.overlay(
             segment_audio, position=adjust_pos_to_timeline(timeline, start_ms)
         )
@@ -127,7 +132,7 @@ def combine_audio_files(aligned_audio_paths: list, output_audio_path: str) -> No
         combined_audio.export(output_audio_path, format="wav")
 
 
-def parse_srt(file_path: str, speaker_name: str) -> list:
+def parse_srt(file_path: str, speaker_name: Optional[str] = None) -> SrtEntries:
     """
     Parse an SRT file, attach speaker name to each text line,
     and return a list of (start_time_for_sorting, end_timestamp, text_with_speaker).
@@ -139,10 +144,9 @@ def parse_srt(file_path: str, speaker_name: str) -> list:
     Returns:
         list: List of tuples (start_time_for_sorting, end_timestamp, text_with_speaker).
     """
-    entries = []
+    entries: SrtEntries = []
     with open(file_path, "r", encoding="utf-8") as f:
         blocks = f.read().strip().split("\n\n")
-    os.remove(file_path)  # Cleanup after reading
 
     for block in blocks:
         lines = block.split("\n")
@@ -152,11 +156,13 @@ def parse_srt(file_path: str, speaker_name: str) -> list:
         timestamp = lines[1]
         start, end = timestamp.split(" --> ")
         text = " ".join(lines[2:])
-        text_with_speaker = f"{speaker_name}: {text}"
+        if speaker_name:
+            text = f"{speaker_name}: {text}"
 
         # Convert timestamps for sorting
         start_time_for_sorting = start.replace(",", ".")
-        entries.append((start_time_for_sorting, end, text_with_speaker))
+        end_time_for_sorting = end.replace(",", ".")
+        entries.append((start_time_for_sorting, end_time_for_sorting, text))
     return entries
 
 
@@ -166,7 +172,7 @@ def combine_srt_files(input_dir: str, output_file: str) -> None:
     """
 
     srt_files = [f for f in os.listdir(input_dir) if f.endswith(".srt")]
-    all_entries = []
+    all_entries: SrtEntries = []
 
     for srt_file in srt_files:
         if "-" in srt_file:
@@ -175,6 +181,7 @@ def combine_srt_files(input_dir: str, output_file: str) -> None:
             speaker_name = os.path.basename(srt_file).split(".")[0]
         srt_path = os.path.join(input_dir, srt_file)
         all_entries.extend(parse_srt(srt_path, speaker_name))
+        os.remove(srt_path)
 
     # Sort all entries by timestamp
     all_entries.sort(key=lambda x: x[0])

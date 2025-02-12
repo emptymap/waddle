@@ -27,3 +27,15 @@ def format_time(seconds: float) -> str:
     ss = int(seconds % 60)
     ms = round((seconds % 1) * 1000)
     return f"{hh:02}:{mm:02}:{ss:02},{ms:03}"
+
+
+def format_audio_filename(prefix: str, start: int, end: int) -> str:
+    """Generate a standardized audio filename with a given prefix and time range."""
+    return f"{prefix}_{start}_{end}.wav"
+
+
+def parse_audio_filename(filename: str) -> tuple:
+    """Extract and return the start and end timestamps from a standardized audio filename."""
+    parts = filename.split("_")
+    start_str, end_str = parts[-2], parts[-1].split(".")[0]
+    return int(start_str), int(end_str)

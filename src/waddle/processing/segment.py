@@ -14,7 +14,7 @@ from waddle.config import (
     DEFAULT_THRESHOLD_DB,
 )
 from waddle.processing.combine import SpeechTimeline, combine_segments_into_audio
-from waddle.utils import format_time, time_to_seconds
+from waddle.utils import format_audio_filename, format_time, parse_audio_filename, time_to_seconds
 
 
 def detect_speech_timeline(
@@ -66,7 +66,9 @@ def detect_speech_timeline(
                 current_segment = None
             continue
 
-        temp_chunk_path = os.path.join(chunks_folder, f"chunk_{i}_{i + chunk_size_ms}.wav")
+        temp_chunk_path = os.path.join(
+            chunks_folder, format_audio_filename("chunk", i, i + chunk_size_ms)
+        )
         chunk.export(temp_chunk_path, format="wav")
         remove_noise(temp_chunk_path, temp_chunk_path)
         chunk = AudioSegment.from_file(temp_chunk_path)
@@ -116,7 +118,9 @@ def detect_speech_timeline(
     for seg in merged_segments:
         seg_audio = audio[seg[0] : seg[1]]
         normalized_audio = seg_audio.apply_gain(gain_adjustment)
-        seg_audio_path = os.path.join(segs_folder_path, f"seg_{seg[0]}_{seg[1]}.wav")
+        seg_audio_path = os.path.join(
+            segs_folder_path, format_audio_filename("seg", seg[0], seg[1])
+        )
         normalized_audio.export(seg_audio_path, format="wav")
         # Remove_noise is called twice, but this is done because accuracy is poor
         # if it is not written for each sentence.
@@ -169,7 +173,7 @@ def process_segments(
         dynamic_ncols=True,
         bar_format="{l_bar}{bar:50}{r_bar}",
     ):
-        _, start, _ = os.path.basename(segs_file_path).split("_")
+        start, _ = parse_audio_filename(segs_file_path)
         start_seconds = float(start) / 1000
 
         # Transcribe segment
