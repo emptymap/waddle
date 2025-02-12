@@ -144,7 +144,6 @@ def parse_srt(file_path: str, speaker_name: Optional[str] = None) -> list:
     entries = []
     with open(file_path, "r", encoding="utf-8") as f:
         blocks = f.read().strip().split("\n\n")
-    os.remove(file_path)  # Cleanup after reading
 
     for block in blocks:
         lines = block.split("\n")
@@ -179,6 +178,7 @@ def combine_srt_files(input_dir: str, output_file: str) -> None:
             speaker_name = os.path.basename(srt_file).split(".")[0]
         srt_path = os.path.join(input_dir, srt_file)
         all_entries.extend(parse_srt(srt_path, speaker_name))
+        os.remove(srt_path)
 
     # Sort all entries by timestamp
     all_entries.sort(key=lambda x: x[0])
