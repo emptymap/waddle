@@ -58,90 +58,70 @@ Before using **Waddle**, ensure the following requirements are installed:
 
 ## Usage
 
-1. **Prepare Audio Files**:
+### **Prepare Audio Files**:
    - Upload each speaker's audio files in the `audios` directory.
    - Use the naming convention: `ep{N}-{SpeakerName}.[wav|aifc|m4a|mp4]`.
      - Example: `ep1-Alice.wav`, `ep1-Bob.aifc`
    - Include a reference audio file that covers the entire podcast. The reference file name must start with `GMT` (e.g., a Zoom recording).
 
-2. **Run Waddle**:
-   Navigate to the `audios` directory and run:
-   ```bash
-   waddle
-   ```
+### CLI Options
 
-## Advanced Usage
+- `single` - Process a single audio file:
+  ```bash
+  waddle single path/to/audio.wav -o ./output
+  ```
+  - `-o, --output`: Output directory (default: `./out`).
+  - `-od, --out_duration`: Limit output duration (seconds).
 
-Use the CLI to customize the processing:
+- `preprocess` - Process multiple audio files:
+  ```bash
+  waddle preprocess -d ./audios -r ./reference.wav -o ./output
+  ```
+  - `-d, --directory`: Directory containing audio files (default: `./`).
+  - `-r, --reference`: Reference audio file for alignment.
+  - `-o, --output`: Output directory (default: `./out`).
+  - `-od, --out_duration`: Limit output duration (seconds).
+  - `-c, --comp_duration`: Duration for alignment comparison (default: `10` seconds).
+  - `-nc, --no-convert`: Skip conversion to WAV format.
 
-```bash
-waddle [options]
-```
-
-### Options:
-- `-a`, `--audio`: Path to a single audio file to process. When provided, Waddle processes only this file in single-file mode.
-- `-d`, `--directory`: Directory containing audio files (used in multi-file mode, default: `./`).
-- `-r`, `--reference`: Path to the reference audio file (default: `None`).
-- `-o`, `--output`: Path to save the output. For single-file mode, this is the directory for saving results. For multi-file mode, it is the synthesized audio file path.
-- `-c`, `--comp_duration`: Duration (in seconds) for alignment comparison (default: `10`).
-- `-od`, `--out_duration`: Duration (in seconds) for the output audio (default: `None`).
-- `-nc`, `--no-convert`: Skip converting audio files to WAV format.
 
 ## Example Commands
 
 ### Podcast Preprocessing
 
-
-1. **Basic Command**:
-   Navigate to the folder containing your audio files and run:
+1. **Basic Processing**:
    ```bash
-   waddle
+   waddle preprocess
    ```
 
-   This will process all audio files in the current directory, aligning, normalizing, and generating combined outputs.
-
-2. **Specify a Directory**:
-   Process audio files in a specific directory:
+2. **Specify an Audio Directory**:
    ```bash
-   waddle -d /path/to/audio/files
+   waddle preprocess -d /path/to/audio/files
    ```
 
-3. **Specify a Reference File**:
-   Provide a custom reference audio file:
+3. **Use a Custom Reference File**:
    ```bash
-   waddle -r /path/to/GMT-Reference.wav
+   waddle preprocess -r /path/to/GMT-Reference.wav
    ```
 
-4. **Customize Output Duration**:
-   Limit the output audio file duration to 30 seconds for testing:
+4. **Limit Output Duration**:
    ```bash
-   waddle -d /path/to/audio/files -od 30
+   waddle preprocess -od 30
    ```
 
-5. **Skip Conversion**:
-   If your audio files are already in WAV format:
+5. **Skip WAV Conversion**:
    ```bash
-   waddle -d /path/to/audio/files -nc
+   waddle preprocess -nc
    ```
 
-### Single-File Preprocessing
+### Single Audio File Processing
 
-Process a single audio file:
-```bash
-waddle --audio path/to/audio.wav --output path/to/output/dir
-```
+1. **Basic Processing**:
+   ```bash
+   waddle single /path/to/audio.wav
+   ```
 
-This processes the specified file, normalizes it, detects speech segments, and generates an SRT file for subtitles.
-
-
-## Output Files
-
-### Podcast Preprocessing
-- **Combined Audio**: A single audio file with all speakers combined.
-- **Subtitle**: An SRT file with transcriptions for each speaker.
-- **Each Speaker**: Individual audio files for each speaker with noise reduction.
-
-
-### Single-File Preprocessing
-- **Processed Audio**: The processed single audio file.
-- **Subtitle**: An SRT file with transcription for the audio file.
+2. **Limit Output Duration**:
+   ```bash
+   waddle single /path/to/audio.wav -od 30
+   ```
