@@ -27,7 +27,7 @@ def find_offset_via_cross_correlation(ref_audio: np.ndarray, spk_audio: np.ndarr
     return offset
 
 
-def shift_audio(spk_audio: str, offset: int, ref_length: int) -> np.ndarray:
+def shift_audio(spk_audio: np.ndarray, offset: int, ref_length: int) -> np.ndarray:
     """
     Shift the spk_audio by 'offset' samples relative to the reference track.
     Ensures the returned array is the same length as the reference.
