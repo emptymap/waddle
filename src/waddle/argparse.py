@@ -23,6 +23,12 @@ def create_waddle_parser():
         help="Directory to save the output (default: './out').",
     )
     single_parser.add_argument(
+        "-ss",
+        type=int,
+        default=None,
+        help="Start time in seconds for the audio segment (default: None).",
+    )
+    single_parser.add_argument(
         "-t",
         "--time",
         type=int,
@@ -61,6 +67,12 @@ def create_waddle_parser():
         type=float,
         default=DEFAULT_COMP_AUDIO_DURATION,
         help="Duration in seconds for alignment comparison (default: 10s).",
+    )
+    preprocess_parser.add_argument(
+        "-ss",
+        type=int,
+        default=None,
+        help="Start time in seconds for the audio segment (default: None).",
     )
     preprocess_parser.add_argument(
         "-t",
