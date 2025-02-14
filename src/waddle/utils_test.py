@@ -1,3 +1,5 @@
+import pytest
+
 from waddle.utils import (
     format_audio_filename,
     format_time,
@@ -18,6 +20,15 @@ def test_time_to_seconds():
     assert time_to_seconds("99:59:59,999") == 359999.999, (
         "time_to_seconds('99:59:59,999') is failed."
     )
+
+    with pytest.raises(ValueError):
+        time_to_seconds("00:00:00:00")
+    with pytest.raises(ValueError):
+        time_to_seconds("00:00:00.123.53")
+    with pytest.raises(ValueError):
+        time_to_seconds("00:00.123")
+    with pytest.raises(ValueError):
+        time_to_seconds("00.12")
 
 
 def test_phrase_time_to_seconds():
