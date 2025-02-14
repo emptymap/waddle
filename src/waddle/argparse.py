@@ -26,7 +26,7 @@ def create_waddle_parser():
     single_parser.add_argument(
         "-ss",
         type=phrase_time_to_seconds,
-        default=0,
+        default=0.0,
         help="Start time in seconds for the audio segment (default: None).",
     )
     single_parser.add_argument(
@@ -72,7 +72,7 @@ def create_waddle_parser():
     preprocess_parser.add_argument(
         "-ss",
         type=phrase_time_to_seconds,
-        default=0,
+        default=0.0,
         help="Start time in seconds for the audio segment (default: None).",
     )
     preprocess_parser.add_argument(
