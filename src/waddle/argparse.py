@@ -24,7 +24,7 @@ def create_waddle_parser():
     )
     single_parser.add_argument(
         "-od",
-        "--out_duration",
+        "--out-duration",
         type=int,
         default=None,
         help="Duration in seconds for the output audio (default: None).",
@@ -57,14 +57,14 @@ def create_waddle_parser():
     )
     preprocess_parser.add_argument(
         "-c",
-        "--comp_duration",
+        "--comp-duration",
         type=float,
         default=DEFAULT_COMP_AUDIO_DURATION,
         help="Duration in seconds for alignment comparison (default: 10s).",
     )
     preprocess_parser.add_argument(
         "-od",
-        "--out_duration",
+        "--out-duration",
         type=int,
         default=None,
         help="Duration in seconds for the output audio (default: None).",
