@@ -1,4 +1,10 @@
-from waddle.utils import format_audio_filename, format_time, parse_audio_filename, time_to_seconds
+from waddle.utils import (
+    format_audio_filename,
+    format_time,
+    parse_audio_filename,
+    phrase_time_to_seconds,
+    time_to_seconds,
+)
 
 
 def test_time_to_seconds():
@@ -12,6 +18,21 @@ def test_time_to_seconds():
     assert time_to_seconds("99:59:59,999") == 359999.999, (
         "time_to_seconds('99:59:59,999') is failed."
     )
+
+
+def test_phrase_time_to_seconds():
+    """Test conversion of argument timestamps to seconds."""
+    assert phrase_time_to_seconds("00:01") == 1.0
+    assert phrase_time_to_seconds("00:01.5") == 1.5
+    assert phrase_time_to_seconds("05:12") == 312.0
+    assert phrase_time_to_seconds("05:12.5") == 312.5
+    assert phrase_time_to_seconds("12") == 12.0
+    assert phrase_time_to_seconds("12.5") == 12.5
+    assert phrase_time_to_seconds("12:34:56") == 45296.0
+    assert phrase_time_to_seconds("12:34:56.789") == 45296.789
+    assert phrase_time_to_seconds("00:1.5:00") == 90.0
+    assert phrase_time_to_seconds("00:1.5:10") == 100.0
+    assert phrase_time_to_seconds("0.1:0.2:0.3") == 372.3
 
 
 def test_format_time():

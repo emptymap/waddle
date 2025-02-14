@@ -19,7 +19,16 @@ def phrase_time_to_seconds(s: str) -> float:
     try:
         return float(s)
     except ValueError:
-        return time_to_seconds(s)
+        pass
+
+    value = s.replace(",", ".")
+    parts = list(map(float, value.split(":")))
+
+    if len(parts) > 3:
+        raise ValueError(f"Invalid time format: {s}")
+    weights = [3600, 60, 1][-len(parts) :]
+
+    return float(sum(p * w for p, w in zip(parts, weights, strict=False)))
 
 
 def format_time(seconds: float) -> str:
