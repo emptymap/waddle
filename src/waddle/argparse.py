@@ -23,8 +23,8 @@ def create_waddle_parser():
         help="Directory to save the output (default: './out').",
     )
     single_parser.add_argument(
-        "-od",
-        "--out-duration",
+        "-t",
+        "--time",
         type=int,
         default=None,
         help="Duration in seconds for the output audio (default: None).",
