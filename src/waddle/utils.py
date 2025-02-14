@@ -8,8 +8,18 @@ def time_to_seconds(timestamp: str) -> float:
     Returns:
         float: Time in seconds.
     """
-    hours, minutes, seconds = timestamp.replace(",", ".").split(":")
-    return int(hours) * 3600 + int(minutes) * 60 + float(seconds)
+    try:
+        hours, minutes, seconds = timestamp.replace(",", ".").split(":")
+        return int(hours) * 3600 + int(minutes) * 60 + float(seconds)
+    except Exception as e:
+        raise ValueError(f"Invalid timestamp format: {timestamp}") from e
+
+
+def phrase_time_to_seconds(s: str) -> float:
+    try:
+        return float(s)
+    except ValueError:
+        return time_to_seconds(s)
 
 
 def format_time(seconds: float) -> str:
