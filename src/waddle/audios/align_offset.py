@@ -11,7 +11,7 @@ from waddle.config import (
 )
 
 
-def find_offset_via_cross_correlation(ref_audio: str, spk_audio: str) -> int:
+def find_offset_via_cross_correlation(ref_audio: np.ndarray, spk_audio: np.ndarray) -> int:
     """
     Return the sample offset (lag) that best aligns spk_audio to ref_audio
     using cross-correlation.
