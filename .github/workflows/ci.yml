@@ -6,11 +6,6 @@ on:
   pull_request:
     branches: [main]
 
-permissions:
-  contents: write
-  pull-requests: write
-  checks: write
-
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -40,16 +35,15 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          export PYTHONPATH=$(pwd)/src
-          uv run pytest --cov=src --junitxml=pytest.xml --cov-report "xml:coverage.xml" --cov-report=term-missing --cov-config=pyproject.toml
+          uv run pytest --cov=src --junitxml=junit.xml -o junit_family=legacy --cov-report=term-missing --cov-config=pyproject.toml
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
-      - name: Pytest coverage comment
-        uses: MishaKav/pytest-coverage-comment@main
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v1
         with:
-          pytest-xml-coverage-path: ./coverage.xml
-          coverage-path-prefix: src/
+          token: ${{ secrets.CODECOV_TOKEN }}
