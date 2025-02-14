@@ -36,7 +36,8 @@ def do_single(args):
         aligned_audio_path=output_audio_path,
         output_dir=output_dir,
         speaker_file=os.path.basename(args.audio),
-        out_duration=args.out_duration,
+        ss=args.ss,
+        out_duration=args.time,
     )
     print(f"[INFO] Processed single audio file saved in: {output_dir}")
 
@@ -47,7 +48,8 @@ def do_preprocess(args):
         audio_source_directory=args.directory,
         output_dir=args.output or "./out",
         comp_duration=args.comp_duration,
-        out_duration=args.out_duration,
+        ss=args.ss,
+        out_duration=args.time,
         convert=not args.no_convert,
     )
 

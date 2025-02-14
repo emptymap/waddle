@@ -71,7 +71,7 @@ Before using **Waddle**, ensure the following requirements are installed:
   waddle single path/to/audio.wav -o ./output
   ```
   - `-o, --output`: Output directory (default: `./out`).
-  - `-od, --out_duration`: Limit output duration (seconds).
+  - `-t, --time`: Limit output duration (seconds).
 
 - `preprocess` - Process multiple audio files:
   ```bash
@@ -80,8 +80,8 @@ Before using **Waddle**, ensure the following requirements are installed:
   - `-d, --directory`: Directory containing audio files (default: `./`).
   - `-r, --reference`: Reference audio file for alignment.
   - `-o, --output`: Output directory (default: `./out`).
-  - `-od, --out_duration`: Limit output duration (seconds).
-  - `-c, --comp_duration`: Duration for alignment comparison (default: `10` seconds).
+  - `-t, --time`: Limit output duration (seconds).
+  - `-c, --comp-duration`: Duration for alignment comparison (default: `10` seconds).
   - `-nc, --no-convert`: Skip conversion to WAV format.
 
 
@@ -106,7 +106,7 @@ Before using **Waddle**, ensure the following requirements are installed:
 
 4. **Limit Output Duration**:
    ```bash
-   waddle preprocess -od 30
+   waddle preprocess -t 30
    ```
 
 5. **Skip WAV Conversion**:
@@ -123,7 +123,7 @@ Before using **Waddle**, ensure the following requirements are installed:
 
 2. **Limit Output Duration**:
    ```bash
-   waddle single /path/to/audio.wav -od 30
+   waddle single /path/to/audio.wav -t 30
    ```
 
 

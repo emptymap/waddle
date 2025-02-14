@@ -1,10 +1,11 @@
 import argparse
 
 from waddle.config import DEFAULT_COMP_AUDIO_DURATION
+from waddle.utils import phrase_time_to_seconds
 
 
 def create_waddle_parser():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(exit_on_error=False)
 
     subparsers = parser.add_subparsers(dest="subcommand", required=True)
 
@@ -23,9 +24,15 @@ def create_waddle_parser():
         help="Directory to save the output (default: './out').",
     )
     single_parser.add_argument(
-        "-od",
-        "--out-duration",
-        type=int,
+        "-ss",
+        type=phrase_time_to_seconds,
+        default=0.0,
+        help="Start time in seconds for the audio segment (default: None).",
+    )
+    single_parser.add_argument(
+        "-t",
+        "--time",
+        type=phrase_time_to_seconds,
         default=None,
         help="Duration in seconds for the output audio (default: None).",
     )
@@ -63,9 +70,15 @@ def create_waddle_parser():
         help="Duration in seconds for alignment comparison (default: 10s).",
     )
     preprocess_parser.add_argument(
-        "-od",
-        "--out-duration",
-        type=int,
+        "-ss",
+        type=phrase_time_to_seconds,
+        default=0.0,
+        help="Start time in seconds for the audio segment (default: None).",
+    )
+    preprocess_parser.add_argument(
+        "-t",
+        "--time",
+        type=phrase_time_to_seconds,
         default=None,
         help="Duration in seconds for the output audio (default: None).",
     )

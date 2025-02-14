@@ -69,7 +69,17 @@ def test_integration_single_file_not_found():
 def test_integration_preprocess():
     """Tests the preprocess command for batch processing."""
     with tempfile.TemporaryDirectory() as tmpdir:
-        test_args = ["preprocess", "--directory", os.path.join(dir, "ep0"), "--output", tmpdir]
+        test_args = [
+            "preprocess",
+            "--directory",
+            os.path.join(dir, "ep0"),
+            "--output",
+            tmpdir,
+            "-ss",
+            "5",
+            "-t",
+            "5",
+        ]
         result = run_waddle_command(test_args)
 
         assert result.returncode == 0, f"Command failed with error: {result.stderr}"
