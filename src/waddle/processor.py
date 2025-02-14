@@ -5,6 +5,7 @@ from glob import glob
 
 from waddle.audios.align_offset import align_speaker_to_reference
 from waddle.audios.call_tools import convert_to_wav
+from waddle.audios.clip import clip_audio
 from waddle.config import DEFAULT_COMP_AUDIO_DURATION, DEFAULT_OUT_AUDIO_DURATION
 from waddle.processing.combine import (
     combine_audio_files,
@@ -53,6 +54,7 @@ def process_single_file(
     Returns:
         str: Path to the combined speaker audio file.
     """
+    clip_audio(aligned_audio_path, aligned_audio_path, ss=ss, out_duration=out_duration)
 
     segs_folder_path, _ = detect_speech_timeline(aligned_audio_path)
 
@@ -122,6 +124,7 @@ def preprocess_multi_files(
             workspace,
             comp_duration=comp_duration,
         )
+        clip_audio(aligned_audio_path, aligned_audio_path, ss=ss, out_duration=out_duration)
 
         # 2) Preprocess the aligned audio file
         segments_dir, timeline = detect_speech_timeline(aligned_audio_path)

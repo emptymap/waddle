@@ -32,7 +32,7 @@ def create_waddle_parser():
     single_parser.add_argument(
         "-t",
         "--time",
-        type=int,
+        type=phrase_time_to_seconds,
         default=None,
         help="Duration in seconds for the output audio (default: None).",
     )
@@ -78,7 +78,7 @@ def create_waddle_parser():
     preprocess_parser.add_argument(
         "-t",
         "--time",
-        type=str,
+        type=phrase_time_to_seconds,
         default=None,
         help="Duration in seconds for the output audio (default: None).",
     )
