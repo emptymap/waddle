@@ -137,8 +137,7 @@ def preprocess_multi_files(
 
     merged_timeline = merge_timelines(timelines)
 
-    processed_files = []
-    for audio_file_path, segments_dir in zip(audio_files, segments_dir_list, strict=False):
+    def save_audio_with_timeline(audio_file_path, segments_dir):
         audio_file_name = os.path.splitext(os.path.basename(audio_file_path))[0]
         target_audio_path = os.path.join(output_dir, f"{audio_file_name}.wav")
         combine_segments_into_audio_with_timeline(
@@ -146,7 +145,10 @@ def preprocess_multi_files(
             target_audio_path,
             merged_timeline,
         )
-        processed_files.append(target_audio_path)
+        return target_audio_path
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        executor.map(save_audio_with_timeline, audio_files, segments_dir_list)
 
     # Clean up workspace
     shutil.rmtree(workspace, ignore_errors=True)
