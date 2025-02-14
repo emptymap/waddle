@@ -7,7 +7,6 @@ from scipy import signal
 
 from waddle.config import (
     DEFAULT_COMP_AUDIO_DURATION,
-    DEFAULT_OUT_AUDIO_DURATION,
     DEFAULT_SR,
 )
 
@@ -58,7 +57,6 @@ def align_speaker_to_reference(
     output_dir: str = "out",
     sample_rate: int = DEFAULT_SR,
     comp_duration: int = DEFAULT_COMP_AUDIO_DURATION,
-    out_duration: int = DEFAULT_OUT_AUDIO_DURATION,
 ) -> str:
     # 1) Load short segments for cross-correlation
     ref_audio, _ = librosa.load(reference_path, sr=sample_rate, mono=True, duration=comp_duration)
@@ -74,8 +72,8 @@ def align_speaker_to_reference(
     offset = find_offset_via_cross_correlation(ref_audio, spk_audio)
 
     # 3) Load full audio
-    ref_full, _ = librosa.load(reference_path, sr=sample_rate, mono=True, duration=out_duration)
-    spk_full, _ = librosa.load(speaker_path, sr=sample_rate, mono=True, duration=out_duration)
+    ref_full, _ = librosa.load(reference_path, sr=sample_rate, mono=True)
+    spk_full, _ = librosa.load(speaker_path, sr=sample_rate, mono=True)
 
     # 4) Shift speaker
     aligned_speaker = shift_audio(spk_full, offset, len(ref_full))

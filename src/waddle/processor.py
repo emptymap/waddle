@@ -39,7 +39,8 @@ def process_single_file(
     aligned_audio_path: str,
     output_dir: str,
     speaker_file: str,
-    out_duration: float = None,
+    ss: float = 0.0,
+    out_duration: float | None = None,
 ) -> str:
     """
     Process a single audio file: normalize, detect speech, and transcribe.
@@ -52,7 +53,8 @@ def process_single_file(
     Returns:
         str: Path to the combined speaker audio file.
     """
-    segs_folder_path, _ = detect_speech_timeline(aligned_audio_path, out_duration=out_duration)
+
+    segs_folder_path, _ = detect_speech_timeline(aligned_audio_path)
 
     # Transcribe segments and combine
     speaker_name = os.path.splitext(os.path.basename(speaker_file))[0]
@@ -72,6 +74,7 @@ def preprocess_multi_files(
     audio_source_directory: str | None,
     output_dir: str,
     comp_duration: float = DEFAULT_COMP_AUDIO_DURATION,
+    ss: float = 0.0,
     out_duration: float = DEFAULT_OUT_AUDIO_DURATION,
     convert: bool = True,
 ) -> None:
@@ -118,13 +121,10 @@ def preprocess_multi_files(
             speaker_file,
             workspace,
             comp_duration=comp_duration,
-            out_duration=out_duration,
         )
 
         # 2) Preprocess the aligned audio file
-        segments_dir, timeline = detect_speech_timeline(
-            aligned_audio_path, out_duration=out_duration
-        )
+        segments_dir, timeline = detect_speech_timeline(aligned_audio_path)
 
         return segments_dir, timeline
 
@@ -218,7 +218,6 @@ def process_multi_files(
             speaker_file,
             output_dir,
             comp_duration=comp_duration,
-            out_duration=out_duration,
         )
 
         # 2) Process the aligned audio file

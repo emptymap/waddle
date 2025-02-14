@@ -23,7 +23,6 @@ def detect_speech_timeline(
     chunk_size_ms: int = int(DEFAULT_CHUNK_DURATION * 1000),
     buffer_size_ms: int = int(DEFAULT_BUFFER_DURATION * 1000),
     target_dBFS: float = DEFAULT_TARGET_DB,
-    out_duration: float = None,
 ) -> tuple[str, SpeechTimeline]:
     """
     Detects speech segments in an audio file based on a specified loudness threshold.
@@ -38,12 +37,11 @@ def detect_speech_timeline(
         target_dBFS (float): Target loudness level (dBFS) for normalized audio segments.
         out_duration (float, optional): Maximum duration of the processed output audio in seconds.
 
-    Returns:
+    Returns
         segs_folder_path (str): Path to the directory containing the extracted speech segments.
         merged_segments (SpeechTimeline): List of detected and merged speech segments.
     """
     audio = AudioSegment.from_file(audio_path)
-    duration = int(out_duration * 1000) if out_duration else len(audio)
 
     segments = []
     current_segment = None
@@ -55,6 +53,7 @@ def detect_speech_timeline(
         shutil.rmtree(chunks_folder)
     os.makedirs(chunks_folder)
 
+    duration = len(audio)
     for i in tqdm(
         range(0, duration, chunk_size_ms),
         desc="[INFO] Detecting speech segments",
