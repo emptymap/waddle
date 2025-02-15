@@ -34,9 +34,9 @@ def do_single(args):
 
     print(f"[INFO] Processing single audio file: {output_audio_path}")
     process_single_file(
-        aligned_audio_path=str(output_audio_path),
-        output_dir=str(output_dir),
-        speaker_file=audio_path.name,
+        aligned_audio_path=output_audio_path,
+        output_dir_path=output_dir,
+        speaker_file=audio_path,
         ss=args.ss,
         out_duration=args.time,
     )
@@ -44,10 +44,18 @@ def do_single(args):
 
 
 def do_preprocess(args):
+    reference_path_or_none = Path(args.reference) if args.reference else None
+    if reference_path_or_none is not None and not reference_path_or_none.is_file():
+        raise FileNotFoundError(f"Reference file not found: {args.reference}")
+    source_dir_path = Path(args.directory)
+    if not source_dir_path.is_dir():
+        raise FileNotFoundError(f"Audio source directory not found: {args.directory}")
+    output_dir_path = Path(args.output or "./out")
+
     preprocess_multi_files(
-        reference_path=args.reference,
-        audio_source_directory=args.directory,
-        output_dir=args.output or "./out",
+        reference_path_or_none=reference_path_or_none,
+        source_dir_path=source_dir_path,
+        output_dir_path=output_dir_path,
         comp_duration=args.comp_duration,
         ss=args.ss,
         out_duration=args.time,
