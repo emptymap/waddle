@@ -51,9 +51,9 @@ def process_single_file(
     Returns:
         str: Path to the combined speaker audio file.
     """
-    clip_audio(str(aligned_audio_path), str(aligned_audio_path), ss=ss, out_duration=out_duration)
+    clip_audio(aligned_audio_path, aligned_audio_path, ss=ss, out_duration=out_duration)
 
-    segs_folder_path, _ = detect_speech_timeline(str(aligned_audio_path))
+    segs_folder_path, _ = detect_speech_timeline(aligned_audio_path)
 
     # Transcribe segments and combine
     speaker_name = speaker_file.stem
