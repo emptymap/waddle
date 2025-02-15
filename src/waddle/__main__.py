@@ -1,5 +1,5 @@
-import os
 import shutil
+from pathlib import Path
 
 from waddle.argparse import create_waddle_parser
 from waddle.processor import preprocess_multi_files, process_single_file
@@ -20,22 +20,23 @@ def main():
 
 
 def do_single(args):
-    if not os.path.isfile(args.audio):
+    audio_path = Path(args.audio)
+    if not audio_path.is_file():
         raise FileNotFoundError(f"Audio file not found: {args.audio}")
-    output_dir = args.output
-    os.makedirs(output_dir, exist_ok=True)
+    output_dir = Path(args.output)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     # Copy the audio file to the output directory
-    audio_file_name = os.path.basename(args.audio)
-    output_audio_path = os.path.join(output_dir, audio_file_name)
+    audio_file_name = audio_path.name
+    output_audio_path = output_dir / audio_file_name
     print(f"[INFO] Copying audio file to: {output_audio_path}")
     shutil.copy(args.audio, output_audio_path)
 
     print(f"[INFO] Processing single audio file: {output_audio_path}")
     process_single_file(
-        aligned_audio_path=output_audio_path,
-        output_dir=output_dir,
-        speaker_file=os.path.basename(args.audio),
+        aligned_audio_path=str(output_audio_path),
+        output_dir=str(output_dir),
+        speaker_file=audio_path.name,
         ss=args.ss,
         out_duration=args.time,
     )
