@@ -117,3 +117,23 @@ def test_integration_preprocess_no_reference():
         result = run_waddle_command(test_args)
 
         assert result.returncode != 0, "Command should fail without a reference file"
+
+
+def test_integration_preprocess_no_source_dir():
+    """Tests the preprocess command without a source directory."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        test_args = [
+            "preprocess",
+            "--directory",
+            "non_existent",
+            "--output",
+            tmpdir,
+            "-ss",
+            "5",
+            "-t",
+            "5",
+            "--no-convert",
+        ]
+        result = run_waddle_command(test_args)
+
+        assert result.returncode != 0, "Command should fail without a source directory"
