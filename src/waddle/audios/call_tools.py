@@ -169,8 +169,7 @@ def transcribe(input_path: Path, output_path: Path, language: str = "ja") -> Non
         subprocess.run(command, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         Path(f"{output_path}.srt").replace(output_path)
     except subprocess.CalledProcessError as e:
-        print(f"Error running Whisper-cli: {e}")
-        raise
+        raise RuntimeError(f"Error running Whisper: {e}") from e
     finally:
         # Clean up the temporary file
         if temp_audio_path.exists():
