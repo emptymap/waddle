@@ -2,7 +2,6 @@ import os
 import tempfile
 import wave
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 from waddle.audios.align_offset import (
@@ -11,18 +10,17 @@ from waddle.audios.align_offset import (
     shift_audio,
 )
 
+DEFAULT_SR = 48000
 
-def generate_test_audio(sr=48000, offset=0):
-    """Generate a test sine wave audio signal with 1s silence, 1s sine wave, and 1s silence."""
+
+def generate_test_audio(sr=DEFAULT_SR, s_offset=0, e_offset=0):
+    """Generate a test sine wave audio signal with optional start and end offset."""
     t = np.linspace(0, np.pi / 2, int(sr * 1.0), endpoint=False)
     sine_wave = (32767 * 0.5 * np.sin(t)).astype(np.float32)
-    silence = np.zeros(int(sr * 1.0), dtype=np.float32)
-    audio = np.concatenate([silence, sine_wave, silence])
 
-    if offset > 0:
-        audio = np.pad(audio, (offset, 0), mode="constant", constant_values=0)
-    elif offset < 0:
-        audio = np.pad(audio, (0, abs(offset)), mode="constant", constant_values=0)
+    s_silence = np.zeros(sr + s_offset, dtype=np.float32)  # 1s + s_offset
+    e_silence = np.zeros(sr + e_offset, dtype=np.float32)  # 1s + e_offset
+    audio = np.concatenate([s_silence, sine_wave, e_silence])
 
     return audio, sr
 
@@ -40,44 +38,46 @@ def read_wav(filename):
     """Read an audio file in WAV format."""
     with wave.open(filename, "r") as wav_file:
         sr = wav_file.getframerate()
-        audio = np.frombuffer(wav_file.readframes(wav_file.getnframes()), dtype=np.int16)
+        audio = np.frombuffer(wav_file.readframes(wav_file.getnframes()), dtype=np.float32)
     return audio, sr
 
 
-def plot_waveform(audio, sr, title="waveform"):
-    """Plot the waveform of an audio signal."""
-    time_axis = np.linspace(0, len(audio) / sr, num=len(audio))
-    plt.figure(figsize=(10, 4))
-    plt.plot(time_axis, audio, label="Audio Signal")
-    plt.xlabel("Time (seconds)")
-    plt.ylabel("Amplitude")
-    plt.title(title)
-    plt.legend()
-    plt.grid()
-    plt.savefig(f"{title}.png")
-
-
 def test_find_offset_via_cross_correlation():
-    ref_audio, sr = generate_test_audio()
-    spk_audio, _ = generate_test_audio(offset=24000)  # 500ms offset at 48kHz
-    plot_waveform(ref_audio, sr, title="Reference Audio Signal")
-    plot_waveform(spk_audio, sr, title="Speaker Audio Signal")
-    offset = find_offset_via_cross_correlation(ref_audio, spk_audio)  # offset should be -4800
-    assert abs(offset + 24000) < 100  # Allowable error for 100Hz (0.625ms at 48kHz)
-
-
-def test_shift_audio():
     ref_audio, _ = generate_test_audio()
-    spk_audio, _ = generate_test_audio(offset=-24000)
-    shifted = shift_audio(spk_audio, 4800, len(ref_audio))
+    spk_audio, _ = generate_test_audio(s_offset=24000)
+
+    offset = find_offset_via_cross_correlation(ref_audio, spk_audio)
+    assert offset == -24000  # offset should be negative to align the speaker to the reference
+
+
+def test_shift_audio_s_offset():
+    ref_audio, _ = generate_test_audio()
+    spk_audio, _ = generate_test_audio(s_offset=4800)
+    shifted = shift_audio(spk_audio, -4800, len(ref_audio))
+    assert np.allclose(ref_audio, shifted)
+
+
+def test_shift_audio_e_offset():
+    ref_audio, _ = generate_test_audio()
+    spk_audio, _ = generate_test_audio(e_offset=158)
+    shifted = shift_audio(spk_audio, 0, len(ref_audio))
+    assert len(shifted) == len(ref_audio)
+    assert np.allclose(ref_audio, shifted)
+
+
+def test_shift_audio_both():
+    ref_audio, _ = generate_test_audio()
+    spk_audio, _ = generate_test_audio(s_offset=800, e_offset=555)
+    shifted = shift_audio(spk_audio, -800, len(ref_audio))
+    assert len(shifted) == len(ref_audio)
     assert np.allclose(ref_audio, shifted)
 
 
 def test_align_speaker_to_reference():
     with tempfile.TemporaryDirectory() as temp_dir:
         ref_audio, sr = generate_test_audio()
-        spk_audio_0, _ = generate_test_audio(offset=4800)
-        spk_audio_1, _ = generate_test_audio(offset=-4800)
+        spk_audio_0, _ = generate_test_audio(s_offset=4800, e_offset=100)
+        spk_audio_1, _ = generate_test_audio(e_offset=800)
 
         ref_path = os.path.join(temp_dir, "ref.wav")
         spk_path_0 = os.path.join(temp_dir, "spk_0.wav")
