@@ -134,9 +134,7 @@ def transcribe(input_path: Path, output_path: Path, language: str = "ja") -> Non
     project_root = get_project_root()
     whisper_bin = project_root / "tools" / "whisper.cpp" / "build" / "bin" / "whisper-cli"
     whisper_model = project_root / "tools" / "whisper.cpp" / "models" / "ggml-large-v3.bin"
-    input_path = Path(input_path)
-    output_path = Path(output_path)
-    temp_audio_path = input_path.stem + "_16k_16bit.wav"
+    temp_audio_path = input_path.with_stem(input_path.stem + "_16k_16bit")
 
     # Check if the Whisper binary exists
     with whisper_install_lock:
@@ -160,7 +158,7 @@ def transcribe(input_path: Path, output_path: Path, language: str = "ja") -> Non
         "-m",
         str(whisper_model),
         "-f",
-        temp_audio_path,
+        str(temp_audio_path),
         "-l",
         language,
         "-osrt",
@@ -175,6 +173,5 @@ def transcribe(input_path: Path, output_path: Path, language: str = "ja") -> Non
         raise
     finally:
         # Clean up the temporary file
-        temp_path = Path(temp_audio_path)
-        if temp_path.exists():
-            temp_path.unlink()
+        if temp_audio_path.exists():
+            temp_audio_path.unlink()
