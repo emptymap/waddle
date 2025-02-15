@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 
 import librosa
 import numpy as np
@@ -11,7 +11,7 @@ from waddle.config import (
 )
 
 
-def find_offset_via_cross_correlation(ref_audio: str, spk_audio: str) -> int:
+def find_offset_via_cross_correlation(ref_audio: np.ndarray, spk_audio: np.ndarray) -> int:
     """
     Return the sample offset (lag) that best aligns spk_audio to ref_audio
     using cross-correlation.
@@ -25,7 +25,7 @@ def find_offset_via_cross_correlation(ref_audio: str, spk_audio: str) -> int:
     return offset
 
 
-def shift_audio(spk_audio: str, offset: int, ref_length: int) -> np.ndarray:
+def shift_audio(spk_audio: np.ndarray, offset: int, ref_length: int) -> np.ndarray:
     """
     Shift the spk_audio by 'offset' samples relative to the reference track.
     Ensures the returned array is the same length as the reference.
@@ -52,15 +52,19 @@ def shift_audio(spk_audio: str, offset: int, ref_length: int) -> np.ndarray:
 
 
 def align_speaker_to_reference(
-    reference_path: str,
-    speaker_path: str,
-    output_dir: str = "out",
+    reference_path: Path,
+    speaker_path: Path,
+    output_dir: Path = Path("out"),
     sample_rate: int = DEFAULT_SR,
     comp_duration: int = DEFAULT_COMP_AUDIO_DURATION,
-) -> str:
+) -> Path:
     # 1) Load short segments for cross-correlation
-    ref_audio, _ = librosa.load(reference_path, sr=sample_rate, mono=True, duration=comp_duration)
-    spk_audio, _ = librosa.load(speaker_path, sr=sample_rate, mono=True, duration=comp_duration)
+    ref_audio, _ = librosa.load(
+        str(reference_path), sr=sample_rate, mono=True, duration=comp_duration
+    )
+    spk_audio, _ = librosa.load(
+        str(speaker_path), sr=sample_rate, mono=True, duration=comp_duration
+    )
 
     # Normalize
     if np.max(np.abs(ref_audio)) > 0:
@@ -72,15 +76,15 @@ def align_speaker_to_reference(
     offset = find_offset_via_cross_correlation(ref_audio, spk_audio)
 
     # 3) Load full audio
-    ref_full, _ = librosa.load(reference_path, sr=sample_rate, mono=True)
-    spk_full, _ = librosa.load(speaker_path, sr=sample_rate, mono=True)
+    ref_full, _ = librosa.load(str(reference_path), sr=sample_rate, mono=True)
+    spk_full, _ = librosa.load(str(speaker_path), sr=sample_rate, mono=True)
 
     # 4) Shift speaker
     aligned_speaker = shift_audio(spk_full, offset, len(ref_full))
 
     # 5) Save the aligned track
-    os.makedirs(output_dir, exist_ok=True)
-    speaker_base = os.path.basename(speaker_path)
-    aligned_path = os.path.join(output_dir, speaker_base)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    speaker_base = speaker_path.name
+    aligned_path = output_dir / speaker_base
     sf.write(aligned_path, aligned_speaker, sample_rate)
     return aligned_path
