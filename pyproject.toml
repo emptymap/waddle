@@ -45,3 +45,13 @@ select = [
 [tool.coverage.run]
 source = ["src"]
 omit = ["*/tests/*", "*_test.py"]
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+pythonVersion = "3.12"
+typeCheckingMode = "basic" # TODO: Change to "strict" after fixing basic issues
+reportMissingImports = true
+reportMissingTypeStubs = false
+useLibraryCodeForTypes = true
+include = ["src", "tests"]
