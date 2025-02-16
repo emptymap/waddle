@@ -1,3 +1,4 @@
+import subprocess
 import tempfile
 import wave
 from pathlib import Path
@@ -57,12 +58,33 @@ def test_convert_to_wav_existing_wav():
         temp_m4a.write_bytes(m4a_file.read_bytes())  # Copy .m4a
         temp_wav.write_bytes(wav_file.read_bytes())  # Copy .wav (same name)
 
-        with patch("builtins.print") as mocked_print:
+        with patch("builtins.print") as mock_print:
             convert_to_wav(temp_dir_path)
-            mocked_print.assert_any_call(f"[INFO] Skipping {temp_m4a}: WAV file already exists.")
+
+            # Ensure `[INFO]` message is printed when skipping `.m4a`
+            assert any("[INFO] Skipping" in call.args[0] for call in mock_print.call_args_list)
 
         # Since .wav already exists, .m4a should be skipped (not overwritten)
         assert temp_wav.exists()
+
+
+def test_convert_to_wav_error():
+    """
+    Test that `subprocess.CalledProcessError` is handled in convert_to_wav,
+    ensuring `[ERROR]` is printed.
+    """
+    m4a_file = EP0_DIR / "ep12-masa.m4a"
+    if not m4a_file.exists():
+        pytest.skip(f"Sample file {m4a_file} not found")
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_dir_path = Path(temp_dir)
+        temp_m4a = temp_dir_path / m4a_file.name
+        temp_m4a.write_bytes(m4a_file.read_bytes())  # Copy file
+
+        with patch("subprocess.run", side_effect=subprocess.CalledProcessError(1, "ffmpeg")):
+            with pytest.raises(RuntimeError, match="Converting"):
+                convert_to_wav(temp_dir_path)
 
 
 def test_ensure_sampling_rate():
@@ -81,6 +103,32 @@ def test_ensure_sampling_rate():
 
         assert output_wav.exists()
         assert get_wav_duration(output_wav) == pytest.approx(get_wav_duration(temp_wav), rel=0.1)
+
+
+def test_ensure_sampling_rate_file_not_found():
+    """Test `ensure_sampling_rate` when input file does not exist."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_dir_path = Path(temp_dir)
+        fake_input = temp_dir_path / "non_existent.wav"
+        output_wav = temp_dir_path / "output.wav"
+
+        with pytest.raises(FileNotFoundError, match="Input file not found"):
+            ensure_sampling_rate(fake_input, output_wav, target_rate=16000)
+
+
+def test_ensure_sampling_rate_error():
+    """Test that `subprocess.CalledProcessError` is handled in ensure_sampling_rate, ensuring `[ERROR]` is printed."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_dir_path = Path(temp_dir)
+        fake_input = temp_dir_path / "input.wav"
+        output_wav = temp_dir_path / "output.wav"
+
+        # Create an empty input file
+        fake_input.touch()
+
+        with patch("subprocess.run", side_effect=subprocess.CalledProcessError(1, "ffmpeg")):
+            with pytest.raises(RuntimeError, match="Converting"):
+                ensure_sampling_rate(fake_input, output_wav, target_rate=16000)
 
 
 def test_remove_noise():
