@@ -47,22 +47,22 @@ def read_wav(filename):
 
 def test_find_offset_via_cross_correlation():
     ref_audio, _ = generate_test_audio()
-    spk_audio, _ = generate_test_audio(s_offset=24000)
+    spk_audio, _ = generate_test_audio(s_padding=24000)
 
     offset = find_offset_via_cross_correlation(ref_audio, spk_audio)
     assert offset == -24000  # offset should be negative to align the speaker to the reference
 
 
-def test_shift_audio_s_offset():
+def test_shift_audio_s_padding():
     ref_audio, _ = generate_test_audio()
-    spk_audio, _ = generate_test_audio(s_offset=4800)
+    spk_audio, _ = generate_test_audio(s_padding=4800)
     shifted = shift_audio(spk_audio, -4800, len(ref_audio))
     assert np.allclose(ref_audio, shifted)
 
 
-def test_shift_audio_e_offset():
+def test_shift_audio_e_padding():
     ref_audio, _ = generate_test_audio()
-    spk_audio, _ = generate_test_audio(e_offset=158)
+    spk_audio, _ = generate_test_audio(e_padding=158)
     shifted = shift_audio(spk_audio, 0, len(ref_audio))
     assert len(shifted) == len(ref_audio)
     assert np.allclose(ref_audio, shifted)
@@ -70,7 +70,7 @@ def test_shift_audio_e_offset():
 
 def test_shift_audio_both():
     ref_audio, _ = generate_test_audio()
-    spk_audio, _ = generate_test_audio(s_offset=800, e_offset=555)
+    spk_audio, _ = generate_test_audio(s_padding=800, e_padding=555)
     shifted = shift_audio(spk_audio, -800, len(ref_audio))
     assert len(shifted) == len(ref_audio)
     assert np.allclose(ref_audio, shifted)
@@ -79,8 +79,8 @@ def test_shift_audio_both():
 def test_align_speaker_to_reference():
     with tempfile.TemporaryDirectory() as temp_dir:
         ref_audio, sr = generate_test_audio()
-        spk_audio_0, _ = generate_test_audio(s_offset=4800, e_offset=100)
-        spk_audio_1, _ = generate_test_audio(e_offset=800)
+        spk_audio_0, _ = generate_test_audio(s_padding=4800, e_padding=100)
+        spk_audio_1, _ = generate_test_audio(e_padding=800)
 
         ref_path = os.path.join(temp_dir, "ref.wav")
         spk_path_0 = os.path.join(temp_dir, "spk_0.wav")
