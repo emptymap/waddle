@@ -47,7 +47,7 @@ def convert_to_wav(folder_path: Path) -> None:
                 )
                 print(f"[INFO] Successfully converted: {output_path}")
             except subprocess.CalledProcessError as e:
-                print(f"[Error] Converting {input_path}: {e.stderr.decode()}")
+                raise RuntimeError(f"[ERROR] Converting {input_path}: {e}") from e
 
 
 def ensure_sampling_rate(
@@ -82,8 +82,7 @@ def ensure_sampling_rate(
             stderr=subprocess.DEVNULL,
         )
     except subprocess.CalledProcessError as e:
-        print(f"ffmpeg failed with error: {e}")
-        raise
+        raise RuntimeError(f"[ERROR] Converting {input_path} to {output_path}: {e}") from e
 
 
 deep_filter_install_lock = threading.Lock()
@@ -119,8 +118,7 @@ def remove_noise(input_path: Path, output_path: Path) -> None:
         subprocess.run(command, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         Path(tmp_file_path).rename(output_path)
     except subprocess.CalledProcessError as e:
-        print(f"Error running DeepFilterNet: {e}")
-        raise
+        raise RuntimeError(f"[ERROR] Running DeepFilterNet: {e}") from e
 
 
 whisper_install_lock = threading.Lock()
@@ -169,7 +167,7 @@ def transcribe(input_path: Path, output_path: Path, language: str = "ja") -> Non
         subprocess.run(command, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         Path(f"{output_path}.srt").replace(output_path)
     except subprocess.CalledProcessError as e:
-        raise RuntimeError(f"Error running Whisper: {e}") from e
+        raise RuntimeError(f"[ERROR] Running Whisper: {e}") from e
     finally:
         # Clean up the temporary file
         if temp_audio_path.exists():
