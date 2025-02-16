@@ -21,7 +21,9 @@ def find_offset_via_cross_correlation(ref_audio: np.ndarray, spk_audio: np.ndarr
     """
     correlation = signal.correlate(ref_audio, spk_audio, mode="full")
     max_corr_index = np.argmax(correlation)
-    offset = max_corr_index - (len(spk_audio) - 1)
+    offset = max_corr_index - (
+        len(spk_audio) - 1
+    )  # the center index (zero lag) is at len(spk_audio) - 1
     return offset
 
 
