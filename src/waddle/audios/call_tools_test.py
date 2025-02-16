@@ -1,6 +1,7 @@
 import tempfile
 import wave
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -39,6 +40,29 @@ def test_convert_to_wav():
 
         expected_output = temp_m4a.with_suffix(".wav")
         assert expected_output.exists()
+
+
+def test_convert_to_wav_existing_wav():
+    """Test when `.m4a` exists but corresponding `.wav` is already present."""
+    m4a_file = EP0_DIR / "ep12-masa.m4a"
+    wav_file = EP0_DIR / "ep12-masa.wav"
+
+    if not m4a_file.exists() or not wav_file.exists():
+        pytest.skip(f"Sample files {m4a_file} or {wav_file} not found")
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_dir_path = Path(temp_dir)
+        temp_m4a = temp_dir_path / m4a_file.name
+        temp_wav = temp_dir_path / wav_file.name
+        temp_m4a.write_bytes(m4a_file.read_bytes())  # Copy .m4a
+        temp_wav.write_bytes(wav_file.read_bytes())  # Copy .wav (same name)
+
+        with patch("builtins.print") as mocked_print:
+            convert_to_wav(temp_dir_path)
+            mocked_print.assert_any_call(f"[INFO] Skipping {temp_m4a}: WAV file already exists.")
+
+        # Since .wav already exists, .m4a should be skipped (not overwritten)
+        assert temp_wav.exists()
 
 
 def test_ensure_sampling_rate():
