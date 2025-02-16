@@ -13,13 +13,16 @@ from waddle.audios.align_offset import (
 DEFAULT_SR = 48000
 
 
-def generate_test_audio(sr=DEFAULT_SR, s_offset=0, e_offset=0):
-    """Generate a test sine wave audio signal with optional start and end offset."""
+def generate_test_audio(sr=DEFAULT_SR, s_padding=0, e_padding=0):
+    """
+    Generate a test audio with s_padding seconds of silence, followed by 1 second of sine wave,
+    followed by e_padding seconds of silence.
+    """
     t = np.linspace(0, np.pi / 2, int(sr * 1.0), endpoint=False)
     sine_wave = (32767 * 0.5 * np.sin(t)).astype(np.float32)
 
-    s_silence = np.zeros(sr + s_offset, dtype=np.float32)  # 1s + s_offset
-    e_silence = np.zeros(sr + e_offset, dtype=np.float32)  # 1s + e_offset
+    s_silence = np.zeros(sr + s_padding, dtype=np.float32)  # 1s + s_padding
+    e_silence = np.zeros(sr + e_padding, dtype=np.float32)  # 1s + e_padding
     audio = np.concatenate([s_silence, sine_wave, e_silence])
 
     return audio, sr
