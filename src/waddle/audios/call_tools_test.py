@@ -69,10 +69,7 @@ def test_convert_to_wav_existing_wav():
 
 
 def test_convert_to_wav_error():
-    """
-    Test that `subprocess.CalledProcessError` is handled in convert_to_wav,
-    ensuring `[ERROR]` is printed.
-    """
+    """Test when an error occurs during conversion."""
     m4a_file = EP0_DIR / "ep12-masa.m4a"
     if not m4a_file.exists():
         pytest.skip(f"Sample file {m4a_file} not found")
@@ -117,7 +114,7 @@ def test_ensure_sampling_rate_file_not_found():
 
 
 def test_ensure_sampling_rate_error():
-    """Test that `subprocess.CalledProcessError` is handled in ensure_sampling_rate, ensuring `[ERROR]` is printed."""
+    """Test `ensure_sampling_rate` when an error occurs during conversion."""
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_dir_path = Path(temp_dir)
         fake_input = temp_dir_path / "input.wav"
