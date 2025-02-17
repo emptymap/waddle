@@ -56,7 +56,7 @@ def combine_segments_into_audio(
 def combine_segments_into_audio_with_timeline(
     segs_folder_path: str,
     combined_audio_path: str,
-    timeline: str,
+    timeline: SpeechTimeline,
 ):
     segment_files = sorted(glob(os.path.join(segs_folder_path, "*.wav")))
     if not segment_files:
