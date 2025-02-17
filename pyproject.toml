@@ -22,7 +22,12 @@ package = true
 
 
 [dependency-groups]
-dev = ["pytest>=8.3.4", "pytest-cov>=6.0.0", "ruff>=0.9.5"]
+dev = [
+    "pyinstrument>=5.0.1",
+    "pytest>=8.3.4",
+    "pytest-cov>=6.0.0",
+    "ruff>=0.9.5",
+]
 
 [tool.ruff]
 line-length = 100
