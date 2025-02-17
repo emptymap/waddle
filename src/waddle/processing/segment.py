@@ -198,7 +198,7 @@ def process_segments(
 
 
 def process_segment_transcription(
-    transcribe_file_path: str, start_offset: int, transcription_entries: list
+    transcribe_file_path: str, start_offset: float, transcription_entries: list
 ) -> None:
     """
     Adjust timestamps in a segment's transcription file by adding the start offset,
