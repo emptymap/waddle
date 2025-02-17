@@ -1,15 +1,13 @@
 import os
 import tempfile
-from typing import Dict, List, TypeAlias
+from typing import Dict, TypeAlias
 
 from waddle.processing.combine import SrtEntries, SrtEntry, combine_srt_files, parse_srt
 
 SrtFiles: TypeAlias = dict[str, str]
 
 
-def create_srt_files(
-    temp_dir: str, srt_files: SrtFiles, is_combined: bool = False
-) -> Dict[str, List[SrtEntry]]:
+def create_srt_files(temp_dir: str, srt_files: SrtFiles, is_combined: bool = False) -> None:
     for filename, content in srt_files.items():
         with open(os.path.join(temp_dir, f"{filename}.srt"), "w", encoding="utf-8") as f:
             f.write(content)
