@@ -15,6 +15,11 @@ jobs:
       - uses: FedericoCarboni/setup-ffmpeg@v3
         id: setup-ffmpeg
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -37,7 +42,7 @@ jobs:
           uv run ruff format
 
       - name: Run Pyright
-        run: pyright
+        run: uv run pyright
 
       - name: Run tests with coverage
         run: |
