@@ -1,9 +1,10 @@
 import wave
+from pathlib import Path
 
 
 def clip_audio(
-    audio_path: str, out_path: str, ss: float = 0.0, out_duration: float | None = None
-) -> str:
+    audio_path: Path, out_path: Path, ss: float = 0.0, out_duration: float | None = None
+) -> Path:
     """
     Clip an audio file to a specified duration starting from a given time.
 
@@ -15,7 +16,7 @@ def clip_audio(
     Returns:
         str: Path to the clipped audio file.
     """
-    with wave.open(audio_path, "rb") as wav:
+    with wave.open(str(audio_path), "rb") as wav:
         frame_rate = wav.getframerate()
         n_channels = wav.getnchannels()
         samp_width = wav.getsampwidth()
@@ -29,7 +30,7 @@ def clip_audio(
         wav.setpos(start_frame)
         frames = wav.readframes(end_frame - start_frame)
 
-    with wave.open(out_path, "wb") as output_wav:
+    with wave.open(str(out_path), "wb") as output_wav:
         output_wav.setnchannels(n_channels)
         output_wav.setsampwidth(samp_width)
         output_wav.setframerate(frame_rate)

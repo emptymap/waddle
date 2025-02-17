@@ -18,3 +18,4 @@ tmp/
 tests/ep0/out
 
 .coverage*
+coverage.*
