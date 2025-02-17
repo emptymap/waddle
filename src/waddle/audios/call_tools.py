@@ -95,9 +95,7 @@ def remove_noise(input_path: Path, output_path: Path) -> None:
     # Paths
     project_root = get_project_root()
     deep_filter_path = project_root / "tools" / "deep-filter"
-    output_dir = output_path.parent
-    tmp_file = input_path.name.replace(".wav", "_tmp.wav")
-    tmp_file_path = output_dir / tmp_file
+    tmp_file_path = input_path.with_stem(input_path.stem + "_tmp")
 
     # Check if the tool exists
     with deep_filter_install_lock:
@@ -106,19 +104,25 @@ def remove_noise(input_path: Path, output_path: Path) -> None:
             print(
                 f"DeepFilterNet tool not found. Run the following command to install it: {command}"
             )
-            # Even if we run this command, it will not print output
             subprocess.run(command, check=True)
 
     # Ensure input is 48kHz and 16-bit
     ensure_sampling_rate(input_path, tmp_file_path, target_rate=48000)
 
     # Run the DeepFilterNet tool without printing its output
-    command = [str(deep_filter_path), str(tmp_file_path), "-o", str(output_dir)]
+    output_folder_path = output_path.parent
+    command = [str(deep_filter_path), str(tmp_file_path), "-o", str(output_folder_path)]
     try:
         subprocess.run(command, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        Path(tmp_file_path).rename(output_path)
+        output_path.write_bytes(tmp_file_path.read_bytes())
+
     except subprocess.CalledProcessError as e:
         raise RuntimeError(f"[ERROR] Running DeepFilterNet: {e}") from e
+
+    finally:
+        # Cleanup temporary file
+        if tmp_file_path.exists():
+            tmp_file_path.unlink()
 
 
 whisper_install_lock = threading.Lock()
