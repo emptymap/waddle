@@ -58,7 +58,7 @@ def align_speaker_to_reference(
     speaker_path: str,
     output_dir: str = "out",
     sample_rate: int = DEFAULT_SR,
-    comp_duration: int = DEFAULT_COMP_AUDIO_DURATION,
+    comp_duration: float = DEFAULT_COMP_AUDIO_DURATION,
 ) -> str:
     # 1) Load short segments for cross-correlation
     ref_audio, _ = librosa.load(reference_path, sr=sample_rate, mono=True, duration=comp_duration)
