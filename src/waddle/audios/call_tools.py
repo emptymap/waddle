@@ -1,3 +1,4 @@
+import shutil
 import subprocess
 import threading
 from pathlib import Path
@@ -114,7 +115,9 @@ def remove_noise(input_path: Path, output_path: Path) -> None:
     command = [str(deep_filter_path), str(tmp_file_path), "-o", str(output_folder_path)]
     try:
         subprocess.run(command, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        output_path.write_bytes(tmp_file_path.read_bytes())
+        if output_path.exists():
+            output_path.unlink()
+        shutil.move(tmp_file_path, output_path)
 
     except subprocess.CalledProcessError as e:
         raise RuntimeError(f"[ERROR] Running DeepFilterNet: {e}") from e
