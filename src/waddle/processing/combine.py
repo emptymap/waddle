@@ -1,6 +1,5 @@
-import os
 import shutil
-from glob import glob
+from pathlib import Path
 from typing import Optional, TypeAlias
 
 from pydub import AudioSegment
@@ -15,20 +14,22 @@ SrtEntries: TypeAlias = list[SrtEntry]
 
 
 def combine_segments_into_audio(
-    segs_folder_path: str,
-    combined_audio_path: str,
+    segs_folder_path: Path,
+    combined_audio_path: Path,
 ) -> None:
     """
     Combine segment files into a single audio, placing each at the correct offset.
 
     Args:
-        segment_files (list): Paths to segment files.
-        speech_segments (list): List of (start, end) tuples for each segment.
-        output_audio_path (str): Where to save the combined audio file.
-        total_duration (float): Total duration (in seconds) of the final audio.
+        segs_folder_path (Path): Path to the folder containing segment files.
+        combined_audio_path (Path): Path to save the combined audio file
     """
-    segment_files = sorted(glob(os.path.join(segs_folder_path, "*.wav")))
-    if not segment_files:
+    segs_folder_path = Path(segs_folder_path)  # TODO: Delete it after switch to Pathlib in test
+    combined_audio_path = Path(
+        combined_audio_path
+    )  # TODO: Delete it after switch to Pathlib in test
+    seg_file_paths = sorted(segs_folder_path.glob("*.wav"))
+    if not seg_file_paths:
         print("\033[93m[WARNING] No segment files found for combining.\033[0m")
 
         # Output a dummy audio file
@@ -38,14 +39,14 @@ def combine_segments_into_audio(
         # Clean up segs folder
         shutil.rmtree(segs_folder_path, ignore_errors=True)
         return
-    end_mses = [parse_audio_filename(f)[1] for f in segment_files]
+    end_mses = [parse_audio_filename(str(f))[1] for f in seg_file_paths]
     max_end_ms = max(end_mses)
     final_audio = AudioSegment.silent(duration=max_end_ms)
 
-    for segment_file in segment_files:
-        segment_audio = AudioSegment.from_file(segment_file)
-        start_ms, _ = parse_audio_filename(segment_file)
-        final_audio = final_audio.overlay(segment_audio, position=start_ms)
+    for seg_file_path in seg_file_paths:
+        seg_audio = AudioSegment.from_file(str(seg_file_path))
+        start_ms, _ = parse_audio_filename(str(seg_file_path))
+        final_audio = final_audio.overlay(seg_audio, position=start_ms)
 
     final_audio.export(combined_audio_path, format="wav")
 
@@ -54,12 +55,16 @@ def combine_segments_into_audio(
 
 
 def combine_segments_into_audio_with_timeline(
-    segs_folder_path: str,
-    combined_audio_path: str,
+    segs_folder_path: Path,
+    combined_audio_path: Path,
     timeline: SpeechTimeline,
-):
-    segment_files = sorted(glob(os.path.join(segs_folder_path, "*.wav")))
-    if not segment_files:
+) -> None:
+    segs_folder_path = Path(segs_folder_path)  # TODO: Delete it after switch to Pathlib in test
+    combined_audio_path = Path(
+        combined_audio_path
+    )  # TODO: Delete it after switch to Pathlib in test
+    seg_file_paths = sorted(segs_folder_path.glob("*.wav"))
+    if not seg_file_paths:
         print("\033[93m[WARNING] No segment files found for combining.\033[0m")
 
         # Output a dummy audio file
@@ -73,14 +78,14 @@ def combine_segments_into_audio_with_timeline(
     max_end_ms = adjust_pos_to_timeline(timeline, timeline[-1][1])
     final_audio = AudioSegment.silent(duration=max_end_ms)
 
-    for segment_file in segment_files:
-        segment_audio = AudioSegment.from_file(segment_file)
-        start_ms, _ = parse_audio_filename(segment_file)
+    for seg_file_path in seg_file_paths:
+        seg_audio = AudioSegment.from_file(str(seg_file_path))
+        start_ms, _ = parse_audio_filename(str(seg_file_path))
         final_audio = final_audio.overlay(
-            segment_audio, position=adjust_pos_to_timeline(timeline, start_ms)
+            seg_audio, position=adjust_pos_to_timeline(timeline, start_ms)
         )
 
-    final_audio.export(combined_audio_path, format="wav")
+    final_audio.export(str(combined_audio_path), format="wav")
 
 
 def adjust_pos_to_timeline(timeline: SpeechTimeline, pos: int) -> int:
@@ -113,7 +118,7 @@ def adjust_pos_to_timeline(timeline: SpeechTimeline, pos: int) -> int:
     return running_total
 
 
-def combine_audio_files(aligned_audio_paths: list, output_audio_path: str) -> None:
+def combine_audio_files(aligned_audio_paths: list[Path], output_audio_path: Path) -> None:
     """
     Combine multiple aligned audio files by overlaying them sequentially.
 
@@ -125,14 +130,14 @@ def combine_audio_files(aligned_audio_paths: list, output_audio_path: str) -> No
     # Sort for making max duration audio
     aligned_audio_paths.sort(key=lambda x: AudioSegment.from_file(x).duration_seconds, reverse=True)
     for path in aligned_audio_paths:
-        audio = AudioSegment.from_file(path)
+        audio = AudioSegment.from_file(str(path))
         combined_audio = audio if combined_audio is None else combined_audio.overlay(audio)
 
     if combined_audio:
         combined_audio.export(output_audio_path, format="wav")
 
 
-def parse_srt(file_path: str, speaker_name: Optional[str] = None) -> SrtEntries:
+def parse_srt(file_path: Path, speaker_name: Optional[str] = None) -> SrtEntries:
     """
     Parse an SRT file, attach speaker name to each text line,
     and return a list of (start_time_for_sorting, end_timestamp, text_with_speaker).
@@ -145,7 +150,7 @@ def parse_srt(file_path: str, speaker_name: Optional[str] = None) -> SrtEntries:
         list: List of tuples (start_time_for_sorting, end_timestamp, text_with_speaker).
     """
     entries: SrtEntries = []
-    with open(file_path, "r", encoding="utf-8") as f:
+    with open(str(file_path), "r", encoding="utf-8") as f:
         blocks = f.read().strip().split("\n\n")
 
     for block in blocks:
@@ -166,28 +171,27 @@ def parse_srt(file_path: str, speaker_name: Optional[str] = None) -> SrtEntries:
     return entries
 
 
-def combine_srt_files(input_dir: str, output_file: str) -> None:
+def combine_srt_files(input_dir_path: Path, output_file_path: Path) -> None:
     """
     Combine all .srt files in a directory, add speaker names, and sort by timestamp.
     """
-
-    srt_files = [f for f in os.listdir(input_dir) if f.endswith(".srt")]
+    input_dir_path = Path(input_dir_path)  # TODO: Delete it after switch to Pathlib in test
+    output_file_path = Path(output_file_path)  # TODO: Delete it after switch to Pathlib in test
+    srt_file_paths = [f for f in input_dir_path.glob("*.srt")]
     all_entries: SrtEntries = []
 
-    for srt_file in srt_files:
-        if "-" in srt_file:
-            speaker_name = os.path.basename(srt_file).split("-")[1].split(".")[0]
-        else:
-            speaker_name = os.path.basename(srt_file).split(".")[0]
-        srt_path = os.path.join(input_dir, srt_file)
-        all_entries.extend(parse_srt(srt_path, speaker_name))
-        os.remove(srt_path)
+    for srt_file_path in srt_file_paths:
+        srt_file_name = srt_file_path.stem
+        if "-" in srt_file_name:
+            srt_file_name = srt_file_name.split("-")[1]
+        all_entries.extend(parse_srt(srt_file_path, srt_file_name))
+        srt_file_path.unlink()
 
     # Sort all entries by timestamp
     all_entries.sort(key=lambda x: x[0])
 
     # Write combined SRT file
-    with open(output_file, "w", encoding="utf-8") as f:
+    with open(str(output_file_path), "w", encoding="utf-8") as f:
         for i, (start, end, text) in enumerate(all_entries, start=1):
             f.write(f"{i}\n")
             f.write(f"{start} --> {end}\n")

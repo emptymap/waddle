@@ -1,6 +1,6 @@
-import os
 import tempfile
 import wave
+from pathlib import Path
 
 import numpy as np
 
@@ -28,18 +28,18 @@ def generate_test_audio(sr=DEFAULT_SR, s_padding=0, e_padding=0):
     return audio, sr
 
 
-def write_wav(filename, audio, sr):
+def write_wav(file_path, audio, sr):
     """Write an audio file in WAV format."""
-    with wave.open(filename, "w") as wav_file:
+    with wave.open(str(file_path), "w") as wav_file:
         wav_file.setnchannels(1)
         wav_file.setsampwidth(2)
         wav_file.setframerate(sr)
         wav_file.writeframes(audio.tobytes())
 
 
-def read_wav(filename):
+def read_wav(file_path):
     """Read an audio file in WAV format."""
-    with wave.open(filename, "r") as wav_file:
+    with wave.open(str(file_path), "r") as wav_file:
         sr = wav_file.getframerate()
         audio = np.frombuffer(wav_file.readframes(wav_file.getnframes()), dtype=np.float32)
     return audio, sr
@@ -82,16 +82,17 @@ def test_align_speaker_to_reference():
         spk_audio_0, _ = generate_test_audio(s_padding=4800, e_padding=100)
         spk_audio_1, _ = generate_test_audio(e_padding=800)
 
-        ref_path = os.path.join(temp_dir, "ref.wav")
-        spk_path_0 = os.path.join(temp_dir, "spk_0.wav")
-        spk_path_1 = os.path.join(temp_dir, "spk_1.wav")
+        temp_dir_path = Path(temp_dir)
+        ref_path = temp_dir_path / "ref.wav"
+        spk_path_0 = temp_dir_path / "spk_0.wav"
+        spk_path_1 = temp_dir_path / "spk_1.wav"
 
         write_wav(ref_path, ref_audio, sr)
         write_wav(spk_path_0, spk_audio_0, sr)
         write_wav(spk_path_1, spk_audio_1, sr)
 
-        output_path_0 = align_speaker_to_reference(ref_path, spk_path_0, temp_dir)
-        output_path_1 = align_speaker_to_reference(ref_path, spk_path_1, temp_dir)
+        output_path_0 = align_speaker_to_reference(ref_path, spk_path_0, temp_dir_path)
+        output_path_1 = align_speaker_to_reference(ref_path, spk_path_1, temp_dir_path)
 
         aligned_audio_0, _ = read_wav(output_path_0)
         aligned_audio_1, _ = read_wav(output_path_1)

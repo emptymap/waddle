@@ -95,3 +95,45 @@ def test_integration_preprocess():
         reference_file = glob.glob(os.path.join(dir, "ep0", "GMT*"))[0]
         reference_length = get_wav_duration(reference_file)
         assert lengths[0] < reference_length, "Length of processed audio is not less than reference"
+
+
+def test_integration_preprocess_no_reference():
+    """Tests the preprocess command without a reference file."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        test_args = [
+            "preprocess",
+            "--directory",
+            os.path.join(dir, "ep0"),
+            "--reference",
+            "non_existent.wav",
+            "--output",
+            tmpdir,
+            "-ss",
+            "5",
+            "-t",
+            "5",
+            "--no-convert",
+        ]
+        result = run_waddle_command(test_args)
+
+        assert result.returncode != 0, "Command should fail without a reference file"
+
+
+def test_integration_preprocess_no_source_dir():
+    """Tests the preprocess command without a source directory."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        test_args = [
+            "preprocess",
+            "--directory",
+            "non_existent",
+            "--output",
+            tmpdir,
+            "-ss",
+            "5",
+            "-t",
+            "5",
+            "--no-convert",
+        ]
+        result = run_waddle_command(test_args)
+
+        assert result.returncode != 0, "Command should fail without a source directory"

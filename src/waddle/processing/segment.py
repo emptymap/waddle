@@ -1,6 +1,5 @@
-import os
 import shutil
-from glob import glob
+from pathlib import Path
 
 import numpy as np
 from pydub import AudioSegment
@@ -18,12 +17,12 @@ from waddle.utils import format_audio_filename, format_time, parse_audio_filenam
 
 
 def detect_speech_timeline(
-    audio_path: str,
+    audio_path: Path,
     threshold_db: float = DEFAULT_THRESHOLD_DB,
     chunk_size_ms: int = int(DEFAULT_CHUNK_DURATION * 1000),
     buffer_size_ms: int = int(DEFAULT_BUFFER_DURATION * 1000),
     target_dBFS: float = DEFAULT_TARGET_DB,
-) -> tuple[str, SpeechTimeline]:
+) -> tuple[Path, SpeechTimeline]:
     """
     Detects speech segments in an audio file based on a specified loudness threshold.
     Each detected segment includes a buffer of audio before and after to ensure completeness.
@@ -41,17 +40,17 @@ def detect_speech_timeline(
         segs_folder_path (str): Path to the directory containing the extracted speech segments.
         merged_segments (SpeechTimeline): List of detected and merged speech segments.
     """
-    audio = AudioSegment.from_file(audio_path)
+    audio = AudioSegment.from_file(str(audio_path))
 
     segments = []
     current_segment = None
 
     # Create a clean 'chunks' folder
-    identifier = os.path.splitext(os.path.basename(audio_path))[0]
-    chunks_folder = os.path.join(os.path.dirname(audio_path), "chunks", identifier)
-    if os.path.exists(chunks_folder):
+    identifier = audio_path.stem
+    chunks_folder = audio_path.parent / "chunks" / identifier
+    if chunks_folder.exists():
         shutil.rmtree(chunks_folder)
-    os.makedirs(chunks_folder)
+    chunks_folder.mkdir(parents=True, exist_ok=True)
 
     duration = len(audio)
     for i in tqdm(
@@ -65,9 +64,7 @@ def detect_speech_timeline(
                 current_segment = None
             continue
 
-        temp_chunk_path = os.path.join(
-            chunks_folder, format_audio_filename("chunk", i, i + chunk_size_ms)
-        )
+        temp_chunk_path = chunks_folder / format_audio_filename("chunk", i, i + chunk_size_ms)
         chunk.export(temp_chunk_path, format="wav")
         remove_noise(temp_chunk_path, temp_chunk_path)
         chunk = AudioSegment.from_file(temp_chunk_path)
@@ -95,11 +92,11 @@ def detect_speech_timeline(
     merged_segments = merge_segments(segments)
 
     # Save segment to disk
-    audio_file_name = os.path.splitext(os.path.basename(audio_path))[0]
-    segs_folder_path = os.path.join(os.path.dirname(audio_path), f"{audio_file_name}_segs")
-    if os.path.exists(segs_folder_path):
+    audio_file_name = audio_path.stem
+    segs_folder_path = audio_path.parent / f"{audio_file_name}_segs"
+    if segs_folder_path.exists():
         shutil.rmtree(segs_folder_path)
-    os.makedirs(segs_folder_path)
+    segs_folder_path.mkdir(parents=True, exist_ok=True)
 
     # collect max_dBFS for each segment
     max_dBFS_list = []
@@ -117,16 +114,14 @@ def detect_speech_timeline(
     for seg in merged_segments:
         seg_audio = audio[seg[0] : seg[1]]
         normalized_audio = seg_audio.apply_gain(gain_adjustment)
-        seg_audio_path = os.path.join(
-            segs_folder_path, format_audio_filename("seg", seg[0], seg[1])
-        )
+        seg_audio_path = segs_folder_path / format_audio_filename("seg", seg[0], seg[1])
         normalized_audio.export(seg_audio_path, format="wav")
         # Remove_noise is called twice, but this is done because accuracy is poor
         # if it is not written for each sentence.
         remove_noise(seg_audio_path, seg_audio_path)
 
     # Clean up audio
-    os.remove(audio_path)
+    audio_path.unlink()
 
     print(f"[INFO] Global normalization applied with gain adjustment: {gain_adjustment} dB")
 
@@ -147,9 +142,9 @@ def merge_segments(segments: SpeechTimeline) -> SpeechTimeline:
 
 
 def process_segments(
-    segs_folder_path: str,
-    combined_audio_path: str,
-    transcription_output_path: str,
+    segs_folder_path: Path,
+    combined_audio_path: Path,
+    transcription_output_path: Path,
     language: str = "ja",
 ) -> None:
     """
@@ -162,7 +157,15 @@ def process_segments(
         transcription_output_path (str): Path to save the combined transcription file.
         language (str): Language code for transcription.
     """
-    segs_file_paths = sorted(glob(os.path.join(segs_folder_path, "*.wav")))
+    segs_folder_path = Path(segs_folder_path)  # TODO: Delete it after switch to Pathlib in test
+    combined_audio_path = Path(
+        combined_audio_path
+    )  # TODO: Delete it after switch to Pathlib in test
+    transcription_output_path = Path(
+        transcription_output_path
+    )  # TODO: Delete it after switch to Pathlib in test
+
+    segs_file_paths = sorted(segs_folder_path.glob("*.wav"))
     transcription_entries = []
 
     for segs_file_path in tqdm(
@@ -172,19 +175,19 @@ def process_segments(
         dynamic_ncols=True,
         bar_format="{l_bar}{bar:50}{r_bar}",
     ):
-        start, _ = parse_audio_filename(segs_file_path)
+        start, _ = parse_audio_filename(str(segs_file_path))
         start_seconds = float(start) / 1000
 
         # Transcribe segment
-        srt_output_path = f"{os.path.splitext(segs_file_path)[0]}.srt"
+        srt_output_path = Path(segs_file_path).with_suffix(".srt")
         transcribe(segs_file_path, srt_output_path, language=language)
 
         # Adjust transcription timestamps
         process_segment_transcription(srt_output_path, start_seconds, transcription_entries)
-        os.remove(srt_output_path)
+        srt_output_path.unlink()
 
     # Create a single SRT file from all segments
-    with open(transcription_output_path, "w", encoding="utf-8") as srt_out:
+    with open(str(transcription_output_path), "w", encoding="utf-8") as srt_out:
         for idx, (start_time, end_time, text) in enumerate(transcription_entries, start=1):
             srt_out.write(f"{idx}\n")
             srt_out.write(f"{start_time} --> {end_time}\n")
@@ -198,7 +201,7 @@ def process_segments(
 
 
 def process_segment_transcription(
-    transcribe_file_path: str, start_offset: float, transcription_entries: list
+    transcribe_file_path: Path, start_offset: float, transcription_entries: list
 ) -> None:
     """
     Adjust timestamps in a segment's transcription file by adding the start offset,
@@ -209,11 +212,14 @@ def process_segment_transcription(
         start_offset (float): Offset in seconds to add to each timestamp.
         transcription_entries (list): Output list for adjusted transcription entries.
     """
-    if not os.path.isfile(transcribe_file_path):
+    transcribe_file_path = Path(
+        transcribe_file_path
+    )  # TODO: Delete it after switch to Pathlib in test
+    if not transcribe_file_path.is_file():
         print(f"[Warning] SRT file not found for segment: {transcribe_file_path}")
         return
 
-    with open(transcribe_file_path, "r", encoding="utf-8") as srt_file:
+    with open(str(transcribe_file_path), "r", encoding="utf-8") as srt_file:
         blocks = srt_file.read().strip().split("\n\n")
 
     for block in blocks:

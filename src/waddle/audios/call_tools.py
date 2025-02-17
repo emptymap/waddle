@@ -1,16 +1,16 @@
-import os
 import subprocess
 import threading
+from pathlib import Path
 
 
-def get_project_root() -> str:
+def get_project_root() -> Path:
     """
     Get the project root directory.
     """
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../"))
+    return Path(__file__).parent.parent.parent.parent.resolve()
 
 
-def convert_to_wav(folder_path: str) -> None:
+def convert_to_wav(folder_path: Path) -> None:
     """
     Convert audio files in the specified folder to WAV format.
     Overwrites existing files without user input.
@@ -22,57 +22,55 @@ def convert_to_wav(folder_path: str) -> None:
     valid_extensions = (".m4a", ".aifc", ".mp4")
 
     # Find all valid files in the current directory and subdirectories
-    for root, _, files in os.walk(folder_path):
-        for file in files:
-            if file.endswith(valid_extensions):
-                input_path = os.path.join(root, file)
-                output_path = os.path.splitext(input_path)[0] + ".wav"
+    folder = Path(folder_path)
+    for input_path in folder.rglob("*"):
+        if input_path.suffix in valid_extensions:
+            output_path = input_path.with_suffix(".wav")
+            if output_path.exists():
+                print(f"[INFO] Skipping {input_path}: WAV file already exists.")
+                continue
 
-                if os.path.exists(output_path):
-                    print(f"Skipping {input_path}: WAV file already exists.")
-                    continue
-
-                # Convert to WAV using ffmpeg
-                print(f"Converting {input_path} to {output_path}...")
-                try:
-                    subprocess.run(
-                        [
-                            "ffmpeg",
-                            "-y",
-                            "-i",
-                            input_path,
-                            output_path,
-                        ],  # Added '-y' flag
-                        check=True,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                    )
-                    print(f"Successfully converted: {output_path}")
-                except subprocess.CalledProcessError as e:
-                    print(f"Error converting {input_path}: {e.stderr.decode()}")
+            # Convert to WAV using ffmpeg
+            print(f"[INFO] Converting {input_path} to {output_path}...")
+            try:
+                subprocess.run(
+                    [
+                        "ffmpeg",
+                        "-y",
+                        "-i",
+                        str(input_path),
+                        str(output_path),
+                    ],  # Added '-y' flag
+                    check=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                )
+                print(f"[INFO] Successfully converted: {output_path}")
+            except subprocess.CalledProcessError as e:
+                raise RuntimeError(f"[ERROR] Converting {input_path}: {e}") from e
 
 
 def ensure_sampling_rate(
-    input_path: str, output_path: str, target_rate: int, bit_depth: str = "16"
+    input_path: Path, output_path: Path, target_rate: int, bit_depth: str = "16"
 ) -> None:
     """
     Ensure the input WAV file has the specified sampling rate and bit depth.
     Converts the input file if needed.
     """
-    if not os.path.exists(input_path):
+    if not input_path.exists():
         raise FileNotFoundError(f"Input file not found: {input_path}")
 
     command = [
         "ffmpeg",
         "-i",
-        input_path,  # Input file
+        str(input_path),  # Input file
         "-ar",
         str(target_rate),  # Set target sample rate
         "-ac",
         "1",  # Ensure mono channel
         "-c:a",
         f"pcm_s{bit_depth}le",  # Set bit depth
-        output_path,  # Output file
+        str(output_path),  # Output file
         "-y",  # Overwrite output file
     ]
 
@@ -84,71 +82,73 @@ def ensure_sampling_rate(
             stderr=subprocess.DEVNULL,
         )
     except subprocess.CalledProcessError as e:
-        print(f"ffmpeg failed with error: {e}")
-        raise
+        raise RuntimeError(f"[ERROR] Converting {input_path} to {output_path}: {e}") from e
 
 
 deep_filter_install_lock = threading.Lock()
 
 
-def remove_noise(input_path: str, output_path: str) -> None:
+def remove_noise(input_path: Path, output_path: Path) -> None:
     """
     Enhance audio by removing noise using DeepFilterNet.
     """
     # Paths
     project_root = get_project_root()
-    deep_filter_path = os.path.join(project_root, "tools/deep-filter")
-    output_dir = os.path.dirname(output_path)
-    tmp_file = os.path.basename(input_path).replace(".wav", "_tmp.wav")
-    tmp_file_path = os.path.join(output_dir, tmp_file)
+    deep_filter_path = project_root / "tools" / "deep-filter"
+    tmp_file_path = input_path.with_stem(input_path.stem + "_tmp")
 
     # Check if the tool exists
     with deep_filter_install_lock:
-        if not os.path.exists(deep_filter_path):
-            command = os.path.join(project_root, "scripts/install-deep-filter.sh")
+        if not deep_filter_path.exists():
+            command = str(project_root / "scripts" / "install-deep-filter.sh")
             print(
                 f"DeepFilterNet tool not found. Run the following command to install it: {command}"
             )
-            # Even if we run this command, it will not print output
             subprocess.run(command, check=True)
 
     # Ensure input is 48kHz and 16-bit
     ensure_sampling_rate(input_path, tmp_file_path, target_rate=48000)
 
     # Run the DeepFilterNet tool without printing its output
-    command = [deep_filter_path, tmp_file_path, "-o", output_dir]
+    output_folder_path = output_path.parent
+    command = [str(deep_filter_path), str(tmp_file_path), "-o", str(output_folder_path)]
     try:
         subprocess.run(command, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        os.rename(tmp_file_path, output_path)
+        output_path.write_bytes(tmp_file_path.read_bytes())
+
     except subprocess.CalledProcessError as e:
-        print(f"Error running DeepFilterNet: {e}")
-        raise
+        raise RuntimeError(f"[ERROR] Running DeepFilterNet: {e}") from e
+
+    finally:
+        # Cleanup temporary file
+        if tmp_file_path.exists():
+            tmp_file_path.unlink()
 
 
 whisper_install_lock = threading.Lock()
 
 
-def transcribe(input_path: str, output_path: str, language: str = "ja") -> None:
+def transcribe(input_path: Path, output_path: Path, language: str = "ja") -> None:
     """
     Transcribe audio using Whisper.cpp.
     """
     # Paths
     project_root = get_project_root()
-    whisper_bin = os.path.join(project_root, "tools/whisper.cpp/build/bin/whisper-cli")
-    whisper_model = os.path.join(project_root, "tools/whisper.cpp/models/ggml-large-v3.bin")
-    temp_audio_path = f"{os.path.splitext(input_path)[0]}_16k_16bit.wav"
+    whisper_bin = project_root / "tools" / "whisper.cpp" / "build" / "bin" / "whisper-cli"
+    whisper_model = project_root / "tools" / "whisper.cpp" / "models" / "ggml-large-v3.bin"
+    temp_audio_path = input_path.with_stem(input_path.stem + "_16k_16bit")
 
     # Check if the Whisper binary exists
     with whisper_install_lock:
-        if not os.path.exists(whisper_bin):
-            command = os.path.join(project_root, "scripts/install-whisper-cpp.sh")
+        if not whisper_bin.exists():
+            command = str(project_root / "scripts" / "install-whisper-cpp.sh")
             print(
                 f"Whisper-cli binary not found. Run the following command to install it: {command}"
             )
             subprocess.run(command, check=True)
 
     # Check if the Whisper model exists
-    if not os.path.exists(whisper_model):
+    if not whisper_model.exists():
         raise FileNotFoundError(f"Whisper model not found. Please ensure {whisper_model} exists.")
 
     # Ensure input is 16kHz and 16-bit
@@ -156,11 +156,11 @@ def transcribe(input_path: str, output_path: str, language: str = "ja") -> None:
 
     # Transcribe using Whisper without printing its output
     command = [
-        whisper_bin,
+        str(whisper_bin),
         "-m",
-        whisper_model,
+        str(whisper_model),
         "-f",
-        temp_audio_path,
+        str(temp_audio_path),
         "-l",
         language,
         "-osrt",
@@ -169,11 +169,10 @@ def transcribe(input_path: str, output_path: str, language: str = "ja") -> None:
     ]
     try:
         subprocess.run(command, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        os.replace(f"{output_path}.srt", output_path)
+        Path(f"{output_path}.srt").replace(output_path)
     except subprocess.CalledProcessError as e:
-        print(f"Error running Whisper-cli: {e}")
-        raise
+        raise RuntimeError(f"[ERROR] Running Whisper: {e}") from e
     finally:
         # Clean up the temporary file
-        if os.path.exists(temp_audio_path):
-            os.remove(temp_audio_path)
+        if temp_audio_path.exists():
+            temp_audio_path.unlink()
