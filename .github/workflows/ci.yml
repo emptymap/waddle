@@ -28,9 +28,6 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v5
 
-      - name: Install Pyright
-        run: npm install -g pyright
-
       - name: Install Python dependencies
         run: |
           uv venv
