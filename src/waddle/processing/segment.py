@@ -2,6 +2,7 @@ import shutil
 from pathlib import Path
 
 import numpy as np
+import pyinstrument
 from pydub import AudioSegment
 from tqdm import tqdm
 
@@ -16,6 +17,7 @@ from waddle.processing.combine import SpeechTimeline, combine_segments_into_audi
 from waddle.utils import format_audio_filename, format_time, parse_audio_filename, time_to_seconds
 
 
+@pyinstrument.profile()
 def detect_speech_timeline(
     audio_path: Path,
     threshold_db: float = DEFAULT_THRESHOLD_DB,
