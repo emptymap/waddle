@@ -51,7 +51,7 @@ def process_single_file(
         output_dir (str | os.PathLike): Path to the output directory.
         speaker_file (str | os.PathLike): Path to the speaker audio file.
         ss (float, optional): Start time offset in seconds. Defaults to 0.0.
-        out_duration (float | None, optional): Duration of the output audio in seconds. Defaults to None.
+        out_duration (float | None, optional): Duration of the processed output audio in seconds.
 
     Returns:
         Path: Path to the combined speaker audio file.
