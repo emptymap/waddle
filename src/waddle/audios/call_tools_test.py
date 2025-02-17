@@ -4,6 +4,7 @@ import wave
 from pathlib import Path
 from unittest.mock import patch
 
+import numpy as np
 import pytest
 
 from waddle.audios.call_tools import (
@@ -14,8 +15,23 @@ from waddle.audios.call_tools import (
 )
 
 # Define test directory paths
-TESTS_DIR = Path(__file__).resolve().parent.parents[2] / "tests"
-EP0_DIR = TESTS_DIR / "ep0"
+TESTS_DIR_PATH = Path(__file__).resolve().parent.parents[2] / "tests"
+EP0_DIR_PATH = TESTS_DIR_PATH / "ep0"
+
+# Save the original subprocess.run
+_orig_run = subprocess.run
+
+
+def subprocess_run_with_error(error_on=None):
+    """Patch `subprocess.run` to raise an error only when `error_on` is found in the command."""
+
+    def side_effect(cmd, *args, **kwargs):
+        cmd_str = " ".join(str(arg) for arg in cmd) if isinstance(cmd, (list, tuple)) else str(cmd)
+        if error_on and error_on in cmd_str:
+            raise subprocess.CalledProcessError(1, cmd)
+        return _orig_run(cmd, *args, **kwargs)  # Call the original subprocess.run
+
+    return patch("subprocess.run", side_effect=side_effect)
 
 
 def get_wav_duration(file_path: Path) -> float:
@@ -142,7 +158,7 @@ def test_ensure_sampling_rate_error():
         # Create an empty input file
         fake_input.touch()
 
-        with patch("subprocess.run", side_effect=subprocess.CalledProcessError(1, "ffmpeg")):
+        with subprocess_run_with_error("ffmpeg"):
             with pytest.raises(RuntimeError, match="Converting"):
                 ensure_sampling_rate(fake_input, output_wav, target_rate=16000)
 
@@ -184,15 +200,50 @@ def test_remove_noise_same_output_path():
 
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_dir_path = Path(temp_dir)
-        temp_wav = temp_dir_path / wav_file.name
-        temp_wav.write_bytes(wav_file.read_bytes())  # Copy file
+        wav_path = temp_dir_path / wav_file_path.name
+        wav_path.write_bytes(wav_file_path.read_bytes())
 
+        remove_noise(wav_path, wav_path)
+
+        assert wav_path.exists()
+        assert get_wav_duration(wav_path) == pytest.approx(get_wav_duration(wav_file_path), rel=0.1)
+        assert wav_path.read_bytes() != wav_file_path.read_bytes()
+
+        # To compare noise levels, ensure_sampling_rate is used to convert to 48kHz
+        original_48k_path = temp_dir_path / "wav_48k.wav"
+        ensure_sampling_rate(wav_file_path, original_48k_path, target_rate=48000)
+        assert get_total_noise_amount(wav_path) < get_total_noise_amount(original_48k_path), (
+            "Noise not removed"
+        )
+
+
+def test_remove_noise_file_not_found():
+    """Test remove_noise when input file does not exist."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_dir_path = Path(temp_dir)
+        fake_input = temp_dir_path / "non_existent.wav"
         output_wav = temp_dir_path / "output.wav"
-        try:
-            remove_noise(temp_wav, output_wav)
-            assert output_wav.exists()
-        except FileNotFoundError:
-            pytest.skip("DeepFilterNet tool not installed")
+
+        with pytest.raises(FileNotFoundError, match="Input file not found"):
+            remove_noise(fake_input, output_wav)
+
+
+def test_remove_noise_error():
+    """Test remove_noise when subprocess raises an error."""
+    wav_file_path = EP0_DIR_PATH / "ep12-masa.wav"
+    if not wav_file_path.exists():
+        pytest.skip(f"Sample file {wav_file_path} not found")
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_dir_path = Path(temp_dir)
+        temp_wav_path = temp_dir_path / wav_file_path.name
+        temp_wav_path.write_bytes(wav_file_path.read_bytes())
+
+        output_wav = temp_dir_path / "denoised.wav"
+
+        with subprocess_run_with_error("deep-filter"):
+            with pytest.raises(RuntimeError, match="Running DeepFilterNet"):
+                remove_noise(temp_wav_path, output_wav)
 
 
 def test_transcribe():
@@ -233,14 +284,11 @@ def test_transcribe_error():
 
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_dir_path = Path(temp_dir)
-        temp_wav = temp_dir_path / wav_file.name
-        temp_wav.write_bytes(wav_file.read_bytes())  # Copy file
+        temp_wav_path = temp_dir_path / wav_file_path.name
+        temp_wav_path.write_bytes(wav_file_path.read_bytes())
 
-        output_srt = temp_dir_path / "output.srt"
-        try:
-            transcribe(temp_wav, output_srt, language="ja")
-            assert output_srt.exists()
-            # Check line is more than 3
-            assert len(output_srt.read_text().strip().split("\n")) > 3
-        except FileNotFoundError:
-            pytest.skip("Whisper CLI or model not installed")
+        output_txt = temp_dir_path / "transcription.txt"
+
+        with subprocess_run_with_error("whisper"):
+            with pytest.raises(RuntimeError, match="Running Whisper"):
+                transcribe(temp_wav_path, output_txt)
