@@ -246,6 +246,30 @@ def test_remove_noise_error():
                 remove_noise(temp_wav_path, output_wav)
 
 
+def test_remove_noise_with_missing_deep_filter():
+    """Test that the DeepFilterNet installation command is executed when the tool is missing."""
+    wav_file_path = EP0_DIR_PATH / "ep12-masa.wav"
+    if not wav_file_path.exists():
+        pytest.skip(f"Sample file {wav_file_path} not found")
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_dir_path = Path(temp_dir)
+        temp_wav_path = temp_dir_path / wav_file_path.name
+        temp_wav_path.write_bytes(wav_file_path.read_bytes())
+
+        with (
+            patch("builtins.print") as mock_print,
+            patch(
+                "subprocess.run", side_effect=RuntimeError("subprocess.run was called")
+            ) as mock_run,
+            patch("waddle.audios.call_tools.get_project_root", return_value=temp_dir_path),
+        ):
+            with pytest.raises(RuntimeError, match="subprocess.run was called"):
+                remove_noise(temp_wav_path, temp_wav_path)
+            assert any("not found" in call.args[0] for call in mock_print.call_args_list)
+            assert any("install-deep-filter.sh" in call.args[0] for call in mock_run.call_args_list)
+
+
 def test_transcribe():
     """Test transcription using Whisper."""
     wav_file_path = EP0_DIR_PATH / "ep12-masa.wav"
