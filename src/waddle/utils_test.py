@@ -1,3 +1,6 @@
+import os
+from pathlib import Path
+
 import pytest
 
 from waddle.utils import (
@@ -6,6 +9,7 @@ from waddle.utils import (
     parse_audio_filename,
     phrase_time_to_seconds,
     time_to_seconds,
+    to_path,
 )
 
 
@@ -96,3 +100,25 @@ def test_parse_audio_filename():
     assert parse_audio_filename("tmp/kzjirwe_klae256_wj1/seg_1_200.wav") == (1, 200), (
         "parse_name('tmp/kzjirwe_klae256_wj1/seg_1_200.wav') is failed."
     )
+
+
+class PathLikeBytes(os.PathLike):
+    """Custom os.PathLike class returning bytes."""
+
+    def __init__(self, path: bytes):
+        if not isinstance(path, bytes):
+            raise TypeError("Path must be a bytes object")
+        self._path = path
+
+    def __fspath__(self) -> bytes:
+        return self._path
+
+
+def test_to_path():
+    """Test convert string to Path."""
+    assert to_path(Path("abc/23/a.txt")) == Path("abc/23/a.txt")
+    assert to_path("test") == Path("test")
+    assert to_path("test/test") == Path("test/test")
+    assert to_path(os.path.join("test", "test")) == Path("test/test")
+    assert to_path(b"z/1/2") == Path("z/1/2")
+    assert to_path(PathLikeBytes(b"a/b.py")) == Path("a/b.py")
