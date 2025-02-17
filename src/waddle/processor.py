@@ -39,7 +39,7 @@ def select_reference_audio(audio_paths: list[Path]) -> Path:
 def process_single_file(
     aligned_audio: str | bytes | os.PathLike[Any],
     output_dir: str | bytes | os.PathLike[Any],
-    speaker_file: str | bytes | os.PathLike[Any],
+    speaker_audio: str | bytes | os.PathLike[Any],
     ss: float = 0.0,
     out_duration: float | None = None,
 ) -> Path:
@@ -49,7 +49,7 @@ def process_single_file(
     Args:
         aligned_audio (str | os.PathLike): Path to the aligned audio file.
         output_dir (str | os.PathLike): Path to the output directory.
-        speaker_file (str | os.PathLike): Path to the speaker audio file.
+        speaker_audio (str | os.PathLike): Path to the speaker audio file.
         ss (float, optional): Start time offset in seconds. Defaults to 0.0.
         out_duration (float | None, optional): Duration of the processed output audio in seconds.
 
@@ -58,14 +58,14 @@ def process_single_file(
     """
     aligned_audio_path = to_path(aligned_audio)
     output_dir_path = to_path(output_dir)
-    speaker_file_path = to_path(speaker_file)
+    speaker_audio_path = to_path(speaker_audio)
 
     clip_audio(aligned_audio_path, aligned_audio_path, ss=ss, out_duration=out_duration)
 
     segs_folder_path, _ = detect_speech_timeline(aligned_audio_path)
 
     # Transcribe segments and combine
-    speaker_name = speaker_file_path.stem
+    speaker_name = speaker_audio_path.stem
     combined_speaker_path = output_dir_path / f"{speaker_name}.wav"
     transcription_path = output_dir_path / f"{speaker_name}.srt"
     process_segments(
@@ -118,13 +118,13 @@ def preprocess_multi_files(
     timelines: list[SpeechTimeline] = []
     segments_dir_list = []
 
-    def process_file(speaker_file_path: Path):
-        print(f"\033[92m[INFO] Processing file: {str(speaker_file_path)}\033[0m")
+    def process_file(speaker_audio_path: Path):
+        print(f"\033[92m[INFO] Processing file: {str(speaker_audio_path)}\033[0m")
 
         # 1) Align each speaker audio to the reference
         aligned_audio_path = align_speaker_to_reference(
             reference_path,
-            speaker_file_path,
+            speaker_audio_path,
             workspace_path,
             comp_duration=comp_duration,
         )

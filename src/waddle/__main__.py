@@ -1,8 +1,8 @@
 import shutil
-from pathlib import Path
 
 from waddle.argparse import create_waddle_parser
 from waddle.processor import preprocess_multi_files, process_single_file
+from waddle.utils import to_path
 
 
 def main():
@@ -20,10 +20,10 @@ def main():
 
 
 def do_single(args):
-    audio_path = Path(args.audio)
+    audio_path = to_path(args.audio)
     if not audio_path.is_file():
         raise FileNotFoundError(f"Audio file not found: {args.audio}")
-    output_dir = Path(args.output)
+    output_dir = to_path(args.output)
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Copy the audio file to the output directory
@@ -34,9 +34,9 @@ def do_single(args):
 
     print(f"[INFO] Processing single audio file: {output_audio_path}")
     process_single_file(
-        aligned_audio_path=output_audio_path,
-        output_dir_path=output_dir,
-        speaker_file=audio_path,
+        aligned_audio=output_audio_path,
+        output_dir=output_dir,
+        speaker_audio=audio_path,
         ss=args.ss,
         out_duration=args.time,
     )
@@ -44,18 +44,18 @@ def do_single(args):
 
 
 def do_preprocess(args):
-    reference_path_or_none = Path(args.reference) if args.reference else None
+    reference_path_or_none = to_path(args.reference) if args.reference else None
     if reference_path_or_none is not None and not reference_path_or_none.is_file():
         raise FileNotFoundError(f"Reference file not found: {args.reference}")
-    source_dir_path = Path(args.directory)
+    source_dir_path = to_path(args.directory)
     if not source_dir_path.is_dir():
         raise FileNotFoundError(f"Audio source directory not found: {args.directory}")
-    output_dir_path = Path(args.output or "./out")
+    output_dir_path = to_path(args.output or "./out")
 
     preprocess_multi_files(
-        reference_path_or_none=reference_path_or_none,
-        source_dir_path=source_dir_path,
-        output_dir_path=output_dir_path,
+        reference=reference_path_or_none,
+        source_dir=source_dir_path,
+        output_dir=output_dir_path,
         comp_duration=args.comp_duration,
         ss=args.ss,
         out_duration=args.time,
