@@ -121,4 +121,5 @@ def test_to_path():
     assert to_path("test/test") == Path("test/test")
     assert to_path(os.path.join("test", "test")) == Path("test/test")
     assert to_path(b"z/1/2") == Path("z/1/2")
+    assert to_path(b"test/test.png") == Path("test/test.png")
     assert to_path(PathLikeBytes(b"a/b.py")) == Path("a/b.py")
