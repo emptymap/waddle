@@ -1,6 +1,8 @@
 import concurrent.futures
+import os
 import shutil
 from pathlib import Path
+from typing import Any
 
 from waddle.audios.align_offset import align_speaker_to_reference
 from waddle.audios.call_tools import convert_to_wav
@@ -15,6 +17,7 @@ from waddle.processing.segment import (
     detect_speech_timeline,
     process_segments,
 )
+from waddle.utils import to_path
 
 
 def select_reference_audio(audio_paths: list[Path]) -> Path:
@@ -34,29 +37,35 @@ def select_reference_audio(audio_paths: list[Path]) -> Path:
 
 
 def process_single_file(
-    aligned_audio_path: Path,
-    output_dir_path: Path,
-    speaker_file: Path,
+    aligned_audio: str | bytes | os.PathLike[Any],
+    output_dir: str | bytes | os.PathLike[Any],
+    speaker_file: str | bytes | os.PathLike[Any],
     ss: float = 0.0,
     out_duration: float | None = None,
-) -> str:
+) -> Path:
     """
     Process a single audio file: normalize, detect speech, and transcribe.
 
     Args:
-        aligned_audio_path (str): Path to the aligned audio file.
-        output_dir (str): Output directory for processed files.
-        speaker_file (str): Original speaker file name.
+        aligned_audio (str | os.PathLike): Path to the aligned audio file.
+        output_dir (str | os.PathLike): Path to the output directory.
+        speaker_file (str | os.PathLike): Path to the speaker audio file.
+        ss (float, optional): Start time offset in seconds. Defaults to 0.0.
+        out_duration (float | None, optional): Duration of the output audio in seconds. Defaults to None.
 
     Returns:
-        str: Path to the combined speaker audio file.
+        Path: Path to the combined speaker audio file.
     """
+    aligned_audio_path = to_path(aligned_audio)
+    output_dir_path = to_path(output_dir)
+    speaker_file_path = to_path(speaker_file)
+
     clip_audio(aligned_audio_path, aligned_audio_path, ss=ss, out_duration=out_duration)
 
     segs_folder_path, _ = detect_speech_timeline(aligned_audio_path)
 
     # Transcribe segments and combine
-    speaker_name = speaker_file.stem
+    speaker_name = speaker_file_path.stem
     combined_speaker_path = output_dir_path / f"{speaker_name}.wav"
     transcription_path = output_dir_path / f"{speaker_name}.srt"
     process_segments(
@@ -69,23 +78,26 @@ def process_single_file(
 
 
 def preprocess_multi_files(
-    reference_path_or_none: Path | None,
-    source_dir_path: Path,
-    output_dir_path: Path,
+    reference: str | bytes | os.PathLike[Any] | None,
+    source_dir: str | bytes | os.PathLike[Any],
+    output_dir: str | bytes | os.PathLike[Any],
     comp_duration: float = DEFAULT_COMP_AUDIO_DURATION,
     ss: float = 0.0,
     out_duration: float = DEFAULT_OUT_AUDIO_DURATION,
     convert: bool = True,
 ) -> None:
+    source_dir_path = to_path(source_dir)
+    output_dir_path = to_path(output_dir)
+
     if output_dir_path.exists():
         shutil.rmtree(output_dir_path, ignore_errors=True)
     output_dir_path.mkdir(parents=True, exist_ok=True)
 
     # Workspace for temporary files
-    workspace = source_dir_path / "workspace" if source_dir_path is not None else None
-    # Recreate the workspace
-    shutil.rmtree(workspace, ignore_errors=True)
-    workspace.mkdir(parents=True, exist_ok=True)
+    workspace_path = source_dir_path / "workspace"
+    if workspace_path.exists():
+        shutil.rmtree(workspace_path, ignore_errors=True)
+    workspace_path.mkdir(parents=True, exist_ok=True)
 
     # Convert to WAV files if the flag is set
     if convert:
@@ -96,7 +108,7 @@ def preprocess_multi_files(
     if not audio_file_paths:
         raise ValueError("No audio files found in the directory.")
 
-    reference_path = reference_path_or_none or select_reference_audio(audio_file_paths)
+    reference_path = to_path(reference) if reference else select_reference_audio(audio_file_paths)
     print(f"[INFO] Using reference audio: {reference_path}")
 
     audio_file_paths = [f for f in audio_file_paths if f != reference_path and "GMT" not in f.name]
@@ -113,7 +125,7 @@ def preprocess_multi_files(
         aligned_audio_path = align_speaker_to_reference(
             reference_path,
             speaker_file_path,
-            workspace,
+            workspace_path,
             comp_duration=comp_duration,
         )
         clip_audio(aligned_audio_path, aligned_audio_path, ss=ss, out_duration=out_duration)
@@ -145,5 +157,5 @@ def preprocess_multi_files(
     with concurrent.futures.ThreadPoolExecutor() as executor:
         executor.map(save_audio_with_timeline, audio_file_paths, segments_dir_list)
 
-    # Clean up workspace
-    shutil.rmtree(workspace, ignore_errors=True)
+    # Clean up workspace_path
+    shutil.rmtree(workspace_path, ignore_errors=True)
