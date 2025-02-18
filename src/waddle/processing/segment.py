@@ -5,7 +5,7 @@ import numpy as np
 from pydub import AudioSegment
 from tqdm import tqdm
 
-from waddle.audios.call_tools import remove_noise, transcribe
+from waddle.audios.call_tools import transcribe
 from waddle.config import (
     DEFAULT_BUFFER_DURATION,
     DEFAULT_CHUNK_DURATION,
@@ -58,17 +58,6 @@ def detect_speech_timeline(
         desc="[INFO] Detecting speech segments",
     ):
         chunk = audio[i : i + chunk_size_ms]
-        if not chunk.dBFS > threshold_db:
-            if current_segment is not None:
-                segments.append((current_segment[0], current_segment[1]))
-                current_segment = None
-            continue
-
-        temp_chunk_path = chunks_folder / format_audio_filename("chunk", i, i + chunk_size_ms)
-        chunk.export(temp_chunk_path, format="wav")
-        remove_noise(temp_chunk_path, temp_chunk_path)
-        chunk = AudioSegment.from_file(temp_chunk_path)
-
         if chunk.dBFS > threshold_db:
             start_ms = max(0, i - buffer_size_ms)
             end_ms = min(duration, i + chunk_size_ms + buffer_size_ms)
@@ -116,9 +105,6 @@ def detect_speech_timeline(
         normalized_audio = seg_audio.apply_gain(gain_adjustment)
         seg_audio_path = segs_folder_path / format_audio_filename("seg", seg[0], seg[1])
         normalized_audio.export(seg_audio_path, format="wav")
-        # Remove_noise is called twice, but this is done because accuracy is poor
-        # if it is not written for each sentence.
-        remove_noise(seg_audio_path, seg_audio_path)
 
     # Clean up audio
     audio_path.unlink()
