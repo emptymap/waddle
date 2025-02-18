@@ -20,7 +20,7 @@ def find_offset_via_cross_correlation(ref_audio: np.ndarray, spk_audio: np.ndarr
     Negative offset => spk_audio starts later than ref_audio
     """
     correlation = signal.correlate(ref_audio, spk_audio, mode="full")
-    max_corr_index = np.argmax(correlation)
+    max_corr_index = int(np.argmax(correlation))
     offset = max_corr_index - (
         len(spk_audio) - 1
     )  # the center index (zero lag) is at len(spk_audio) - 1
@@ -58,7 +58,7 @@ def align_speaker_to_reference(
     speaker_path: Path,
     output_dir: Path = Path("out"),
     sample_rate: int = DEFAULT_SR,
-    comp_duration: int = DEFAULT_COMP_AUDIO_DURATION,
+    comp_duration: float = DEFAULT_COMP_AUDIO_DURATION,
 ) -> Path:
     # 1) Load short segments for cross-correlation
     ref_audio, _ = librosa.load(
