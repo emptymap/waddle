@@ -94,6 +94,9 @@ def detect_speech_timeline(
         max_dBFS_list.append(seg_audio.dBFS)
 
     # calculate 95th percentile of max_dBFS
+    if not max_dBFS_list:
+        print("[Warning] No speech segments detected.")
+        return segs_folder_path, []
     max_dBFS_95th_percentile = np.percentile(max_dBFS_list, 95)
 
     # Calculate gain adjustment to achieve target_dBFS for 95th percentile
