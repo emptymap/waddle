@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from waddle.audios.align_offset import align_speaker_to_reference
-from waddle.audios.call_tools import convert_all_files_to_wav
+from waddle.audios.call_tools import convert_all_files_to_wav, convert_to_wav
 from waddle.audios.clip import clip_audio
 from waddle.config import DEFAULT_COMP_AUDIO_DURATION, DEFAULT_OUT_AUDIO_DURATION
 from waddle.processing.combine import (
@@ -60,6 +60,9 @@ def process_single_file(
     output_dir_path = to_path(output_dir)
     speaker_audio_path = to_path(speaker_audio)
 
+    if aligned_audio_path.suffix != ".wav":
+        convert_to_wav(aligned_audio_path)
+        aligned_audio_path = aligned_audio_path.with_suffix(".wav")
     clip_audio(aligned_audio_path, aligned_audio_path, ss=ss, out_duration=out_duration)
 
     segs_folder_path, _ = detect_speech_timeline(aligned_audio_path)
