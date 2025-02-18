@@ -66,6 +66,27 @@ def test_integration_single_file_not_found():
         )
 
 
+def test_integration_single_m4a():
+    """Tests single file processing with an M4A file."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        input_file = "ep12-masa.m4a"
+        input_file_path = os.path.join(dir, "ep0", input_file)
+
+        test_args = ["single", input_file_path, "--output", tmpdir, "-ss", "5", "-t", "5"]
+        result = run_waddle_command(test_args)
+
+        assert result.returncode == 0, f"Command failed with error: {result.stderr}"
+
+        output_file = os.path.join(tmpdir, input_file.replace(".m4a", ".wav"))
+        assert os.path.exists(output_file), "Output file was not created"
+
+        with wave.open(output_file, "r") as wav_file:
+            assert wav_file.getnchannels() > 0, "Invalid number of channels"
+            assert wav_file.getsampwidth() > 0, "Invalid sample width"
+            assert wav_file.getframerate() > 0, "Invalid frame rate"
+            assert wav_file.getnframes() > 0, "No frames in output file"
+
+
 def test_integration_preprocess():
     """Tests the preprocess command for batch processing."""
     with tempfile.TemporaryDirectory() as tmpdir:
