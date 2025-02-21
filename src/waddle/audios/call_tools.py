@@ -10,14 +10,35 @@ def get_project_root() -> Path:
     return Path(__file__).parent.parent.parent.parent.resolve()
 
 
-def convert_to_wav(folder_path: Path) -> None:
-    """
-    Convert audio files in the specified folder to WAV format.
-    Overwrites existing files without user input.
+def convert_to_wav(input_path: Path, output_path_or_none: Path | None = None) -> None:
+    """Convert audio file to WAV format."""
+    output_path = output_path_or_none or input_path.with_suffix(".wav")
+    if output_path.exists():
+        print(f"[INFO] Skipping {input_path}: WAV file already exists.")
+        return
 
-    Args:
-        folder_path (str): Path to the folder containing audio files.
-    """
+    # Convert to WAV using ffmpeg
+    print(f"[INFO] Converting {input_path} to {output_path}...")
+    try:
+        subprocess.run(
+            [
+                "ffmpeg",
+                "-y",
+                "-i",
+                str(input_path),
+                str(output_path),
+            ],  # Added '-y' flag
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        print(f"[INFO] Successfully converted: {output_path}")
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"[ERROR] Converting {input_path}: {e}") from e
+
+
+def convert_all_files_to_wav(folder_path: Path) -> None:
+    """Convert all audio files in the specified folder to WAV format."""
     # File extensions to look for
     valid_extensions = (".m4a", ".aifc", ".mp4")
 
@@ -25,29 +46,7 @@ def convert_to_wav(folder_path: Path) -> None:
     folder = Path(folder_path)
     for input_path in folder.rglob("*"):
         if input_path.suffix in valid_extensions:
-            output_path = input_path.with_suffix(".wav")
-            if output_path.exists():
-                print(f"[INFO] Skipping {input_path}: WAV file already exists.")
-                continue
-
-            # Convert to WAV using ffmpeg
-            print(f"[INFO] Converting {input_path} to {output_path}...")
-            try:
-                subprocess.run(
-                    [
-                        "ffmpeg",
-                        "-y",
-                        "-i",
-                        str(input_path),
-                        str(output_path),
-                    ],  # Added '-y' flag
-                    check=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                )
-                print(f"[INFO] Successfully converted: {output_path}")
-            except subprocess.CalledProcessError as e:
-                raise RuntimeError(f"[ERROR] Converting {input_path}: {e}") from e
+            convert_to_wav(input_path)
 
 
 def ensure_sampling_rate(

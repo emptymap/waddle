@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from waddle.audios.align_offset import align_speaker_to_reference
-from waddle.audios.call_tools import convert_to_wav, remove_noise
+from waddle.audios.call_tools import convert_all_files_to_wav, convert_to_wav, remove_noise
 from waddle.audios.clip import clip_audio
 from waddle.config import DEFAULT_COMP_AUDIO_DURATION, DEFAULT_OUT_AUDIO_DURATION
 from waddle.processing.combine import (
@@ -60,6 +60,9 @@ def process_single_file(
     output_dir_path = to_path(output_dir)
     speaker_audio_path = to_path(speaker_audio)
 
+    if aligned_audio_path.suffix != ".wav":
+        convert_to_wav(aligned_audio_path)
+        aligned_audio_path = aligned_audio_path.with_suffix(".wav")
     clip_audio(aligned_audio_path, aligned_audio_path, ss=ss, out_duration=out_duration)
     remove_noise(aligned_audio_path, aligned_audio_path)
 
@@ -103,7 +106,7 @@ def preprocess_multi_files(
     # Convert to WAV files if the flag is set
     if convert:
         print("[INFO] Converting audio files to WAV format...")
-        convert_to_wav(source_dir_path)
+        convert_all_files_to_wav(source_dir_path)
 
     audio_file_paths = sorted(source_dir_path.glob("*.wav"))
     if not audio_file_paths:
