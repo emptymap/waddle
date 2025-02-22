@@ -5,7 +5,12 @@ from pathlib import Path
 from typing import Any
 
 from waddle.audios.align_offset import align_speaker_to_reference
-from waddle.audios.call_tools import convert_all_files_to_wav, convert_to_wav, remove_noise
+from waddle.audios.call_tools import (
+    convert_all_files_to_wav,
+    convert_to_wav,
+    remove_noise,
+    transcribe,
+)
 from waddle.audios.clip import clip_audio
 from waddle.config import DEFAULT_COMP_AUDIO_DURATION, DEFAULT_OUT_AUDIO_DURATION
 from waddle.processing.combine import (
@@ -175,17 +180,21 @@ def postprocess_multi_files(
     source_dir_path = to_path(source_dir)
     output_dir_path = to_path(output_dir)
 
-    audio_files = sorted(source_dir_path.glob("*.wav"))
-    if not audio_files:
+    audio_file_paths = [f for f in sorted(source_dir_path.glob("*.wav")) if "GMT" not in f.name]
+    if not audio_file_paths:
         raise ValueError("No audio files found in the directory.")
 
     if output_dir_path.exists():
         shutil.rmtree(output_dir_path, ignore_errors=True)
     output_dir_path.mkdir(parents=True, exist_ok=True)
 
-    audio_prefix = audio_files[0].stem
+    for audio_file_path in audio_file_paths:
+        srt_file_path = output_dir_path / audio_file_path.with_suffix(".srt").name
+        transcribe(audio_file_path, srt_file_path)
+
+    audio_prefix = audio_file_paths[0].stem
     if "-" in audio_prefix:
         audio_prefix = audio_prefix.split("-")[0]
 
     final_audio_path = output_dir_path / f"{audio_prefix}.wav"
-    combine_audio_files(audio_files, final_audio_path)
+    combine_audio_files(audio_file_paths, final_audio_path)
