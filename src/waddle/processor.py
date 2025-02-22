@@ -9,7 +9,6 @@ from waddle.audios.call_tools import (
     convert_all_files_to_wav,
     convert_to_wav,
     remove_noise,
-    transcribe,
 )
 from waddle.audios.clip import clip_audio
 from waddle.config import DEFAULT_COMP_AUDIO_DURATION, DEFAULT_OUT_AUDIO_DURATION
@@ -190,8 +189,17 @@ def postprocess_multi_files(
     output_dir_path.mkdir(parents=True, exist_ok=True)
 
     for audio_file_path in audio_file_paths:
-        srt_file_path = output_dir_path / audio_file_path.with_suffix(".srt").name
-        transcribe(audio_file_path, srt_file_path)
+        tmp_audio_file_path = output_dir_path / audio_file_path.name
+        shutil.copy(audio_file_path, tmp_audio_file_path)
+        segments_dir, _ = detect_speech_timeline(tmp_audio_file_path)
+        speaker_name = audio_file_path.stem
+        combined_speaker_path = output_dir_path / f"{speaker_name}.wav"
+        transcription_path = output_dir_path / f"{speaker_name}.srt"
+        process_segments(
+            segments_dir,
+            combined_speaker_path,
+            transcription_path,
+        )
 
     transcription_output_path = output_dir_path / "transcription.srt"
     combine_srt_files(output_dir_path, transcription_output_path)
