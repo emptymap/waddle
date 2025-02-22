@@ -17,48 +17,26 @@ from waddle.processing.combine import SpeechTimeline, combine_segments_into_audi
 from waddle.utils import format_audio_filename, format_time, parse_audio_filename, time_to_seconds
 
 
-def detect_speech_timeline(
-    audio_path: Path,
+def find_speech_segments(
+    audio: AudioSegment,
     threshold_db: float = DEFAULT_THRESHOLD_DB,
     chunk_size_ms: int = int(DEFAULT_CHUNK_DURATION * 1000),
     buffer_size_ms: int = int(DEFAULT_BUFFER_DURATION * 1000),
-    target_dBFS: float = DEFAULT_TARGET_DB,
-) -> tuple[Path, SpeechTimeline]:
-    """
-    Detects speech segments in an audio file based on a specified loudness threshold.
-    Each detected segment includes a buffer of audio before and after to ensure completeness.
-    The detected segments are normalized to achieve a global mean dBFS of target_dBFS.
-
-    Args:
-        audio_path (str): Path to the input audio file.
-        threshold_db (float): Loudness threshold in dBFS for detecting speech.
-        chunk_size_ms (int): Duration of each audio chunk in milliseconds.
-        buffer_size_ms (int): Additional buffer duration in milliseconds for segment merging.
-        target_dBFS (float): Target loudness level (dBFS) for normalized audio segments.
-        out_duration (float, optional): Maximum duration of the processed output audio in seconds.
-
-    Returns
-        segs_folder_path (str): Path to the directory containing the extracted speech segments.
-        merged_segments (SpeechTimeline): List of detected and merged speech segments.
-    """
-    audio = AudioSegment.from_file(str(audio_path))
-
+) -> SpeechTimeline:
+    """Find speech segments in audio based on loudness threshold."""
     segments = []
     current_segment = None
-
-    # Create a clean 'chunks' folder
-    identifier = audio_path.stem
-    chunks_folder = audio_path.parent / "chunks" / identifier
-    if chunks_folder.exists():
-        shutil.rmtree(chunks_folder)
-    chunks_folder.mkdir(parents=True, exist_ok=True)
-
     duration = len(audio)
+
     for i in tqdm(
         range(0, duration, chunk_size_ms),
         desc="[INFO] Detecting speech segments",
     ):
-        chunk = audio[i : i + chunk_size_ms]
+        end = min(i + chunk_size_ms, duration)
+        # Extract segment using pydub's built-in method
+        chunk = audio[i:end]
+        if not isinstance(chunk, AudioSegment):
+            chunk = AudioSegment.silent(duration=0)
         if chunk.dBFS > threshold_db:
             start_ms = max(0, i - buffer_size_ms)
             end_ms = min(duration, i + chunk_size_ms + buffer_size_ms)
@@ -71,51 +49,104 @@ def detect_speech_timeline(
                 segments.append((current_segment[0], current_segment[1]))
                 current_segment = None
 
-    # Finalize last segment if any
     if current_segment is not None:
         segments.append((current_segment[0], current_segment[1]))
 
-    # Clean up chunks
-    shutil.rmtree(chunks_folder)
+    return merge_segments(segments)
 
-    # Merge overlapping/adjacent segments
-    merged_segments = merge_segments(segments)
 
-    # Save segment to disk
-    audio_file_name = audio_path.stem
-    segs_folder_path = audio_path.parent / f"{audio_file_name}_segs"
+def calculate_normalization(
+    audio: AudioSegment,
+    segments: SpeechTimeline,
+    target_dBFS: float = DEFAULT_TARGET_DB,
+) -> float:
+    """Calculate gain adjustment for audio normalization."""
+    if not segments:
+        return 0.0
+
+    max_dBFS_list = []
+    for seg in segments:
+        # Extract segment using pydub's built-in method
+        segment = audio[seg[0] : seg[1]]
+        if not isinstance(segment, AudioSegment):
+            continue
+        max_dBFS_list.append(segment.dBFS)
+    max_dBFS_95th_percentile = float(np.percentile(max_dBFS_list, 95))
+    return target_dBFS - max_dBFS_95th_percentile
+
+
+def save_normalized_segments(
+    audio: AudioSegment,
+    segments: SpeechTimeline,
+    output_dir: Path,
+    gain_adjustment: float,
+) -> None:
+    """Save normalized audio segments to files."""
+    for seg in segments:
+        # Extract segment using pydub's built-in method
+        segment = audio[seg[0] : seg[1]]
+        if not isinstance(segment, AudioSegment):
+            continue
+        normalized_audio = segment.apply_gain(gain_adjustment)
+        seg_audio_path = output_dir / format_audio_filename("seg", seg[0], seg[1])
+        normalized_audio.export(seg_audio_path, format="wav")
+
+
+def setup_segments_directory(audio_path: Path) -> Path:
+    """Setup and return directory for storing segments."""
+    segs_folder_path = audio_path.parent / f"{audio_path.stem}_segs"
     if segs_folder_path.exists():
         shutil.rmtree(segs_folder_path)
     segs_folder_path.mkdir(parents=True, exist_ok=True)
+    return segs_folder_path
 
-    # collect max_dBFS for each segment
-    max_dBFS_list = []
-    for seg in merged_segments:
-        seg_audio = audio[seg[0] : seg[1]]
-        max_dBFS_list.append(seg_audio.dBFS)
 
-    # calculate 95th percentile of max_dBFS
-    if not max_dBFS_list:
+def detect_speech_timeline(
+    audio_path: Path,
+    threshold_db: float = DEFAULT_THRESHOLD_DB,
+    chunk_size_ms: int = int(DEFAULT_CHUNK_DURATION * 1000),
+    buffer_size_ms: int = int(DEFAULT_BUFFER_DURATION * 1000),
+    target_dBFS: float = DEFAULT_TARGET_DB,
+) -> tuple[Path, SpeechTimeline]:
+    """
+    Detects and processes speech segments in an audio file.
+
+    This function coordinates the speech detection process:
+    1. Loads the audio file
+    2. Detects speech segments based on loudness
+    3. Normalizes the audio segments
+    4. Saves the processed segments to disk
+
+    Returns the path to the segments directory and the timeline of segments.
+    """
+    # Load audio
+    audio = AudioSegment.from_file(str(audio_path))
+
+    # Find speech segments
+    segments = find_speech_segments(
+        audio,
+        threshold_db,
+        chunk_size_ms,
+        buffer_size_ms,
+    )
+
+    if not segments:
         print("[Warning] No speech segments detected.")
+        segs_folder_path = setup_segments_directory(audio_path)
         return segs_folder_path, []
-    max_dBFS_95th_percentile = np.percentile(max_dBFS_list, 95)
 
-    # Calculate gain adjustment to achieve target_dBFS for 95th percentile
-    gain_adjustment = target_dBFS - max_dBFS_95th_percentile
-
-    # Apply normalization to all segments
-    for seg in merged_segments:
-        seg_audio = audio[seg[0] : seg[1]]
-        normalized_audio = seg_audio.apply_gain(gain_adjustment)
-        seg_audio_path = segs_folder_path / format_audio_filename("seg", seg[0], seg[1])
-        normalized_audio.export(seg_audio_path, format="wav")
-
-    # Clean up audio
-    audio_path.unlink()
-
+    # Calculate normalization
+    gain_adjustment = calculate_normalization(audio, segments, target_dBFS)
     print(f"[INFO] Global normalization applied with gain adjustment: {gain_adjustment} dB")
 
-    return segs_folder_path, merged_segments
+    # Setup output directory and save segments
+    segs_folder_path = setup_segments_directory(audio_path)
+    save_normalized_segments(audio, segments, segs_folder_path, gain_adjustment)
+
+    # Cleanup
+    audio_path.unlink()
+
+    return segs_folder_path, segments
 
 
 def merge_segments(segments: SpeechTimeline) -> SpeechTimeline:
@@ -131,32 +162,13 @@ def merge_segments(segments: SpeechTimeline) -> SpeechTimeline:
     return merged_segments
 
 
-def process_segments(
+def transcribe_segments(
     segs_folder_path: Path,
-    combined_audio_path: Path,
-    transcription_output_path: Path,
     whisper_options: str = f"-l {DEFAULT_LANGUAGE}",
-) -> None:
-    """
-    Transcribe only the detected speech segments, adjust timestamps,
-    and combine them into a single audio file.
-
-    Args:
-        segs_folder_path (str): Path to the folder containing the speech segments.
-        combined_audio_path (str): Path to save the combined audio file.
-        transcription_output_path (str): Path to save the combined transcription file.
-        language (str): Language code for transcription.
-    """
-    segs_folder_path = Path(segs_folder_path)  # TODO: Delete it after switch to Pathlib in test
-    combined_audio_path = Path(
-        combined_audio_path
-    )  # TODO: Delete it after switch to Pathlib in test
-    transcription_output_path = Path(
-        transcription_output_path
-    )  # TODO: Delete it after switch to Pathlib in test
-
-    segs_file_paths = sorted(segs_folder_path.glob("*.wav"))
+) -> list[tuple[str, str, str]]:
+    """Transcribe audio segments and return entries with adjusted timestamps."""
     transcription_entries = []
+    segs_file_paths = sorted(segs_folder_path.glob("*.wav"))
 
     for segs_file_path in tqdm(
         segs_file_paths,
@@ -172,22 +184,47 @@ def process_segments(
         srt_output_path = Path(segs_file_path).with_suffix(".srt")
         transcribe(segs_file_path, srt_output_path, options=whisper_options)
 
-        # Adjust transcription timestamps
+        # Process transcription and cleanup
         process_segment_transcription(srt_output_path, start_seconds, transcription_entries)
         srt_output_path.unlink()
 
-    # Create a single SRT file from all segments
-    with open(str(transcription_output_path), "w", encoding="utf-8") as srt_out:
-        for idx, (start_time, end_time, text) in enumerate(transcription_entries, start=1):
+    return transcription_entries
+
+
+def save_transcription_file(
+    entries: list[tuple[str, str, str]],
+    output_path: Path,
+) -> None:
+    """Save transcription entries to an SRT file."""
+    with open(str(output_path), "w", encoding="utf-8") as srt_out:
+        for idx, (start_time, end_time, text) in enumerate(entries, start=1):
             srt_out.write(f"{idx}\n")
             srt_out.write(f"{start_time} --> {end_time}\n")
             srt_out.write(f"{text}\n\n")
 
-    # Combine segments into one audio file
-    combine_segments_into_audio(
-        segs_folder_path,
-        combined_audio_path,
-    )
+
+def process_segments(
+    segs_folder_path: Path,
+    combined_audio_path: Path,
+    transcription_output_path: Path,
+    whisper_options: str = f"-l {DEFAULT_LANGUAGE}",
+) -> None:
+    """
+    Process speech segments: transcribe and combine into final outputs.
+
+    This function coordinates the segment processing:
+    1. Transcribes each audio segment
+    2. Combines transcriptions into a single SRT file
+    3. Combines audio segments into a single audio file
+    """
+    # Transcribe segments
+    transcription_entries = transcribe_segments(segs_folder_path, whisper_options)
+
+    # Save combined transcription
+    save_transcription_file(transcription_entries, transcription_output_path)
+
+    # Combine audio segments
+    combine_segments_into_audio(segs_folder_path, combined_audio_path)
 
 
 def process_segment_transcription(

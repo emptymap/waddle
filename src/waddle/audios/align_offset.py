@@ -53,6 +53,49 @@ def shift_audio(spk_audio: np.ndarray, offset: int, ref_length: int) -> np.ndarr
     return shifted
 
 
+def load_and_normalize_audio(
+    audio_path: Path,
+    sample_rate: int,
+    duration: float | None = None,
+) -> np.ndarray:
+    """Load and normalize audio file."""
+    audio, _ = librosa.load(str(audio_path), sr=sample_rate, mono=True, duration=duration)
+
+    # Normalize if audio is not silent
+    if np.max(np.abs(audio)) > 0:
+        audio /= np.max(np.abs(audio))
+
+    return audio
+
+
+def save_aligned_audio(
+    audio: np.ndarray,
+    output_dir: Path,
+    speaker_path: Path,
+    sample_rate: int,
+) -> Path:
+    """Save aligned audio to file."""
+    output_dir.mkdir(parents=True, exist_ok=True)
+    aligned_path = output_dir / speaker_path.name
+    sf.write(aligned_path, audio, sample_rate)
+    return aligned_path
+
+
+def compute_alignment_offset(
+    ref_audio: np.ndarray,
+    spk_audio: np.ndarray,
+    sample_rate: int,
+    comp_duration: float,
+) -> int:
+    """Compute alignment offset between reference and speaker audio."""
+    # Load short segments for cross-correlation
+    ref_segment = ref_audio[: int(comp_duration * sample_rate)]
+    spk_segment = spk_audio[: int(comp_duration * sample_rate)]
+
+    # Compute offset
+    return find_offset_via_cross_correlation(ref_segment, spk_segment)
+
+
 def align_speaker_to_reference(
     reference_path: Path,
     speaker_path: Path,
@@ -60,33 +103,28 @@ def align_speaker_to_reference(
     sample_rate: int = DEFAULT_SR,
     comp_duration: float = DEFAULT_COMP_AUDIO_DURATION,
 ) -> Path:
-    # 1) Load short segments for cross-correlation
-    ref_audio, _ = librosa.load(
-        str(reference_path), sr=sample_rate, mono=True, duration=comp_duration
-    )
-    spk_audio, _ = librosa.load(
-        str(speaker_path), sr=sample_rate, mono=True, duration=comp_duration
-    )
+    """
+    Align speaker audio to reference audio using cross-correlation.
 
-    # Normalize
-    if np.max(np.abs(ref_audio)) > 0:
-        ref_audio /= np.max(np.abs(ref_audio))
-    if np.max(np.abs(spk_audio)) > 0:
-        spk_audio /= np.max(np.abs(spk_audio))
+    Args:
+        reference_path: Path to reference audio file
+        speaker_path: Path to speaker audio file to align
+        output_dir: Directory to save aligned audio
+        sample_rate: Audio sample rate
+        comp_duration: Duration of audio segment to use for comparison
 
-    # 2) Compute offset
-    offset = find_offset_via_cross_correlation(ref_audio, spk_audio)
+    Returns:
+        Path to aligned audio file
+    """
+    # Load full audio files
+    ref_audio = load_and_normalize_audio(reference_path, sample_rate)
+    spk_audio = load_and_normalize_audio(speaker_path, sample_rate)
 
-    # 3) Load full audio
-    ref_full, _ = librosa.load(str(reference_path), sr=sample_rate, mono=True)
-    spk_full, _ = librosa.load(str(speaker_path), sr=sample_rate, mono=True)
+    # Compute alignment offset
+    offset = compute_alignment_offset(ref_audio, spk_audio, sample_rate, comp_duration)
 
-    # 4) Shift speaker
-    aligned_speaker = shift_audio(spk_full, offset, len(ref_full))
+    # Align speaker audio
+    aligned_speaker = shift_audio(spk_audio, offset, len(ref_audio))
 
-    # 5) Save the aligned track
-    output_dir.mkdir(parents=True, exist_ok=True)
-    speaker_base = speaker_path.name
-    aligned_path = output_dir / speaker_base
-    sf.write(aligned_path, aligned_speaker, sample_rate)
-    return aligned_path
+    # Save aligned audio
+    return save_aligned_audio(aligned_speaker, output_dir, speaker_path, sample_rate)

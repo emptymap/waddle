@@ -42,6 +42,29 @@ def select_reference_audio(audio_paths: list[Path]) -> Path:
     return gmt_files[0]
 
 
+def prepare_audio_file(
+    audio_path: Path,
+    ss: float = 0.0,
+    out_duration: float | None = None,
+) -> Path:
+    """Prepare audio file by converting, clipping and removing noise."""
+    if audio_path.suffix != ".wav":
+        convert_to_wav(audio_path)
+        audio_path = audio_path.with_suffix(".wav")
+    clip_audio(audio_path, audio_path, ss=ss, out_duration=out_duration)
+    remove_noise(audio_path, audio_path)
+    return audio_path
+
+
+def create_output_paths(
+    output_dir: Path,
+    speaker_audio: Path,
+) -> tuple[Path, Path]:
+    """Create output paths for processed audio and transcription."""
+    speaker_name = speaker_audio.stem
+    return (output_dir / f"{speaker_name}.wav", output_dir / f"{speaker_name}.srt")
+
+
 def process_single_file(
     aligned_audio: str | bytes | os.PathLike[Any],
     output_dir: str | bytes | os.PathLike[Any],
@@ -50,35 +73,23 @@ def process_single_file(
     out_duration: float | None = None,
     whisper_options: str = f"-l {DEFAULT_LANGUAGE}",
 ) -> Path:
-    """
-    Process a single audio file: normalize, detect speech, and transcribe.
-
-    Args:
-        aligned_audio (str | os.PathLike): Path to the aligned audio file.
-        output_dir (str | os.PathLike): Path to the output directory.
-        speaker_audio (str | os.PathLike): Path to the speaker audio file.
-        ss (float, optional): Start time offset in seconds. Defaults to 0.0.
-        out_duration (float | None, optional): Duration of the processed output audio in seconds.
-
-    Returns:
-        Path: Path to the combined speaker audio file.
-    """
+    """Process a single audio file: normalize, detect speech, and transcribe."""
     aligned_audio_path = to_path(aligned_audio)
     output_dir_path = to_path(output_dir)
     speaker_audio_path = to_path(speaker_audio)
 
-    if aligned_audio_path.suffix != ".wav":
-        convert_to_wav(aligned_audio_path)
-        aligned_audio_path = aligned_audio_path.with_suffix(".wav")
-    clip_audio(aligned_audio_path, aligned_audio_path, ss=ss, out_duration=out_duration)
-    remove_noise(aligned_audio_path, aligned_audio_path)
+    # Prepare audio file
+    aligned_audio_path = prepare_audio_file(aligned_audio_path, ss, out_duration)
 
+    # Detect speech segments
     segs_folder_path, _ = detect_speech_timeline(aligned_audio_path)
 
-    # Transcribe segments and combine
-    speaker_name = speaker_audio_path.stem
-    combined_speaker_path = output_dir_path / f"{speaker_name}.wav"
-    transcription_path = output_dir_path / f"{speaker_name}.srt"
+    # Create output paths
+    combined_speaker_path, transcription_path = create_output_paths(
+        output_dir_path, speaker_audio_path
+    )
+
+    # Process segments and transcribe
     process_segments(
         segs_folder_path,
         combined_speaker_path,
@@ -87,6 +98,64 @@ def process_single_file(
     )
 
     return combined_speaker_path
+
+
+def setup_directories(source_dir: Path, output_dir: Path) -> tuple[Path, Path]:
+    """Setup and clean output and workspace directories."""
+    if output_dir.exists():
+        shutil.rmtree(output_dir, ignore_errors=True)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    workspace_path = source_dir / "workspace"
+    if workspace_path.exists():
+        shutil.rmtree(workspace_path, ignore_errors=True)
+    workspace_path.mkdir(parents=True, exist_ok=True)
+
+    return output_dir, workspace_path
+
+
+def get_audio_files(
+    source_dir: Path, reference: str | bytes | os.PathLike[Any] | None = None
+) -> tuple[Path, list[Path]]:
+    """Get reference and speaker audio files from directory."""
+    audio_file_paths = sorted(source_dir.glob("*.wav"))
+    if not audio_file_paths:
+        raise ValueError("No audio files found in the directory.")
+
+    ref_path = to_path(reference) if reference else select_reference_audio(audio_file_paths)
+    print(f"[INFO] Using reference audio: {ref_path}")
+
+    speaker_files = [f for f in audio_file_paths if f != ref_path and "GMT" not in f.name]
+    if not speaker_files:
+        raise ValueError("No speaker audio files found in the directory.")
+
+    return ref_path, speaker_files
+
+
+def process_speaker_file(
+    speaker_path: Path,
+    reference_path: Path,
+    workspace_path: Path,
+    comp_duration: float,
+    ss: float,
+    out_duration: float,
+) -> tuple[Path, SpeechTimeline]:
+    """Process a single speaker file."""
+    print(f"\033[92m[INFO] Processing file: {str(speaker_path)}\033[0m")
+
+    # Align speaker audio to reference
+    aligned_path = align_speaker_to_reference(
+        reference_path,
+        speaker_path,
+        workspace_path,
+        comp_duration=comp_duration,
+    )
+
+    # Prepare aligned audio
+    aligned_path = prepare_audio_file(aligned_path, ss, out_duration)
+
+    # Detect speech segments
+    return detect_speech_timeline(aligned_path)
 
 
 def preprocess_multi_files(
@@ -98,80 +167,102 @@ def preprocess_multi_files(
     out_duration: float = DEFAULT_OUT_AUDIO_DURATION,
     convert: bool = True,
 ) -> None:
+    """Preprocess multiple audio files with improved organization."""
     source_dir_path = to_path(source_dir)
     output_dir_path = to_path(output_dir)
 
-    if output_dir_path.exists():
-        shutil.rmtree(output_dir_path, ignore_errors=True)
-    output_dir_path.mkdir(parents=True, exist_ok=True)
+    # Setup directories
+    output_dir_path, workspace_path = setup_directories(source_dir_path, output_dir_path)
 
-    # Workspace for temporary files
-    workspace_path = source_dir_path / "workspace"
-    if workspace_path.exists():
-        shutil.rmtree(workspace_path, ignore_errors=True)
-    workspace_path.mkdir(parents=True, exist_ok=True)
-
-    # Convert to WAV files if the flag is set
+    # Convert files if needed
     if convert:
         print("[INFO] Converting audio files to WAV format...")
         convert_all_files_to_wav(source_dir_path)
 
-    audio_file_paths = sorted(source_dir_path.glob("*.wav"))
-    if not audio_file_paths:
-        raise ValueError("No audio files found in the directory.")
+    # Get audio files
+    reference_path, audio_file_paths = get_audio_files(source_dir_path, reference)
 
-    reference_path = to_path(reference) if reference else select_reference_audio(audio_file_paths)
-    print(f"[INFO] Using reference audio: {reference_path}")
+    # Process each speaker file
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        process_args = [
+            (path, reference_path, workspace_path, comp_duration, ss, out_duration)
+            for path in audio_file_paths
+        ]
+        results = list(executor.map(lambda args: process_speaker_file(*args), process_args))
 
-    audio_file_paths = [f for f in audio_file_paths if f != reference_path and "GMT" not in f.name]
-    if not audio_file_paths:
-        raise ValueError("No speaker audio files found in the directory.")
+    # Separate results
+    segments_dir_list, timelines = zip(*results, strict=False)
 
-    timelines: list[SpeechTimeline] = []
-    segments_dir_list = []
-
-    def process_file(speaker_audio_path: Path):
-        print(f"\033[92m[INFO] Processing file: {str(speaker_audio_path)}\033[0m")
-
-        # 1) Align each speaker audio to the reference
-        aligned_audio_path = align_speaker_to_reference(
-            reference_path,
-            speaker_audio_path,
-            workspace_path,
-            comp_duration=comp_duration,
-        )
-        clip_audio(aligned_audio_path, aligned_audio_path, ss=ss, out_duration=out_duration)
-        remove_noise(aligned_audio_path, aligned_audio_path)
-
-        # 2) Preprocess the aligned audio file
-        segments_dir, timeline = detect_speech_timeline(aligned_audio_path)
-
-        return segments_dir, timeline
+    # Merge timelines and save audio
+    merged_timeline = merge_timelines(list(timelines))
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = list(executor.map(process_file, audio_file_paths))
-
-    for segments_dir, timeline in results:
-        segments_dir_list.append(segments_dir)
-        timelines.append(timeline)
-
-    merged_timeline = merge_timelines(timelines)
-
-    def save_audio_with_timeline(audio_file_path: Path, segments_dir):
-        audio_file_name = Path(audio_file_path).stem
-        target_audio_path = output_dir_path / f"{audio_file_name}.wav"
-        combine_segments_into_audio_with_timeline(
-            segments_dir,
-            target_audio_path,
-            merged_timeline,
+        save_args = [
+            (audio_path, segments_dir, output_dir_path, merged_timeline)
+            for audio_path, segments_dir in zip(audio_file_paths, segments_dir_list, strict=False)
+        ]
+        executor.map(
+            lambda args: combine_segments_into_audio_with_timeline(
+                args[1],  # segments_dir
+                args[2] / f"{args[0].stem}.wav",  # target_audio_path
+                args[3],  # merged_timeline
+            ),
+            save_args,
         )
-        return target_audio_path
 
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        executor.map(save_audio_with_timeline, audio_file_paths, segments_dir_list)
-
-    # Clean up workspace_path
+    # Cleanup
     shutil.rmtree(workspace_path, ignore_errors=True)
+
+
+def get_speaker_files(source_dir: Path) -> list[Path]:
+    """Get speaker audio files from directory."""
+    audio_files = [f for f in sorted(source_dir.glob("*.wav")) if "GMT" not in f.name]
+    if not audio_files:
+        raise ValueError("No audio files found in the directory.")
+    return audio_files
+
+
+def process_speaker_audio(
+    audio_file_path: Path,
+    output_dir: Path,
+    whisper_options: str,
+) -> None:
+    """Process a single speaker's audio file."""
+    # Copy and prepare audio file
+    tmp_audio_file_path = output_dir / audio_file_path.name
+    shutil.copy(audio_file_path, tmp_audio_file_path)
+
+    # Detect speech segments
+    segments_dir, _ = detect_speech_timeline(tmp_audio_file_path)
+
+    # Create output paths and process segments
+    speaker_name = audio_file_path.stem
+    combined_speaker_path = output_dir / f"{speaker_name}.wav"
+    transcription_path = output_dir / f"{speaker_name}.srt"
+
+    process_segments(
+        segments_dir,
+        combined_speaker_path,
+        transcription_path,
+        whisper_options=whisper_options,
+    )
+
+
+def combine_outputs(
+    output_dir: Path,
+    audio_files: list[Path],
+) -> None:
+    """Combine individual outputs into final files."""
+    # Combine transcriptions
+    transcription_output_path = output_dir / "transcription.srt"
+    combine_srt_files(output_dir, transcription_output_path)
+
+    # Combine audio files
+    audio_prefix = audio_files[0].stem
+    if "-" in audio_prefix:
+        audio_prefix = audio_prefix.split("-")[0]
+    final_audio_path = output_dir / f"{audio_prefix}.wav"
+    combine_audio_files(audio_files, final_audio_path)
 
 
 def postprocess_multi_files(
@@ -179,40 +270,22 @@ def postprocess_multi_files(
     output_dir: str | bytes | os.PathLike[Any],
     whisper_options: str = f"-l {DEFAULT_LANGUAGE}",
 ) -> None:
+    """Postprocess multiple audio files with improved organization."""
     source_dir_path = to_path(source_dir)
     output_dir_path = to_path(output_dir)
 
-    audio_file_paths = [f for f in sorted(source_dir_path.glob("*.wav")) if "GMT" not in f.name]
-    if not audio_file_paths:
-        raise ValueError("No audio files found in the directory.")
-
+    # Setup output directory
     if output_dir_path.exists():
         shutil.rmtree(output_dir_path, ignore_errors=True)
     output_dir_path.mkdir(parents=True, exist_ok=True)
 
-    def process_file(audio_file_path: Path):
-        tmp_audio_file_path = output_dir_path / audio_file_path.name
-        shutil.copy(audio_file_path, tmp_audio_file_path)
-        segments_dir, _ = detect_speech_timeline(tmp_audio_file_path)
-        speaker_name = audio_file_path.stem
-        combined_speaker_path = output_dir_path / f"{speaker_name}.wav"
-        transcription_path = output_dir_path / f"{speaker_name}.srt"
-        process_segments(
-            segments_dir,
-            combined_speaker_path,
-            transcription_path,
-            whisper_options=whisper_options,
-        )
+    # Get speaker files
+    audio_file_paths = get_speaker_files(source_dir_path)
 
+    # Process each speaker file
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        executor.map(process_file, audio_file_paths)
+        process_args = [(f, output_dir_path, whisper_options) for f in audio_file_paths]
+        executor.map(lambda args: process_speaker_audio(*args), process_args)
 
-    transcription_output_path = output_dir_path / "transcription.srt"
-    combine_srt_files(output_dir_path, transcription_output_path)
-
-    audio_prefix = audio_file_paths[0].stem
-    if "-" in audio_prefix:
-        audio_prefix = audio_prefix.split("-")[0]
-
-    final_audio_path = output_dir_path / f"{audio_prefix}.wav"
-    combine_audio_files(audio_file_paths, final_audio_path)
+    # Combine outputs into final files
+    combine_outputs(output_dir_path, audio_file_paths)
