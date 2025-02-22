@@ -11,7 +11,7 @@ from waddle.audios.call_tools import (
     remove_noise,
 )
 from waddle.audios.clip import clip_audio
-from waddle.config import DEFAULT_COMP_AUDIO_DURATION, DEFAULT_LANGUAGE, DEFAULT_OUT_AUDIO_DURATION
+from waddle.config import DEFAULT_COMP_AUDIO_DURATION, DEFAULT_LANGUAGE
 from waddle.processing.combine import (
     combine_audio_files,
     combine_segments_into_audio_with_timeline,
@@ -70,7 +70,8 @@ def process_single_file(
     if aligned_audio_path.suffix != ".wav":
         convert_to_wav(aligned_audio_path)
         aligned_audio_path = aligned_audio_path.with_suffix(".wav")
-    clip_audio(aligned_audio_path, aligned_audio_path, ss=ss, out_duration=out_duration)
+    if ss > 0 or out_duration:
+        clip_audio(aligned_audio_path, aligned_audio_path, ss=ss, out_duration=out_duration)
     remove_noise(aligned_audio_path, aligned_audio_path)
 
     segs_folder_path, _ = detect_speech_timeline(aligned_audio_path)
@@ -95,7 +96,7 @@ def preprocess_multi_files(
     output_dir: str | bytes | os.PathLike[Any],
     comp_duration: float = DEFAULT_COMP_AUDIO_DURATION,
     ss: float = 0.0,
-    out_duration: float = DEFAULT_OUT_AUDIO_DURATION,
+    out_duration: float | None = None,
     convert: bool = True,
 ) -> None:
     source_dir_path = to_path(source_dir)
@@ -177,6 +178,8 @@ def preprocess_multi_files(
 def postprocess_multi_files(
     source_dir: str | bytes | os.PathLike[Any],
     output_dir: str | bytes | os.PathLike[Any],
+    ss: float = 0.0,
+    out_duration: float | None = None,
     whisper_options: str = f"-l {DEFAULT_LANGUAGE}",
 ) -> None:
     source_dir_path = to_path(source_dir)
@@ -192,7 +195,10 @@ def postprocess_multi_files(
 
     def process_file(audio_file_path: Path):
         tmp_audio_file_path = output_dir_path / audio_file_path.name
-        shutil.copy(audio_file_path, tmp_audio_file_path)
+        if ss > 0 or out_duration:
+            clip_audio(audio_file_path, tmp_audio_file_path, ss=ss, out_duration=out_duration)
+        else:
+            shutil.copy(audio_file_path, tmp_audio_file_path)
         segments_dir, _ = detect_speech_timeline(tmp_audio_file_path)
         speaker_name = audio_file_path.stem
         combined_speaker_path = output_dir_path / f"{speaker_name}.wav"
