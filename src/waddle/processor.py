@@ -11,7 +11,7 @@ from waddle.audios.call_tools import (
     remove_noise,
 )
 from waddle.audios.clip import clip_audio
-from waddle.config import DEFAULT_COMP_AUDIO_DURATION, DEFAULT_OUT_AUDIO_DURATION
+from waddle.config import DEFAULT_COMP_AUDIO_DURATION, DEFAULT_LANGUAGE, DEFAULT_OUT_AUDIO_DURATION
 from waddle.processing.combine import (
     combine_audio_files,
     combine_segments_into_audio_with_timeline,
@@ -48,6 +48,7 @@ def process_single_file(
     speaker_audio: str | bytes | os.PathLike[Any],
     ss: float = 0.0,
     out_duration: float | None = None,
+    whisper_options: str = f"-l {DEFAULT_LANGUAGE}",
 ) -> Path:
     """
     Process a single audio file: normalize, detect speech, and transcribe.
@@ -82,6 +83,7 @@ def process_single_file(
         segs_folder_path,
         combined_speaker_path,
         transcription_path,
+        whisper_options=whisper_options,
     )
 
     return combined_speaker_path
@@ -175,6 +177,7 @@ def preprocess_multi_files(
 def postprocess_multi_files(
     source_dir: str | bytes | os.PathLike[Any],
     output_dir: str | bytes | os.PathLike[Any],
+    whisper_options: str = f"-l {DEFAULT_LANGUAGE}",
 ) -> None:
     source_dir_path = to_path(source_dir)
     output_dir_path = to_path(output_dir)
@@ -198,6 +201,7 @@ def postprocess_multi_files(
             segments_dir,
             combined_speaker_path,
             transcription_path,
+            whisper_options=whisper_options,
         )
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
