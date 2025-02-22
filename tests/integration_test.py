@@ -190,11 +190,6 @@ def test_integration_postprocess_no_source_dir():
             "non_existent",
             "--output",
             tmpdir,
-            "-ss",
-            "5",
-            "-t",
-            "5",
-            "--no-convert",
         ]
         result = run_waddle_command(test_args)
 
