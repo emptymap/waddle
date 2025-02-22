@@ -41,6 +41,7 @@ def do_single(args):
         speaker_audio=audio_path,
         ss=args.ss,
         out_duration=args.time,
+        whisper_options=args.whisper_options,
     )
     print(f"[INFO] Processed single audio file saved in: {output_dir}")
 
@@ -72,7 +73,11 @@ def do_postprocess(args):
     output_dir_path = to_path(args.output or "./out")
 
     print(f"[INFO] Postprocessing audio files from: {source_dir_path}")
-    postprocess_multi_files(source_dir=source_dir_path, output_dir=output_dir_path)
+    postprocess_multi_files(
+        source_dir=source_dir_path,
+        output_dir=output_dir_path,
+        whisper_options=args.whisper_options,
+    )
     print(f"[INFO] Postprocessing complete. Output saved in: {output_dir_path}")
 
 

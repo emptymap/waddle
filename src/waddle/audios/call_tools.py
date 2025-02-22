@@ -3,6 +3,8 @@ import subprocess
 import threading
 from pathlib import Path
 
+from waddle.config import DEFAULT_LANGUAGE
+
 
 def get_project_root() -> Path:
     """
@@ -128,7 +130,9 @@ def remove_noise(input_path: Path, output_path: Path) -> None:
 whisper_install_lock = threading.Lock()
 
 
-def transcribe(input_path: Path, output_path: Path, language: str = "ja") -> None:
+def transcribe(
+    input_path: Path, output_path: Path, options: str = f"-l {DEFAULT_LANGUAGE}"
+) -> None:
     """
     Transcribe audio using Whisper.cpp.
     """
@@ -167,8 +171,7 @@ def transcribe(input_path: Path, output_path: Path, language: str = "ja") -> Non
         str(whisper_model),
         "-f",
         str(temp_audio_path),
-        "-l",
-        language,
+        *options.split(),
         "-osrt",
         "-of",
         output_path,

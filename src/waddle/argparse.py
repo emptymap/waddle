@@ -1,6 +1,6 @@
 import argparse
 
-from waddle.config import DEFAULT_COMP_AUDIO_DURATION
+from waddle.config import DEFAULT_COMP_AUDIO_DURATION, DEFAULT_LANGUAGE
 from waddle.utils import phrase_time_to_seconds
 
 
@@ -35,6 +35,15 @@ def create_waddle_parser():
         type=phrase_time_to_seconds,
         default=None,
         help="Duration in seconds for the output audio (default: None).",
+    )
+    single_parser.add_argument(
+        "-wo",
+        "--whisper-options",
+        default=f"-l {DEFAULT_LANGUAGE}",
+        help=(
+            "Options to pass to Whisper transcription (default: '-l {DEFAULT_LANGUAGE}').\n"
+            "You can change the default language by modifying src/config.py."
+        ),
     )
 
     preprocess_parser = subparsers.add_parser(
@@ -104,6 +113,15 @@ def create_waddle_parser():
         "--output",
         default="./out",
         help="Directory to save the postprocessed audio files (default: './out').",
+    )
+    postprocess_parser.add_argument(
+        "-wo",
+        "--whisper-options",
+        default=f"-l {DEFAULT_LANGUAGE}",
+        help=(
+            "Options to pass to Whisper transcription (default: '-l {DEFAULT_LANGUAGE}').\n"
+            "You can change the default language by modifying src/config.py."
+        ),
     )
 
     return parser

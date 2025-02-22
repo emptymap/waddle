@@ -9,6 +9,7 @@ from waddle.audios.call_tools import transcribe
 from waddle.config import (
     DEFAULT_BUFFER_DURATION,
     DEFAULT_CHUNK_DURATION,
+    DEFAULT_LANGUAGE,
     DEFAULT_TARGET_DB,
     DEFAULT_THRESHOLD_DB,
 )
@@ -134,7 +135,7 @@ def process_segments(
     segs_folder_path: Path,
     combined_audio_path: Path,
     transcription_output_path: Path,
-    language: str = "ja",
+    whisper_options: str = f"-l {DEFAULT_LANGUAGE}",
 ) -> None:
     """
     Transcribe only the detected speech segments, adjust timestamps,
@@ -169,7 +170,7 @@ def process_segments(
 
         # Transcribe segment
         srt_output_path = Path(segs_file_path).with_suffix(".srt")
-        transcribe(segs_file_path, srt_output_path, language=language)
+        transcribe(segs_file_path, srt_output_path, options=whisper_options)
 
         # Adjust transcription timestamps
         process_segment_transcription(srt_output_path, start_seconds, transcription_entries)
