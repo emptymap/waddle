@@ -176,7 +176,6 @@ def postprocess_multi_files(
     source_dir: str | bytes | os.PathLike[Any],
     output_dir: str | bytes | os.PathLike[Any],
 ) -> None:
-    # audio_prefix = os.path.basename(audio_files[0]).split("-")[0]
     source_dir_path = to_path(source_dir)
     output_dir_path = to_path(output_dir)
 
