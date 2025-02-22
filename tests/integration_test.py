@@ -179,3 +179,23 @@ def test_integration_postprocess():
 
         srt_files = glob.glob(os.path.join(tmpdir, "*.srt"))
         assert len(srt_files) == 1, f"Expected 1 .srt file, but found {len(srt_files)}"
+
+
+def test_integration_postprocess_no_source_dir():
+    """Tests the postprocess command without a source directory."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        test_args = [
+            "postprocess",
+            "--directory",
+            "non_existent",
+            "--output",
+            tmpdir,
+            "-ss",
+            "5",
+            "-t",
+            "5",
+            "--no-convert",
+        ]
+        result = run_waddle_command(test_args)
+
+        assert result.returncode != 0, "Command should fail without a source directory"
