@@ -16,6 +16,7 @@ from waddle.config import DEFAULT_COMP_AUDIO_DURATION, DEFAULT_OUT_AUDIO_DURATIO
 from waddle.processing.combine import (
     combine_audio_files,
     combine_segments_into_audio_with_timeline,
+    combine_srt_files,
     merge_timelines,
 )
 from waddle.processing.segment import (
@@ -191,6 +192,9 @@ def postprocess_multi_files(
     for audio_file_path in audio_file_paths:
         srt_file_path = output_dir_path / audio_file_path.with_suffix(".srt").name
         transcribe(audio_file_path, srt_file_path)
+
+    transcription_output_path = output_dir_path / "transcription.srt"
+    combine_srt_files(output_dir_path, transcription_output_path)
 
     audio_prefix = audio_file_paths[0].stem
     if "-" in audio_prefix:
