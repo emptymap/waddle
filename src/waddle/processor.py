@@ -187,7 +187,7 @@ def postprocess_multi_files(
         shutil.rmtree(output_dir_path, ignore_errors=True)
     output_dir_path.mkdir(parents=True, exist_ok=True)
 
-    for audio_file_path in audio_file_paths:
+    def process_file(audio_file_path: Path):
         tmp_audio_file_path = output_dir_path / audio_file_path.name
         shutil.copy(audio_file_path, tmp_audio_file_path)
         segments_dir, _ = detect_speech_timeline(tmp_audio_file_path)
@@ -199,6 +199,9 @@ def postprocess_multi_files(
             combined_speaker_path,
             transcription_path,
         )
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        executor.map(process_file, audio_file_paths)
 
     transcription_output_path = output_dir_path / "transcription.srt"
     combine_srt_files(output_dir_path, transcription_output_path)
