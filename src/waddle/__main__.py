@@ -76,6 +76,8 @@ def do_postprocess(args):
     postprocess_multi_files(
         source_dir=source_dir_path,
         output_dir=output_dir_path,
+        ss=args.ss,
+        out_duration=args.time,
         whisper_options=args.whisper_options,
     )
     print(f"[INFO] Postprocessing complete. Output saved in: {output_dir_path}")

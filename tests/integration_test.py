@@ -169,6 +169,10 @@ def test_integration_postprocess():
             os.path.join(dir, "ep0"),
             "--output",
             tmpdir,
+            "-ss",
+            "10",
+            "-t",
+            "6",
         ]
         result = run_waddle_command(test_args)
 
@@ -176,6 +180,7 @@ def test_integration_postprocess():
 
         wav_files = glob.glob(os.path.join(tmpdir, "*.wav"))
         assert len(wav_files) == 4, f"Expected 4 .wav files, but found {len(wav_files)}"
+        assert get_wav_duration(wav_files[0]) < 6, "Output audio file has incorrect duration"
 
         srt_files = glob.glob(os.path.join(tmpdir, "*.srt"))
         assert len(srt_files) == 1, f"Expected 1 .srt file, but found {len(srt_files)}"

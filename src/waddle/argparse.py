@@ -115,6 +115,19 @@ def create_waddle_parser():
         help="Directory to save the postprocessed audio files (default: './out').",
     )
     postprocess_parser.add_argument(
+        "-ss",
+        type=phrase_time_to_seconds,
+        default=0.0,
+        help="Start time in seconds for the audio segment (default: None).",
+    )
+    postprocess_parser.add_argument(
+        "-t",
+        "--time",
+        type=phrase_time_to_seconds,
+        default=None,
+        help="Duration in seconds for the output audio (default: None).",
+    )
+    postprocess_parser.add_argument(
         "-wo",
         "--whisper-options",
         default=f"-l {DEFAULT_LANGUAGE}",
