@@ -30,13 +30,13 @@ def do_single(args):
 
     # Copy the audio file to the output directory
     audio_file_name = audio_path.name
-    output_audio_path = output_dir / audio_file_name
-    print(f"[INFO] Copying audio file to: {output_audio_path}")
-    shutil.copy(args.audio, output_audio_path)
+    tmp_audio_path = output_dir / audio_file_name
+    print(f"[INFO] Copying audio file to: {tmp_audio_path}")
+    shutil.copy(args.audio, tmp_audio_path)
 
-    print(f"[INFO] Processing single audio file: {output_audio_path}")
+    print(f"[INFO] Processing single audio file: {tmp_audio_path}")
     process_single_file(
-        aligned_audio=output_audio_path,
+        aligned_audio=tmp_audio_path,
         output_dir=output_dir,
         speaker_audio=audio_path,
         ss=args.ss,
