@@ -1,7 +1,7 @@
 import shutil
 
 from waddle.argparse import create_waddle_parser
-from waddle.processor import preprocess_multi_files, process_single_file
+from waddle.processor import postprocess_multi_files, preprocess_multi_files, process_single_file
 from waddle.utils import to_path
 
 
@@ -17,6 +17,8 @@ def main():
             do_single(args)
         case "preprocess":
             do_preprocess(args)
+        case "postprocess":
+            do_postprocess(args)
 
 
 def do_single(args):
@@ -61,6 +63,17 @@ def do_preprocess(args):
         out_duration=args.time,
         convert=not args.no_convert,
     )
+
+
+def do_postprocess(args):
+    source_dir_path = to_path(args.directory)
+    if not source_dir_path.is_dir():
+        raise FileNotFoundError(f"Audio source directory not found: {args.directory}")
+    output_dir_path = to_path(args.output or "./out")
+
+    print(f"[INFO] Postprocessing audio files from: {source_dir_path}")
+    postprocess_multi_files(source_dir=source_dir_path, output_dir=output_dir_path)
+    print(f"[INFO] Postprocessing complete. Output saved in: {output_dir_path}")
 
 
 if __name__ == "__main__":

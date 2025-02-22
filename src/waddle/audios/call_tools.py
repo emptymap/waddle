@@ -1,3 +1,4 @@
+import os
 import subprocess
 import threading
 from pathlib import Path
@@ -134,12 +135,18 @@ def transcribe(input_path: Path, output_path: Path, language: str = "ja") -> Non
     # Paths
     project_root = get_project_root()
     whisper_bin = project_root / "tools" / "whisper.cpp" / "build" / "bin" / "whisper-cli"
-    whisper_model = project_root / "tools" / "whisper.cpp" / "models" / "ggml-large-v3.bin"
+    whisper_model = (
+        project_root
+        / "tools"
+        / "whisper.cpp"
+        / "models"
+        / f"ggml-{os.getenv('WHISPER_MODEL_NAME') or 'large-v3'}.bin"
+    )
     temp_audio_path = input_path.with_stem(input_path.stem + "_16k_16bit")
 
     # Check if the Whisper binary exists
     with whisper_install_lock:
-        if not whisper_bin.exists():
+        if not whisper_model.exists():
             command = str(project_root / "scripts" / "install-whisper-cpp.sh")
             print(
                 f"Whisper-cli binary not found. Run the following command to install it: {command}"

@@ -5,11 +5,17 @@ from pathlib import Path
 from typing import Any
 
 from waddle.audios.align_offset import align_speaker_to_reference
-from waddle.audios.call_tools import convert_all_files_to_wav, convert_to_wav, remove_noise
+from waddle.audios.call_tools import (
+    convert_all_files_to_wav,
+    convert_to_wav,
+    remove_noise,
+)
 from waddle.audios.clip import clip_audio
 from waddle.config import DEFAULT_COMP_AUDIO_DURATION, DEFAULT_OUT_AUDIO_DURATION
 from waddle.processing.combine import (
+    combine_audio_files,
     combine_segments_into_audio_with_timeline,
+    combine_srt_files,
     merge_timelines,
 )
 from waddle.processing.segment import (
@@ -164,3 +170,45 @@ def preprocess_multi_files(
 
     # Clean up workspace_path
     shutil.rmtree(workspace_path, ignore_errors=True)
+
+
+def postprocess_multi_files(
+    source_dir: str | bytes | os.PathLike[Any],
+    output_dir: str | bytes | os.PathLike[Any],
+) -> None:
+    source_dir_path = to_path(source_dir)
+    output_dir_path = to_path(output_dir)
+
+    audio_file_paths = [f for f in sorted(source_dir_path.glob("*.wav")) if "GMT" not in f.name]
+    if not audio_file_paths:
+        raise ValueError("No audio files found in the directory.")
+
+    if output_dir_path.exists():
+        shutil.rmtree(output_dir_path, ignore_errors=True)
+    output_dir_path.mkdir(parents=True, exist_ok=True)
+
+    def process_file(audio_file_path: Path):
+        tmp_audio_file_path = output_dir_path / audio_file_path.name
+        shutil.copy(audio_file_path, tmp_audio_file_path)
+        segments_dir, _ = detect_speech_timeline(tmp_audio_file_path)
+        speaker_name = audio_file_path.stem
+        combined_speaker_path = output_dir_path / f"{speaker_name}.wav"
+        transcription_path = output_dir_path / f"{speaker_name}.srt"
+        process_segments(
+            segments_dir,
+            combined_speaker_path,
+            transcription_path,
+        )
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        executor.map(process_file, audio_file_paths)
+
+    transcription_output_path = output_dir_path / "transcription.srt"
+    combine_srt_files(output_dir_path, transcription_output_path)
+
+    audio_prefix = audio_file_paths[0].stem
+    if "-" in audio_prefix:
+        audio_prefix = audio_prefix.split("-")[0]
+
+    final_audio_path = output_dir_path / f"{audio_prefix}.wav"
+    combine_audio_files(audio_file_paths, final_audio_path)
