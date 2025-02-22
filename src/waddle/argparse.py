@@ -89,4 +89,21 @@ def create_waddle_parser():
         help="Skip converting audio files to WAV format.",
     )
 
+    postprocess_parser = subparsers.add_parser(
+        "postprocess",
+        description="Postprocess audio files: merge and finalize outputs.",
+    )
+    postprocess_parser.add_argument(
+        "-d",
+        "--directory",
+        required=True,
+        help="Directory containing audio files to be postprocessed.",
+    )
+    postprocess_parser.add_argument(
+        "-o",
+        "--output",
+        default="./out",
+        help="Directory to save the postprocessed audio files (default: './out').",
+    )
+
     return parser

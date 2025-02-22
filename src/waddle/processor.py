@@ -9,6 +9,7 @@ from waddle.audios.call_tools import convert_all_files_to_wav, convert_to_wav, r
 from waddle.audios.clip import clip_audio
 from waddle.config import DEFAULT_COMP_AUDIO_DURATION, DEFAULT_OUT_AUDIO_DURATION
 from waddle.processing.combine import (
+    combine_audio_files,
     combine_segments_into_audio_with_timeline,
     merge_timelines,
 )
@@ -164,3 +165,27 @@ def preprocess_multi_files(
 
     # Clean up workspace_path
     shutil.rmtree(workspace_path, ignore_errors=True)
+
+
+def postprocess_multi_files(
+    source_dir: str | bytes | os.PathLike[Any],
+    output_dir: str | bytes | os.PathLike[Any],
+) -> None:
+    # audio_prefix = os.path.basename(audio_files[0]).split("-")[0]
+    source_dir_path = to_path(source_dir)
+    output_dir_path = to_path(output_dir)
+
+    audio_files = sorted(source_dir_path.glob("*.wav"))
+    if not audio_files:
+        raise ValueError("No audio files found in the directory.")
+
+    if output_dir_path.exists():
+        shutil.rmtree(output_dir_path, ignore_errors=True)
+    output_dir_path.mkdir(parents=True, exist_ok=True)
+
+    audio_prefix = audio_files[0].stem
+    if "-" in audio_prefix:
+        audio_prefix = audio_prefix.split("-")[0]
+
+    final_audio_path = output_dir_path / f"{audio_prefix}.wav"
+    combine_audio_files(audio_files, final_audio_path)
