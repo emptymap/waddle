@@ -158,3 +158,24 @@ def test_integration_preprocess_no_source_dir():
         result = run_waddle_command(test_args)
 
         assert result.returncode != 0, "Command should fail without a source directory"
+
+
+def test_integration_postprocess():
+    """Tests the postprocess command for batch processing"""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        test_args = [
+            "postprocess",
+            "--directory",
+            os.path.join(dir, "ep0"),
+            "--output",
+            tmpdir,
+        ]
+        result = run_waddle_command(test_args)
+
+        assert result.returncode == 0, f"Command failed with error: {result.stderr}"
+
+        wav_files = glob.glob(os.path.join(tmpdir, "*.wav"))
+        assert len(wav_files) == 4, f"Expected 4 .wav files, but found {len(wav_files)}"
+
+        srt_files = glob.glob(os.path.join(tmpdir, "*.srt"))
+        assert len(srt_files) == 1, f"Expected 1 .srt file, but found {len(srt_files)}"
