@@ -155,13 +155,13 @@ def process_segments(
         transcription_output_path
     )  # TODO: Delete it after switch to Pathlib in test
 
-    segs_file_paths = sorted(segs_folder_path.glob("*.wav"))
+    seg_file_paths = sorted(segs_folder_path.glob("*.wav"), key=lambda x: int(x.stem.split("_")[1]))
     transcription_entries = []
 
     for segs_file_path in tqdm(
-        segs_file_paths,
-        desc=f"[INFO] Transcribing {len(segs_file_paths)} segments",
-        total=len(segs_file_paths),
+        seg_file_paths,
+        desc=f"[INFO] Transcribing {len(seg_file_paths)} segments",
+        total=len(seg_file_paths),
         dynamic_ncols=True,
         bar_format="{l_bar}{bar:50}{r_bar}",
     ):

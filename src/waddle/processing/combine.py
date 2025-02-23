@@ -64,7 +64,7 @@ def combine_segments_into_audio_with_timeline(
         combined_audio_path
     )  # TODO: Delete it after switch to Pathlib in test
 
-    seg_file_paths = sorted(segs_folder_path.glob("*.wav"))
+    seg_file_paths = sorted(segs_folder_path.glob("*.wav"), key=lambda x: int(x.stem.split("_")[1]))
     max_end_ms = adjust_pos_to_timeline(timeline, timeline[-1][1]) if timeline else 1
     if not seg_file_paths:
         print("\033[93m[WARNING] No segment files found for combining.\033[0m")
