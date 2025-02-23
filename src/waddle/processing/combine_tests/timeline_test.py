@@ -28,6 +28,14 @@ def test_adjust_pos_to_timeline_starting_from_nonzero():
     assert adjust_pos_to_timeline(segments, 501) == 300, "Boundary adjustment at 501 failed."
 
 
+def test_adjust_pos_to_timeline_one_item():
+    segments = [(0, 100)]
+    assert adjust_pos_to_timeline(segments, 0) == 0, "Boundary adjustment at 0 failed."
+    assert adjust_pos_to_timeline(segments, 50) == 50, "Boundary adjustment at 50 failed."
+    assert adjust_pos_to_timeline(segments, 100) == 100, "Boundary adjustment at 100 failed."
+    assert adjust_pos_to_timeline(segments, 101) == 100, "Boundary adjustment at 101 failed."
+
+
 def test_merge_timelines_separated_segments():
     """Test merging timelines where segments are completely separate."""
     segments = [

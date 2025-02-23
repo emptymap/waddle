@@ -14,7 +14,7 @@ from waddle.audios.clip import clip_audio
 from waddle.config import DEFAULT_COMP_AUDIO_DURATION, DEFAULT_LANGUAGE
 from waddle.processing.combine import (
     combine_audio_files,
-    combine_segments_into_audio_with_timeline,
+    combine_segments_into_audio,
     combine_srt_files,
     merge_timelines,
 )
@@ -161,7 +161,7 @@ def preprocess_multi_files(
     def save_audio_with_timeline(audio_file_path: Path, segments_dir):
         audio_file_name = Path(audio_file_path).stem
         target_audio_path = output_dir_path / f"{audio_file_name}.wav"
-        combine_segments_into_audio_with_timeline(
+        combine_segments_into_audio(
             segments_dir,
             target_audio_path,
             merged_timeline,
