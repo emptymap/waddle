@@ -41,7 +41,7 @@ def test_combine_segments_into_audio_no_files():
         segs_folder.mkdir(parents=True, exist_ok=True)
         output_audio_path = temp_dir_path / "output.wav"
 
-        combine_segments_into_audio(segs_folder, output_audio_path)
+        combine_segments_into_audio_with_timeline(segs_folder, output_audio_path)
         assert output_audio_path.exists(), "Output audio file was not created."
 
         with wave.open(str(output_audio_path), "r") as wf:
@@ -54,7 +54,7 @@ def test_combine_segments_into_audio():
         output_audio_path = temp_dir_path / "output.wav"
         timeline = [(0, 100), (150, 250), (250, 299)]
         segs_folder = create_dummy_segments(temp_dir_path, timeline)
-        combine_segments_into_audio(segs_folder, output_audio_path)
+        combine_segments_into_audio_with_timeline(segs_folder, output_audio_path)
 
         assert output_audio_path.exists(), "Output audio file was not created."
         assert pytest.approx(get_wav_duration(str(output_audio_path)), 0.001) == 299 / 1000
@@ -66,7 +66,7 @@ def test_combine_segments_into_audio_extra_segment():
         output_audio_path = temp_dir_path / "output.wav"
         timeline = [(100, 200), (200, 350), (501, 555)]
         segs_folder = create_dummy_segments(temp_dir_path, timeline)
-        combine_segments_into_audio(segs_folder, output_audio_path)
+        combine_segments_into_audio_with_timeline(segs_folder, output_audio_path)
 
         assert output_audio_path.exists(), "Output audio file was not created."
         assert pytest.approx(get_wav_duration(str(output_audio_path)), 0.001) == 555 / 1000
