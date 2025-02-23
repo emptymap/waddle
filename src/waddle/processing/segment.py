@@ -13,7 +13,7 @@ from waddle.config import (
     DEFAULT_TARGET_DB,
     DEFAULT_THRESHOLD_DB,
 )
-from waddle.processing.combine import SpeechTimeline, combine_segments_into_audio
+from waddle.processing.combine import SpeechTimeline
 from waddle.utils import format_audio_filename, format_time, parse_audio_filename, time_to_seconds
 
 
@@ -131,37 +131,34 @@ def merge_segments(segments: SpeechTimeline) -> SpeechTimeline:
     return merged_segments
 
 
-def process_segments(
+def transcribe_segments(
     segs_folder_path: Path,
-    combined_audio_path: Path,
     transcription_output_path: Path,
     whisper_options: str = f"-l {DEFAULT_LANGUAGE}",
 ) -> None:
     """
-    Transcribe only the detected speech segments, adjust timestamps,
-    and combine them into a single audio file.
+    Transcribe speech segments in a folder and combine the results into a single SRT file.
 
     Args:
-        segs_folder_path (str): Path to the folder containing the speech segments.
-        combined_audio_path (str): Path to save the combined audio file.
-        transcription_output_path (str): Path to save the combined transcription file.
-        language (str): Language code for transcription.
+        segs_folder_path (Path): Path to the folder containing segment files.
+        transcription_output_path (Path): Path to save the combined transcription file.
+        whisper_options (str): Additional options for the whisper tool.
+
+    Output:
+        A single SRT file containing the transcriptions of all segments.
     """
     segs_folder_path = Path(segs_folder_path)  # TODO: Delete it after switch to Pathlib in test
-    combined_audio_path = Path(
-        combined_audio_path
-    )  # TODO: Delete it after switch to Pathlib in test
     transcription_output_path = Path(
         transcription_output_path
     )  # TODO: Delete it after switch to Pathlib in test
 
-    segs_file_paths = sorted(segs_folder_path.glob("*.wav"))
+    seg_file_paths = sorted(segs_folder_path.glob("*.wav"), key=lambda x: int(x.stem.split("_")[1]))
     transcription_entries = []
 
     for segs_file_path in tqdm(
-        segs_file_paths,
-        desc=f"[INFO] Transcribing {len(segs_file_paths)} segments",
-        total=len(segs_file_paths),
+        seg_file_paths,
+        desc=f"[INFO] Transcribing {len(seg_file_paths)} segments",
+        total=len(seg_file_paths),
         dynamic_ncols=True,
         bar_format="{l_bar}{bar:50}{r_bar}",
     ):
@@ -182,12 +179,6 @@ def process_segments(
             srt_out.write(f"{idx}\n")
             srt_out.write(f"{start_time} --> {end_time}\n")
             srt_out.write(f"{text}\n\n")
-
-    # Combine segments into one audio file
-    combine_segments_into_audio(
-        segs_folder_path,
-        combined_audio_path,
-    )
 
 
 def adjust_srt_timestamps(transcribe_file_path: Path, start_offset: float) -> SpeechTimeline:

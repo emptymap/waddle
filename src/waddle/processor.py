@@ -14,6 +14,7 @@ from waddle.audios.clip import clip_audio
 from waddle.config import DEFAULT_COMP_AUDIO_DURATION, DEFAULT_LANGUAGE
 from waddle.processing.combine import (
     combine_audio_files,
+    combine_segments_into_audio,
     combine_segments_into_audio_with_timeline,
     combine_srt_files,
     merge_timelines,
@@ -21,7 +22,7 @@ from waddle.processing.combine import (
 from waddle.processing.segment import (
     SpeechTimeline,
     detect_speech_timeline,
-    process_segments,
+    transcribe_segments,
 )
 from waddle.utils import to_path
 
@@ -78,14 +79,15 @@ def process_single_file(
 
     # Transcribe segments and combine
     speaker_name = speaker_audio_path.stem
-    combined_speaker_path = output_dir_path / f"{speaker_name}.wav"
     transcription_path = output_dir_path / f"{speaker_name}.srt"
-    process_segments(
+    transcribe_segments(
         segs_folder_path,
-        combined_speaker_path,
         transcription_path,
         whisper_options=whisper_options,
     )
+
+    combined_speaker_path = output_dir_path / f"{speaker_name}.wav"
+    combine_segments_into_audio(segs_folder_path, combined_speaker_path)
 
     return combined_speaker_path
 
@@ -201,14 +203,15 @@ def postprocess_multi_files(
             shutil.copy(audio_file_path, tmp_audio_file_path)
         segments_dir, _ = detect_speech_timeline(tmp_audio_file_path)
         speaker_name = audio_file_path.stem
-        combined_speaker_path = output_dir_path / f"{speaker_name}.wav"
         transcription_path = output_dir_path / f"{speaker_name}.srt"
-        process_segments(
+        transcribe_segments(
             segments_dir,
-            combined_speaker_path,
             transcription_path,
             whisper_options=whisper_options,
         )
+
+        combined_speaker_path = output_dir_path / f"{speaker_name}.wav"
+        combine_segments_into_audio(segments_dir, combined_speaker_path)
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
         executor.map(process_file, audio_file_paths)
