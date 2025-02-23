@@ -145,3 +145,29 @@ def test_prove_two_combine_segments_diff():
         assert get_wav_duration(str(output_audio_path_0)) != get_wav_duration(
             str(output_audio_path_1)
         )
+
+
+def test_unify_two_combine_segments():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_dir_path = Path(temp_dir)
+        output_audio_path_0 = temp_dir_path / "output_0.wav"
+        timeline = [(0, 100), (150, 250), (250, 299)]
+        segs_folder = create_dummy_segments(temp_dir_path, timeline)
+        combine_segments_into_audio(segs_folder, output_audio_path_0)
+
+        assert output_audio_path_0.exists(), "Output audio file was not created."
+        with wave.open(str(output_audio_path_0), "r") as wf:
+            assert wf.getnframes() > 0, "Output audio file is empty."
+
+        output_audio_path_1 = temp_dir_path / "output_1.wav"
+        segs_folder = create_dummy_segments(temp_dir_path, timeline)
+        new_timeline = [(timeline[0][0], timeline[-1][1])]
+        combine_segments_into_audio_with_timeline(segs_folder, output_audio_path_1, new_timeline)
+
+        assert output_audio_path_1.exists(), "Output audio file was not created."
+        with wave.open(str(output_audio_path_1), "r") as wf:
+            assert wf.getnframes() > 0, "Output audio file is empty."
+
+        assert pytest.approx(get_wav_duration(str(output_audio_path_0)), 0.001) == get_wav_duration(
+            str(output_audio_path_1)
+        )
