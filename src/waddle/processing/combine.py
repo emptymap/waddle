@@ -16,47 +16,6 @@ SrtEntries: TypeAlias = list[SrtEntry]
 def combine_segments_into_audio(
     segs_folder_path: Path,
     combined_audio_path: Path,
-) -> None:
-    """
-    Combine segment files into a single audio, placing each at the correct offset.
-
-    Args:
-        segs_folder_path (Path): Path to the folder containing segment files.
-        combined_audio_path (Path): Path to save the combined audio file
-    """
-    segs_folder_path = Path(segs_folder_path)  # TODO: Delete it after switch to Pathlib in test
-    combined_audio_path = Path(
-        combined_audio_path
-    )  # TODO: Delete it after switch to Pathlib in test
-    seg_file_paths = sorted(segs_folder_path.glob("*.wav"))
-    if not seg_file_paths:
-        print("\033[93m[WARNING] No segment files found for combining.\033[0m")
-
-        # Output a dummy audio file
-        final_audio = AudioSegment.silent(duration=10)
-        final_audio.export(combined_audio_path, format="wav")
-
-        # Clean up segs folder
-        shutil.rmtree(segs_folder_path, ignore_errors=True)
-        return
-    end_mses = [parse_audio_filename(str(f))[1] for f in seg_file_paths]
-    max_end_ms = max(end_mses)
-    final_audio = AudioSegment.silent(duration=max_end_ms)
-
-    for seg_file_path in seg_file_paths:
-        seg_audio = AudioSegment.from_file(str(seg_file_path))
-        start_ms, _ = parse_audio_filename(str(seg_file_path))
-        final_audio = final_audio.overlay(seg_audio, position=start_ms)
-
-    final_audio.export(combined_audio_path, format="wav")
-
-    # Clean up segs folder
-    shutil.rmtree(segs_folder_path, ignore_errors=True)
-
-
-def combine_segments_into_audio_with_timeline(
-    segs_folder_path: Path,
-    combined_audio_path: Path,
     timeline: SpeechTimeline | None = None,
 ) -> None:
     segs_folder_path = Path(segs_folder_path)  # TODO: Delete it after switch to Pathlib in test
