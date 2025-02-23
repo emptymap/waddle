@@ -12,22 +12,17 @@ from waddle.processing.combine import (
 from waddle.utils import format_audio_filename
 
 
-@pytest.fixture
-def create_dummy_segments():
-    def _create_dummy_segments(timeline):
-        temp_dir = tempfile.TemporaryDirectory()
-        segs_folder = Path(temp_dir.name) / "segments"
-        segs_folder.mkdir(parents=True, exist_ok=True)
+def create_dummy_segments(dir_path, timeline):
+    segs_folder = dir_path / "segments"
+    segs_folder.mkdir(parents=True, exist_ok=True)
 
-        for start, end in timeline:
-            duration_ms = end - start
-            AudioSegment.silent(duration=duration_ms).export(
-                segs_folder / format_audio_filename("seg", start, end),
-                format="wav",
-            )
-        return segs_folder
-
-    return _create_dummy_segments
+    for start, end in timeline:
+        duration_ms = end - start
+        AudioSegment.silent(duration=duration_ms).export(
+            segs_folder / format_audio_filename("seg", start, end),
+            format="wav",
+        )
+    return segs_folder
 
 
 def get_wav_duration(filename):
@@ -53,56 +48,58 @@ def test_combine_segments_into_audio_no_files():
             assert wf.getnframes() > 0, "Output audio file is empty."
 
 
-def test_combine_segments_into_audio(create_dummy_segments):
+def test_combine_segments_into_audio():
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_dir_path = Path(temp_dir)
         output_audio_path = temp_dir_path / "output.wav"
         timeline = [(0, 100), (150, 250), (250, 299)]
-        segs_folder = create_dummy_segments(timeline)
+        segs_folder = create_dummy_segments(temp_dir_path, timeline)
         combine_segments_into_audio(segs_folder, output_audio_path)
 
         assert output_audio_path.exists(), "Output audio file was not created."
-        with wave.open(str(output_audio_path), "r") as wf:
-            assert wf.getnframes() > 0, "Output audio file is empty."
+        assert pytest.approx(get_wav_duration(str(output_audio_path)), 0.001) == 299 / 1000
 
 
-def test_combine_segments_into_audio_extra_segment(create_dummy_segments):
+def test_combine_segments_into_audio_extra_segment():
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_dir_path = Path(temp_dir)
         output_audio_path = temp_dir_path / "output.wav"
         timeline = [(100, 200), (200, 350), (501, 555)]
-        segs_folder = create_dummy_segments(timeline)
+        segs_folder = create_dummy_segments(temp_dir_path, timeline)
         combine_segments_into_audio(segs_folder, output_audio_path)
 
         assert output_audio_path.exists(), "Output audio file was not created."
-        with wave.open(str(output_audio_path), "r") as wf:
-            assert wf.getnframes() > 0, "Output audio file is empty."
+        assert pytest.approx(get_wav_duration(str(output_audio_path)), 0.001) == 555 / 1000
 
 
-def test_combine_segments_into_audio_with_timeline(create_dummy_segments):
+def test_combine_segments_into_audio_with_timeline():
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_dir_path = Path(temp_dir)
         output_audio_path = temp_dir_path / "output.wav"
         timeline = [(0, 100), (150, 250), (250, 299)]
-        segs_folder = create_dummy_segments(timeline)
+        segs_folder = create_dummy_segments(temp_dir_path, timeline)
         combine_segments_into_audio_with_timeline(segs_folder, output_audio_path, timeline)
 
         assert output_audio_path.exists(), "Output audio file was not created."
-        with wave.open(str(output_audio_path), "r") as wf:
-            assert wf.getnframes() > 0, "Output audio file is empty."
+        assert (
+            pytest.approx(get_wav_duration(str(output_audio_path)), 0.001)
+            == (100 + 150 + 49) / 1000
+        )
 
 
-def test_combine_segments_into_audio_with_timeline_extra_segment(create_dummy_segments):
+def test_combine_segments_into_audio_with_timeline_extra_segment():
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_dir_path = Path(temp_dir)
         output_audio_path = temp_dir_path / "output.wav"
         timeline = [(100, 200), (200, 350), (501, 555)]
-        segs_folder = create_dummy_segments(timeline)
+        segs_folder = create_dummy_segments(temp_dir_path, timeline)
         combine_segments_into_audio_with_timeline(segs_folder, output_audio_path, timeline)
 
         assert output_audio_path.exists(), "Output audio file was not created."
-        with wave.open(str(output_audio_path), "r") as wf:
-            assert wf.getnframes() > 0, "Output audio file is empty."
+        assert (
+            pytest.approx(get_wav_duration(str(output_audio_path)), 0.001)
+            == (100 + 150 + 54) / 1000
+        )
 
 
 def test_combine_segments_into_audio_with_timeline_no_files():
@@ -121,12 +118,16 @@ def test_combine_segments_into_audio_with_timeline_no_files():
         )
 
 
-def test_prove_two_combine_segments_diff(create_dummy_segments):
+def test_prove_two_combine_segments_diff():
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_dir_path = Path(temp_dir)
         output_audio_path_0 = temp_dir_path / "output_0.wav"
         timeline = [(0, 100), (150, 250), (250, 299)]
-        segs_folder = create_dummy_segments(timeline)
+        segs_folder = create_dummy_segments(temp_dir_path, timeline)
+        # Check segs_folder is not empty
+        segs_folder_files = list(segs_folder.glob("*.wav"))
+        print(segs_folder_files)
+        assert len(segs_folder_files) > 0, "No segment files were created."
         combine_segments_into_audio(segs_folder, output_audio_path_0)
 
         assert output_audio_path_0.exists(), "Output audio file was not created."
@@ -134,7 +135,7 @@ def test_prove_two_combine_segments_diff(create_dummy_segments):
             assert wf.getnframes() > 0, "Output audio file is empty."
 
         output_audio_path_1 = temp_dir_path / "output_1.wav"
-        segs_folder = create_dummy_segments(timeline)
+        segs_folder = create_dummy_segments(temp_dir_path, timeline)
         combine_segments_into_audio_with_timeline(segs_folder, output_audio_path_1, timeline)
 
         assert output_audio_path_1.exists(), "Output audio file was not created."
