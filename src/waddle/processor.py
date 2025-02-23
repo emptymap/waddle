@@ -221,4 +221,5 @@ def postprocess_multi_files(
         audio_prefix = audio_prefix.split("-")[0]
 
     final_audio_path = output_dir_path / f"{audio_prefix}.wav"
-    combine_audio_files(audio_file_paths, final_audio_path)
+    combined_audio_paths = sorted(output_dir_path.glob("*.wav"))
+    combine_audio_files(combined_audio_paths, final_audio_path)
