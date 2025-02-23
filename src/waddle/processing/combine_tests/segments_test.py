@@ -30,6 +30,15 @@ def create_dummy_segments():
     return _create_dummy_segments
 
 
+def get_wav_duration(filename):
+    """Returns the duration of a WAV file."""
+    with wave.open(filename, "r") as wav_file:
+        frames = wav_file.getnframes()
+        rate = wav_file.getframerate()
+        duration = frames / float(rate)
+        return duration
+
+
 def test_combine_segments_into_audio_no_files():
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_dir_path = Path(temp_dir)
@@ -109,4 +118,29 @@ def test_combine_segments_into_audio_with_timeline_no_files():
 
         assert output_audio_path.exists(), (
             "Output silent audio file should be created when no segments are available."
+        )
+
+
+def test_prove_two_combine_segments_diff(create_dummy_segments):
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_dir_path = Path(temp_dir)
+        output_audio_path_0 = temp_dir_path / "output_0.wav"
+        timeline = [(0, 100), (150, 250), (250, 299)]
+        segs_folder = create_dummy_segments(timeline)
+        combine_segments_into_audio(segs_folder, output_audio_path_0)
+
+        assert output_audio_path_0.exists(), "Output audio file was not created."
+        with wave.open(str(output_audio_path_0), "r") as wf:
+            assert wf.getnframes() > 0, "Output audio file is empty."
+
+        output_audio_path_1 = temp_dir_path / "output_1.wav"
+        segs_folder = create_dummy_segments(timeline)
+        combine_segments_into_audio_with_timeline(segs_folder, output_audio_path_1, timeline)
+
+        assert output_audio_path_1.exists(), "Output audio file was not created."
+        with wave.open(str(output_audio_path_1), "r") as wf:
+            assert wf.getnframes() > 0, "Output audio file is empty."
+
+        assert get_wav_duration(str(output_audio_path_0)) != get_wav_duration(
+            str(output_audio_path_1)
         )
