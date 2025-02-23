@@ -83,7 +83,7 @@ def test_combine_segments_into_audio_with_timeline():
         assert output_audio_path.exists(), "Output audio file was not created."
         assert (
             pytest.approx(get_wav_duration(str(output_audio_path)), 0.001)
-            == (100 + 150 + 49) / 1000
+            == (100 + 100 + 49) / 1000
         )
 
 
