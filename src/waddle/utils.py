@@ -1,4 +1,5 @@
 import os
+import shutil
 from pathlib import Path
 
 
@@ -73,3 +74,9 @@ def to_path(obj: str | bytes | os.PathLike) -> Path:
     if isinstance(fs_path, (bytes, bytearray, memoryview)):
         fs_path = bytes(fs_path).decode()
     return Path(fs_path)
+
+
+def prepare_dir(dir_path: Path) -> None:
+    if dir_path.exists():
+        shutil.rmtree(dir_path)
+    dir_path.mkdir(parents=True, exist_ok=True)
