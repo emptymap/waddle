@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import cast
 
 import numpy as np
 from pydub import AudioSegment
@@ -50,7 +51,7 @@ class SegmentsProcessor:
         chunk_size_ms: int = int(DEFAULT_CHUNK_DURATION * 1000),
         buffer_size_ms: int = int(DEFAULT_BUFFER_DURATION * 1000),
         target_dBFS: float = DEFAULT_TARGET_DB,
-    ):
+    ) -> "SegmentsProcessor":
         """
         Initialize the SegmentProcessor with the path to the audio file and the speech timeline.
 
@@ -64,6 +65,8 @@ class SegmentsProcessor:
         Returns:
             SegmentProcessor: An instance of SegmentProcessor.
         """
+        if not audio_path.is_file():
+            raise FileNotFoundError(f"Audio file not found: {audio_path}")
         audio = AudioSegment.from_file(str(audio_path))
 
         # Step 1: Detect raw speech timeline.
@@ -76,7 +79,7 @@ class SegmentsProcessor:
             print("[Warning] No speech segments detected.")
             segs_folder = audio_path.parent / f"{audio_path.stem}_segs"
             prepare_dir(segs_folder)
-            return segs_folder, timeline
+            return cls(segs_folder, timeline)
 
         # Step 3: Calculate gain adjustment for normalization.
         gain_adjustment = cls._calculate_gain_adjustment(audio, timeline, target_dBFS)
@@ -107,7 +110,7 @@ class SegmentsProcessor:
             range(0, duration, chunk_size_ms),
             desc="[INFO] Detecting speech timeline",
         ):
-            chunk = audio[i : i + chunk_size_ms]
+            chunk = cast(AudioSegment, audio[i : i + chunk_size_ms])
             if chunk.dBFS > threshold_db:
                 start_ms = max(0, i - buffer_size_ms)
                 end_ms = min(duration, i + chunk_size_ms + buffer_size_ms)
@@ -152,7 +155,7 @@ class SegmentsProcessor:
         """
         max_dBFS_list = []
         for seg in timeline:
-            seg_audio = audio[seg[0] : seg[1]]
+            seg_audio = cast(AudioSegment, audio[seg[0] : seg[1]])
             max_dBFS_list.append(seg_audio.dBFS)
 
         if not max_dBFS_list:
