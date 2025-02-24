@@ -13,17 +13,14 @@ from waddle.audios.call_tools import (
 from waddle.audios.clip import clip_audio
 from waddle.config import DEFAULT_COMP_AUDIO_DURATION, DEFAULT_LANGUAGE
 from waddle.processing.combine import (
+    SpeechTimeline,
     combine_audio_files,
     combine_segments_into_audio,
     combine_segments_into_audio_with_timeline,
     combine_srt_files,
     merge_timelines,
 )
-from waddle.processing.segment import (
-    SpeechTimeline,
-    detect_speech_timeline,
-    transcribe_segments,
-)
+from waddle.processing.segment import SegmentsProcessor
 from waddle.utils import to_path
 
 
@@ -75,19 +72,12 @@ def process_single_file(
         clip_audio(aligned_audio_path, aligned_audio_path, ss=ss, out_duration=out_duration)
     remove_noise(aligned_audio_path, aligned_audio_path)
 
-    segs_folder_path, _ = detect_speech_timeline(aligned_audio_path)
-
-    # Transcribe segments and combine
-    speaker_name = speaker_audio_path.stem
-    transcription_path = output_dir_path / f"{speaker_name}.srt"
-    transcribe_segments(
-        segs_folder_path,
-        transcription_path,
-        whisper_options=whisper_options,
+    segs_processor = SegmentsProcessor.process(
+        aligned_audio_path, is_transcribe=True, whisper_options=whisper_options
     )
 
-    combined_speaker_path = output_dir_path / f"{speaker_name}.wav"
-    combine_segments_into_audio(segs_folder_path, combined_speaker_path)
+    combined_speaker_path = output_dir_path / f"{speaker_audio_path.stem}.wav"
+    combine_segments_into_audio(segs_processor.get_segs_dir_path(), combined_speaker_path)
 
     return combined_speaker_path
 
@@ -131,7 +121,7 @@ def preprocess_multi_files(
         raise ValueError("No speaker audio files found in the directory.")
 
     timelines: list[SpeechTimeline] = []
-    segments_dir_list = []
+    segs_dir_path_list = []
 
     def process_file(speaker_audio_path: Path):
         print(f"\033[92m[INFO] Processing file: {str(speaker_audio_path)}\033[0m")
@@ -147,31 +137,31 @@ def preprocess_multi_files(
         remove_noise(aligned_audio_path, aligned_audio_path)
 
         # 2) Preprocess the aligned audio file
-        segments_dir, timeline = detect_speech_timeline(aligned_audio_path)
+        segs_processor = SegmentsProcessor.process(aligned_audio_path)
 
-        return segments_dir, timeline
+        return segs_processor.get_both()
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
         results = list(executor.map(process_file, audio_file_paths))
 
-    for segments_dir, timeline in results:
-        segments_dir_list.append(segments_dir)
+    for segs_dir_path, timeline in results:
+        segs_dir_path_list.append(segs_dir_path)
         timelines.append(timeline)
 
     merged_timeline = merge_timelines(timelines)
 
-    def save_audio_with_timeline(audio_file_path: Path, segments_dir):
+    def save_audio_with_timeline(audio_file_path: Path, segs_dir_path: Path):
         audio_file_name = Path(audio_file_path).stem
         target_audio_path = output_dir_path / f"{audio_file_name}.wav"
         combine_segments_into_audio_with_timeline(
-            segments_dir,
+            segs_dir_path,
             target_audio_path,
             merged_timeline,
         )
         return target_audio_path
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        executor.map(save_audio_with_timeline, audio_file_paths, segments_dir_list)
+        executor.map(save_audio_with_timeline, audio_file_paths, segs_dir_path_list)
 
     # Clean up workspace_path
     shutil.rmtree(workspace_path, ignore_errors=True)
@@ -201,17 +191,14 @@ def postprocess_multi_files(
             clip_audio(audio_file_path, tmp_audio_file_path, ss=ss, out_duration=out_duration)
         else:
             shutil.copy(audio_file_path, tmp_audio_file_path)
-        segments_dir, _ = detect_speech_timeline(tmp_audio_file_path)
-        speaker_name = audio_file_path.stem
-        transcription_path = output_dir_path / f"{speaker_name}.srt"
-        transcribe_segments(
-            segments_dir,
-            transcription_path,
-            whisper_options=whisper_options,
+
+        segs_processor = SegmentsProcessor.process(
+            tmp_audio_file_path, is_transcribe=True, whisper_options=whisper_options
         )
 
-        combined_speaker_path = output_dir_path / f"{speaker_name}.wav"
-        combine_segments_into_audio(segments_dir, combined_speaker_path)
+        combined_speaker_path = output_dir_path / f"{tmp_audio_file_path.stem}.wav"
+        segs_dir_path = segs_processor.get_segs_dir_path()
+        combine_segments_into_audio(segs_dir_path, combined_speaker_path)
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
         executor.map(process_file, audio_file_paths)
