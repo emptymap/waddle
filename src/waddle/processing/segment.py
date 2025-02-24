@@ -34,7 +34,7 @@ class SegmentsProcessor:
         timeline: SpeechTimeline,
     ):
         """
-        Initialize the SegmentsProcessor with the path to the segments folder and the speech timeline.
+        Initialize the SegmentsProcessor instance.
         """
         self.segs_dir_path = segs_dir_path
         self.timeline = timeline
