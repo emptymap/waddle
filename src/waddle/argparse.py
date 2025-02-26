@@ -37,6 +37,11 @@ def create_waddle_parser():
         help="Duration in seconds for the output audio (default: None).",
     )
     single_parser.add_argument(
+        "--no-noise-remove",
+        action="store_true",
+        help="Skip removing noise from the audio.",
+    )
+    single_parser.add_argument(
         "-wo",
         "--whisper-options",
         default=f"-l {DEFAULT_LANGUAGE}",
@@ -90,6 +95,11 @@ def create_waddle_parser():
         type=phrase_time_to_seconds,
         default=None,
         help="Duration in seconds for the output audio (default: None).",
+    )
+    preprocess_parser.add_argument(
+        "--no-noise-remove",
+        action="store_true",
+        help="Skip removing noise from the audio.",
     )
     preprocess_parser.add_argument(
         "-nc",
