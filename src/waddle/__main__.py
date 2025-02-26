@@ -41,6 +41,7 @@ def do_single(args):
         speaker_audio=audio_path,
         ss=args.ss,
         out_duration=args.time,
+        no_noise_remove=args.no_noise_remove,
         whisper_options=args.whisper_options,
     )
     print(f"[INFO] Processed single audio file saved in: {output_dir}")
@@ -62,6 +63,7 @@ def do_preprocess(args):
         comp_duration=args.comp_duration,
         ss=args.ss,
         out_duration=args.time,
+        no_noise_remove=args.no_noise_remove,
         convert=not args.no_convert,
     )
 

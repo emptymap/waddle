@@ -48,6 +48,7 @@ def process_single_file(
     speaker_audio: str | bytes | os.PathLike[Any],
     ss: float = 0.0,
     out_duration: float | None = None,
+    no_noise_remove: bool = False,
     whisper_options: str = f"-l {DEFAULT_LANGUAGE}",
 ) -> Path:
     """
@@ -72,7 +73,8 @@ def process_single_file(
         aligned_audio_path = aligned_audio_path.with_suffix(".wav")
     if ss > 0 or out_duration:
         clip_audio(aligned_audio_path, aligned_audio_path, ss=ss, out_duration=out_duration)
-    remove_noise(aligned_audio_path, aligned_audio_path)
+    if not no_noise_remove:
+        remove_noise(aligned_audio_path, aligned_audio_path)
 
     segs_folder_path, _ = detect_speech_timeline(aligned_audio_path)
 
@@ -97,6 +99,7 @@ def preprocess_multi_files(
     comp_duration: float = DEFAULT_COMP_AUDIO_DURATION,
     ss: float = 0.0,
     out_duration: float | None = None,
+    no_noise_remove: bool = False,
     convert: bool = True,
 ) -> None:
     source_dir_path = to_path(source_dir)
@@ -142,7 +145,8 @@ def preprocess_multi_files(
             comp_duration=comp_duration,
         )
         clip_audio(aligned_audio_path, aligned_audio_path, ss=ss, out_duration=out_duration)
-        remove_noise(aligned_audio_path, aligned_audio_path)
+        if not no_noise_remove:
+            remove_noise(aligned_audio_path, aligned_audio_path)
 
         # 2) Preprocess the aligned audio file
         segments_dir, timeline = detect_speech_timeline(aligned_audio_path)
