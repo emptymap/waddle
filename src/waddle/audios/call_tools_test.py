@@ -293,16 +293,14 @@ def test_remove_noise_with_missing_deep_filter():
         temp_wav_path.write_bytes(wav_file_path.read_bytes())
 
         with (
-            patch("builtins.print") as mock_print,
             patch(
-                "subprocess.run", side_effect=RuntimeError("subprocess.run was called")
-            ) as mock_run,
-            patch("waddle.audios.call_tools.get_project_root", return_value=temp_dir_path),
+                "waddle.audios.call_tools.install_deep_filter",
+                side_effect=RuntimeError("install_deep_filter was called"),
+            ),
+            patch("waddle.audios.call_tools.get_tools_dir", return_value=temp_dir_path),
         ):
-            with pytest.raises(RuntimeError, match="subprocess.run was called"):
+            with pytest.raises(RuntimeError, match="install_deep_filter was called"):
                 remove_noise(temp_wav_path, temp_wav_path)
-            assert any("not found" in call.args[0] for call in mock_print.call_args_list)
-            assert any("install-deep-filter.sh" in call.args[0] for call in mock_run.call_args_list)
 
 
 def test_transcribe():
