@@ -2,7 +2,7 @@
 
 **Waddle** is a preprocessor for podcasts, developed specifically for [RubberDuck.fm](https://rubberduck.fm). It streamlines the process of aligning, normalizing, and transcribing podcast audio files from multiple speakers or individual audio files.
 
-![Demo](./assets/demo.gif)
+![Demo](https://github.com/emptymap/waddle/blob/main/assets/demo.gif?raw=true)
 
 ## Features
 
