@@ -40,7 +40,7 @@ build-backend = "hatchling.build"
 packages = ["src/waddle"]
 
 [tool.hatch.build.targets.sdist]
-exclude = ["tests", "assets"]
+exclude = ["tests", "assets", "htmlcov"]
 
 [project.scripts]
 waddle = "waddle.__main__:main"
