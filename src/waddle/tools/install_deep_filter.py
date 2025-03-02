@@ -1,20 +1,28 @@
-import os
 import platform
-import shutil
 import sys
 import urllib.request
+from pathlib import Path
+
+from platformdirs import user_data_dir
+
+from waddle.config import APP_AUTHOR, APP_NAME
 
 
 def install_deep_filter():
     # Tool installation directories
-    TOOLS_DIR = "./tools"
+    TOOLS_DIR = Path(user_data_dir(APP_NAME, APP_AUTHOR)) / "tools"
+    DEEP_FILTER_OUTPUT = TOOLS_DIR / "deep-filter"
+    if DEEP_FILTER_OUTPUT.exists():
+        print(f"DeepFilterNet binary already exists: {DEEP_FILTER_OUTPUT}")
+        return
+
     DEEP_FILTER_VERSION = "0.5.6"
     DEEP_FILTER_BASE_URL = (
         f"https://github.com/Rikorose/DeepFilterNet/releases/download/v{DEEP_FILTER_VERSION}"
     )
 
     # Create the tools directory if it doesn't exist
-    os.makedirs(TOOLS_DIR, exist_ok=True)
+    TOOLS_DIR.mkdir(parents=True, exist_ok=True)
 
     # Detect system architecture and platform
     ARCH = platform.machine().lower()
@@ -39,26 +47,21 @@ def install_deep_filter():
         sys.exit(1)
 
     DEEP_FILTER_BINARY = ARCH_OS_MAP[key]
-    DEEP_FILTER_OUTPUT = os.path.join(TOOLS_DIR, "deep-filter")
+    print(f"Downloading {DEEP_FILTER_BINARY}...")
 
-    # Download and install DeepFilterNet binary
-    if not os.path.isfile(DEEP_FILTER_OUTPUT):
-        print(f"Downloading {DEEP_FILTER_BINARY}...")
-        download_url = f"{DEEP_FILTER_BASE_URL}/{DEEP_FILTER_BINARY}"
-        binary_path = os.path.join(TOOLS_DIR, DEEP_FILTER_BINARY)
+    download_url = f"{DEEP_FILTER_BASE_URL}/{DEEP_FILTER_BINARY}"
+    binary_path = TOOLS_DIR / DEEP_FILTER_BINARY
 
-        try:
-            urllib.request.urlretrieve(download_url, binary_path)
-        except Exception as e:
-            print(f"Error downloading file: {e}")
-            sys.exit(1)
+    try:
+        urllib.request.urlretrieve(download_url, binary_path)
+    except Exception as e:
+        print(f"Error downloading file: {e}")
+        sys.exit(1)
 
-        # Rename the binary to "deep-filter" and make it executable
-        shutil.move(binary_path, DEEP_FILTER_OUTPUT)
-        os.chmod(DEEP_FILTER_OUTPUT, 0o755)
-        print(f"DeepFilterNet binary installed as: {DEEP_FILTER_OUTPUT}")
-    else:
-        print(f"DeepFilterNet binary already exists: {DEEP_FILTER_OUTPUT}")
+    # Rename the binary to "deep-filter" and make it executable
+    binary_path.rename(DEEP_FILTER_OUTPUT)
+    DEEP_FILTER_OUTPUT.chmod(0o755)
+    print(f"DeepFilterNet binary installed as: {DEEP_FILTER_OUTPUT}")
 
 
 if __name__ == "__main__":
