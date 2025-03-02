@@ -1,5 +1,5 @@
 [project]
-name = "waddle"
+name = "waddle-ai"
 version = "0.1.0"
 description = "A podcast preprocessing library for aligning, normalizing, and transcribing audio files."
 readme = "README.md"
