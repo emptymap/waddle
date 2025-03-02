@@ -1,4 +1,5 @@
 version = 1
+revision = 1
 requires-python = ">=3.12"
 
 [[package]]
@@ -571,6 +572,7 @@ source = { editable = "." }
 dependencies = [
     { name = "librosa" },
     { name = "numpy" },
+    { name = "platformdirs" },
     { name = "pydub" },
     { name = "soundfile" },
     { name = "tqdm" },
@@ -588,6 +590,7 @@ dev = [
 requires-dist = [
     { name = "librosa", specifier = ">=0.10.2.post1" },
     { name = "numpy", specifier = "==1.26.4" },
+    { name = "platformdirs", specifier = ">=4.3.6" },
     { name = "pydub", specifier = ">=0.25.1" },
     { name = "soundfile", specifier = ">=0.12.1" },
     { name = "tqdm", specifier = ">=4.67.1" },

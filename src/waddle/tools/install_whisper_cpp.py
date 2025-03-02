@@ -1,20 +1,25 @@
 import os
 import subprocess
+from pathlib import Path
+
+from platformdirs import user_data_dir
+
+from waddle.config import APP_AUTHOR, APP_NAME
 
 
 def install_whisper_cpp():
     # Tool installation directories
-    TOOLS_DIR = "./tools"
-    WHISPER_DIR = os.path.join(TOOLS_DIR, "whisper.cpp")
+    TOOLS_DIR = Path(user_data_dir(APP_NAME, APP_AUTHOR)) / "tools"
+    WHISPER_DIR = TOOLS_DIR / "whisper.cpp"
 
     # Create the tools directory if it doesn't exist
-    os.makedirs(TOOLS_DIR, exist_ok=True)
+    TOOLS_DIR.mkdir(parents=True, exist_ok=True)
 
     # Clone whisper.cpp if not already cloned
-    if not os.path.isdir(WHISPER_DIR):
+    if not WHISPER_DIR.is_dir():
         print("Cloning whisper.cpp repository...")
         subprocess.run(
-            ["git", "clone", "https://github.com/ggerganov/whisper.cpp.git", WHISPER_DIR],
+            ["git", "clone", "https://github.com/ggerganov/whisper.cpp.git", str(WHISPER_DIR)],
             check=True,
         )
     else:
@@ -25,8 +30,8 @@ def install_whisper_cpp():
     print(f"WHISPER_MODEL_NAME is set to: {WHISPER_MODEL_NAME}")
 
     # Download the model if not already downloaded
-    model_path = os.path.join(WHISPER_DIR, "models", f"ggml-{WHISPER_MODEL_NAME}.bin")
-    if not os.path.isfile(model_path):
+    model_path = WHISPER_DIR / "models" / f"ggml-{WHISPER_MODEL_NAME}.bin"
+    if not model_path.is_file():
         print(f"Downloading the {WHISPER_MODEL_NAME} model...")
         subprocess.run(
             ["sh", "./models/download-ggml-model.sh", WHISPER_MODEL_NAME],
@@ -38,9 +43,9 @@ def install_whisper_cpp():
 
     # Build the project
     print("Building whisper.cpp...")
-    subprocess.run(["cmake", "-B", "build"], check=True, cwd=WHISPER_DIR)
+    subprocess.run(["cmake", "-B", "build"], check=True, cwd=str(WHISPER_DIR))
     subprocess.run(
-        ["cmake", "--build", "build", "--config", "Release"], check=True, cwd=WHISPER_DIR
+        ["cmake", "--build", "build", "--config", "Release"], check=True, cwd=str(WHISPER_DIR)
     )
 
     print(f"whisper.cpp installed successfully in: {WHISPER_DIR}")

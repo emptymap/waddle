@@ -9,6 +9,7 @@ authors = [{ name = "Masamune Ishihara", email = "mwishiha@ucsc.edu" }]
 dependencies = [
     "librosa>=0.10.2.post1",
     "numpy==1.26.4",
+    "platformdirs>=4.3.6",
     "pydub>=0.25.1",
     "soundfile>=0.12.1",
     "tqdm>=4.67.1",
