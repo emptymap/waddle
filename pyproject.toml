@@ -39,6 +39,9 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/waddle"]
 
+[tool.hatch.build.targets.sdist]
+exclude = ["tests", "assets"]
+
 [project.scripts]
 waddle = "waddle.__main__:main"
 
