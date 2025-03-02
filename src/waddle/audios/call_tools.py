@@ -3,14 +3,18 @@ import subprocess
 import threading
 from pathlib import Path
 
-from waddle.config import DEFAULT_LANGUAGE
+from platformdirs import user_data_dir
+
+from waddle.config import APP_AUTHOR, APP_NAME, DEFAULT_LANGUAGE
+from waddle.tools.install_deep_filter import install_deep_filter
+from waddle.tools.install_whisper_cpp import install_whisper_cpp
 
 
-def get_project_root() -> Path:
+def get_tools_dir() -> Path:
     """
-    Get the project root directory.
+    Get the tools directory.
     """
-    return Path(__file__).parent.parent.parent.parent.resolve()
+    return Path(user_data_dir(APP_NAME, APP_AUTHOR)) / "tools"
 
 
 def convert_to_wav(input_path: Path, output_path_or_none: Path | None = None) -> None:
@@ -95,18 +99,14 @@ def remove_noise(input_path: Path, output_path: Path) -> None:
     Enhance audio by removing noise using DeepFilterNet.
     """
     # Paths
-    project_root = get_project_root()
-    deep_filter_path = project_root / "tools" / "deep-filter"
+    tools_dir = get_tools_dir()
+    deep_filter_path = tools_dir / "deep-filter"
     tmp_file_path = input_path.with_stem(input_path.stem + "_tmp")
 
     # Check if the tool exists
     with deep_filter_install_lock:
         if not deep_filter_path.exists():
-            command = str(project_root / "scripts" / "install-deep-filter.sh")
-            print(
-                f"DeepFilterNet tool not found. Run the following command to install it: {command}"
-            )
-            subprocess.run(command, check=True)
+            install_deep_filter()
 
     # Ensure input is 48kHz and 16-bit
     ensure_sampling_rate(input_path, tmp_file_path, target_rate=48000)
@@ -137,11 +137,10 @@ def transcribe(
     Transcribe audio using Whisper.cpp.
     """
     # Paths
-    project_root = get_project_root()
-    whisper_bin = project_root / "tools" / "whisper.cpp" / "build" / "bin" / "whisper-cli"
+    tools_dir = get_tools_dir()
+    whisper_bin = tools_dir / "whisper.cpp" / "build" / "bin" / "whisper-cli"
     whisper_model = (
-        project_root
-        / "tools"
+        tools_dir
         / "whisper.cpp"
         / "models"
         / f"ggml-{os.getenv('WHISPER_MODEL_NAME') or 'large-v3'}.bin"
@@ -151,11 +150,7 @@ def transcribe(
     # Check if the Whisper binary exists
     with whisper_install_lock:
         if not whisper_model.exists():
-            command = str(project_root / "scripts" / "install-whisper-cpp.sh")
-            print(
-                f"Whisper-cli binary not found. Run the following command to install it: {command}"
-            )
-            subprocess.run(command, check=True)
+            install_whisper_cpp()
 
     # Check if the Whisper model exists
     if not whisper_model.exists():

@@ -10,3 +10,6 @@ DEFAULT_BUFFER_DURATION = 0.25  # seconds
 
 DEFAULT_TARGET_DB = -30.0  # dBFS
 DEFAULT_THRESHOLD_DB = -70.0  # dBFS
+
+APP_NAME = "waddle"
+APP_AUTHOR = "emptymap"

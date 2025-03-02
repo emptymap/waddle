@@ -5,13 +5,31 @@ description = "A podcast preprocessing library for aligning, normalizing, and tr
 readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "MIT" }
-authors = [{ name = "Masamune Ishihara", email = "mwishiha@ucsc.edu" }]
+authors = [
+    { name = "Masamune Ishihara", email = "mwishiha@ucsc.edu" },
+    { name = "Shun Kashiwa", email = "skashiwa@ucsd.edu" },
+]
 dependencies = [
     "librosa>=0.10.2.post1",
     "numpy==1.26.4",
+    "platformdirs>=4.3.6",
     "pydub>=0.25.1",
     "soundfile>=0.12.1",
     "tqdm>=4.67.1",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Sound/Audio",
+    "Topic :: Multimedia :: Sound/Audio :: Analysis",
+    "Topic :: Utilities",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Multimedia :: Sound/Audio :: Speech",
 ]
 
 [project.scripts]
@@ -22,12 +40,7 @@ package = true
 
 
 [dependency-groups]
-dev = [
-    "pyright>=1.1.394",
-    "pytest>=8.3.4",
-    "pytest-cov>=6.0.0",
-    "ruff>=0.9.5",
-]
+dev = ["pyright>=1.1.394", "pytest>=8.3.4", "pytest-cov>=6.0.0", "ruff>=0.9.5"]
 
 [tool.ruff]
 line-length = 100
@@ -50,7 +63,7 @@ omit = ["*/tests/*", "*_test.py"]
 venvPath = "."
 venv = ".venv"
 pythonVersion = "3.12"
-typeCheckingMode = "basic" # TODO: Change to "strict" after fixing basic issues
+typeCheckingMode = "basic"     # TODO: Change to "strict" after fixing basic issues
 reportMissingImports = true
 reportMissingTypeStubs = false
 useLibraryCodeForTypes = true

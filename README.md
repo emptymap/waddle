@@ -39,9 +39,6 @@ Before using **Waddle**, ensure the following requirements are installed:
      ```
    - For other platforms, follow installation instructions from [fmt GitHub repository](https://github.com/fmtlib/fmt).
 
-4. **Other Dependencies**:
-   - If you run `./scripts/setup-waddle.sh` as shown in the installation steps below, the required dependencies, [`DeepFilterNet`](https://github.com/Rikorose/DeepFilterNet) and [`whisper.cpp`](https://github.com/ggerganov/whisper.cpp), will be installed automatically.
-
 ## Installation
 
 1. Clone the repository:
@@ -49,12 +46,7 @@ Before using **Waddle**, ensure the following requirements are installed:
    git clone https://github.com/emptymap/waddle.git
    ```
 
-2. Set up the environment:
-   ```bash
-   chmod +x ./scripts/setup-waddle.sh && ./scripts/setup-waddle.sh
-   ```
-
-3. You’re ready to use **Waddle**!
+2. You’re ready to use **Waddle**!
 
 ## Usage
 
@@ -193,12 +185,6 @@ The **Waddle** repository is organized as follows:
 ```
 waddle/
 ├── pyproject.toml      # Project metadata, dependencies, and tool configurations
-├── scripts/            # Helper scripts for setup and processing
-│   ├── install-all-tools.sh   # Installs all required dependencies
-│   ├── install-deep-filter.sh # Installs DeepFilterNet for noise reduction
-│   ├── install-whisper-cpp.sh # Installs whisper.cpp for transcription
-│   ├── setup-waddle.sh        # Sets up the environment for Waddle
-│   └── transcribe.sh          # Helper script for transcribing audio
 ├── src/                # Main library source code
 │   ├── waddle/         
 │   │   ├── __main__.py  # CLI entry point for Waddle
