@@ -367,7 +367,7 @@ def test_transcribe_in_batches_1():
             shutil.copy(wav_file_path, temp_wav_path)
             input_output_paths.append((temp_wav_path, temp_dir_path / f"transcription_{i}.txt"))
 
-        transcribe_in_batches(input_output_paths, batch_size=2)
+        transcribe_in_batches(input_output_paths, "-l ja -tp 0", batch_size=2)
 
         for _, output_path in input_output_paths:
             assert output_path.exists()
@@ -389,7 +389,7 @@ def test_transcribe_in_batches_2():
             input_output_paths.append((temp_wav_path, temp_dir_path / f"transcription_{i}.txt"))
 
         # batch_size > len(input_output_paths)
-        transcribe_in_batches(input_output_paths, batch_size=5)
+        transcribe_in_batches(input_output_paths, "-l ja -tp 0", batch_size=5)
 
         for _, output_path in input_output_paths:
             assert output_path.exists()
