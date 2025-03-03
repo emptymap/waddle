@@ -197,7 +197,7 @@ def postprocess_multi_files(
         shutil.rmtree(output_dir_path, ignore_errors=True)
     output_dir_path.mkdir(parents=True, exist_ok=True)
 
-    def process_file(audio_file_path: Path):
+    for audio_file_path in audio_file_paths:
         tmp_audio_file_path = output_dir_path / audio_file_path.name
         if ss > 0 or out_duration:
             clip_audio(audio_file_path, tmp_audio_file_path, ss=ss, out_duration=out_duration)
@@ -213,9 +213,6 @@ def postprocess_multi_files(
             transcription_path,
             whisper_options=whisper_options,
         )
-
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        executor.map(process_file, audio_file_paths)
 
     transcription_output_path = output_dir_path / "transcription.srt"
     combine_srt_files(output_dir_path, transcription_output_path)
