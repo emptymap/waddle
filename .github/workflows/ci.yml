@@ -49,7 +49,7 @@ jobs:
         run: |
           uv run pytest --cov=src --junitxml=junit.xml -o junit_family=legacy --cov-report "xml:coverage.xml" --cov-report=term-missing --cov-config=pyproject.toml
         env:
-          WHISPER_MODEL_NAME: "base"
+          WHISPER_MODEL_NAME: "tiny"
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
