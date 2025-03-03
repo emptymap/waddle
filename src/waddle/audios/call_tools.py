@@ -3,7 +3,7 @@ import subprocess
 import threading
 from pathlib import Path
 
-from platformdirs import user_data_dir
+from platformdirs import user_runtime_dir
 
 from waddle.config import APP_AUTHOR, APP_NAME, DEFAULT_LANGUAGE
 from waddle.tools.install_deep_filter import install_deep_filter
@@ -14,7 +14,7 @@ def get_tools_dir() -> Path:
     """
     Get the tools directory.
     """
-    return Path(user_data_dir(APP_NAME, APP_AUTHOR)) / "tools"
+    return Path(user_runtime_dir(APP_NAME, APP_AUTHOR)) / "tools"
 
 
 def convert_to_wav(input_path: Path, output_path_or_none: Path | None = None) -> None:
