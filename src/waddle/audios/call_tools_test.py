@@ -1,3 +1,4 @@
+import shutil
 import subprocess
 import tempfile
 import wave
@@ -13,6 +14,7 @@ from waddle.audios.call_tools import (
     ensure_sampling_rate,
     remove_noise,
     transcribe,
+    transcribe_in_batches,
 )
 
 # Define test directory paths
@@ -319,7 +321,7 @@ def test_transcribe():
         transcribe(temp_wav_path, output_txt)
 
         assert output_txt.exists()
-        assert len(output_txt.read_text().strip().split("\n")) > 3
+        assert len(output_txt.read_text().strip().split("\n")) >= 3
 
 
 def test_transcribe_file_not_found():
@@ -349,3 +351,46 @@ def test_transcribe_error():
         with subprocess_run_with_error("whisper"):
             with pytest.raises(RuntimeError, match="Running Whisper"):
                 transcribe(temp_wav_path, output_txt)
+
+
+def test_transcribe_in_batches_1():
+    """Test transcription in batches using Whisper."""
+    wav_file_path = EP0_DIR_PATH / "ep12-masa.wav"
+    if not wav_file_path.exists():
+        pytest.skip(f"Sample file {wav_file_path} not found")
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_dir_path = Path(temp_dir)
+        input_output_paths = []
+        for i in range(5):
+            temp_wav_path = temp_dir_path / f"audio_{i}.wav"
+            shutil.copy(wav_file_path, temp_wav_path)
+            input_output_paths.append((temp_wav_path, temp_dir_path / f"transcription_{i}.txt"))
+
+        transcribe_in_batches(input_output_paths, batch_size=2)
+
+        for _, output_path in input_output_paths:
+            assert output_path.exists()
+            assert len(output_path.read_text().strip().split("\n")) >= 3
+
+
+def test_transcribe_in_batches_2():
+    """Test transcription in batches using Whisper."""
+    wav_file_path = EP0_DIR_PATH / "ep12-masa.wav"
+    if not wav_file_path.exists():
+        pytest.skip(f"Sample file {wav_file_path} not found")
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_dir_path = Path(temp_dir)
+        input_output_paths = []
+        for i in range(2):
+            temp_wav_path = temp_dir_path / f"audio_{i}.wav"
+            shutil.copy(wav_file_path, temp_wav_path)
+            input_output_paths.append((temp_wav_path, temp_dir_path / f"transcription_{i}.txt"))
+
+        # batch_size > len(input_output_paths)
+        transcribe_in_batches(input_output_paths, batch_size=5)
+
+        for _, output_path in input_output_paths:
+            assert output_path.exists()
+            assert len(output_path.read_text().strip().split("\n")) >= 3

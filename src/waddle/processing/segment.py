@@ -5,7 +5,7 @@ import numpy as np
 from pydub import AudioSegment
 from tqdm import tqdm
 
-from waddle.audios.call_tools import transcribe
+from waddle.audios.call_tools import transcribe_in_batches
 from waddle.config import (
     DEFAULT_BUFFER_DURATION,
     DEFAULT_CHUNK_DURATION,
@@ -158,22 +158,22 @@ def process_segments(
     seg_file_paths = sorted(segs_folder_path.glob("*.wav"), key=lambda x: int(x.stem.split("_")[1]))
     transcription_entries = []
 
-    for segs_file_path in tqdm(
-        seg_file_paths,
-        desc=f"[INFO] Transcribing {len(seg_file_paths)} segments",
-        total=len(seg_file_paths),
-        dynamic_ncols=True,
-        bar_format="{l_bar}{bar:50}{r_bar}",
-    ):
+    input_output_paths = []
+    for segs_file_path in seg_file_paths:
+        # Transcribe segment
+        srt_output_path = Path(segs_file_path).with_suffix(".srt")
+        input_output_paths.append((segs_file_path, srt_output_path))
+
+    transcribe_in_batches(input_output_paths, options=whisper_options)
+
+    for segs_file_path, srt_output_path in input_output_paths:
         start, _ = parse_audio_filename(str(segs_file_path))
         start_seconds = float(start) / 1000
 
-        # Transcribe segment
-        srt_output_path = Path(segs_file_path).with_suffix(".srt")
-        transcribe(segs_file_path, srt_output_path, options=whisper_options)
-
         # Adjust transcription timestamps
-        process_segment_transcription(srt_output_path, start_seconds, transcription_entries)
+        process_segment_transcription(
+            segs_file_path.with_suffix(".srt"), start_seconds, transcription_entries
+        )
         srt_output_path.unlink()
 
     # Create a single SRT file from all segments
