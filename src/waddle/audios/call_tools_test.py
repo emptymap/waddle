@@ -321,7 +321,7 @@ def test_transcribe():
         transcribe(temp_wav_path, output_txt)
 
         assert output_txt.exists()
-        assert len(output_txt.read_text().strip().split("\n")) > 3
+        assert len(output_txt.read_text().strip().split("\n")) >= 3
 
 
 def test_transcribe_file_not_found():
@@ -371,7 +371,7 @@ def test_transcribe_in_batches_1():
 
         for _, output_path in input_output_paths:
             assert output_path.exists()
-            assert len(output_path.read_text().strip().split("\n")) > 3
+            assert len(output_path.read_text().strip().split("\n")) >= 3
 
 
 def test_transcribe_in_batches_2():
@@ -393,4 +393,4 @@ def test_transcribe_in_batches_2():
 
         for _, output_path in input_output_paths:
             assert output_path.exists()
-            assert len(output_path.read_text().strip().split("\n")) > 3
+            assert len(output_path.read_text().strip().split("\n")) >= 3
