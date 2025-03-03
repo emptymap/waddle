@@ -3,14 +3,14 @@ import sys
 import urllib.request
 from pathlib import Path
 
-from platformdirs import user_data_dir
+from platformdirs import user_runtime_dir
 
 from waddle.config import APP_AUTHOR, APP_NAME
 
 
 def install_deep_filter():
     # Tool installation directories
-    TOOLS_DIR = Path(user_data_dir(APP_NAME, APP_AUTHOR)) / "tools"
+    TOOLS_DIR = Path(user_runtime_dir(APP_NAME, APP_AUTHOR)) / "tools"
     DEEP_FILTER_OUTPUT = TOOLS_DIR / "deep-filter"
     if DEEP_FILTER_OUTPUT.exists():
         print(f"DeepFilterNet binary already exists: {DEEP_FILTER_OUTPUT}")

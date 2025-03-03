@@ -2,14 +2,14 @@ import os
 import subprocess
 from pathlib import Path
 
-from platformdirs import user_data_dir
+from platformdirs import user_runtime_dir
 
 from waddle.config import APP_AUTHOR, APP_NAME
 
 
 def install_whisper_cpp():
     # Tool installation directories
-    TOOLS_DIR = Path(user_data_dir(APP_NAME, APP_AUTHOR)) / "tools"
+    TOOLS_DIR = Path(user_runtime_dir(APP_NAME, APP_AUTHOR)) / "tools"
     WHISPER_DIR = TOOLS_DIR / "whisper.cpp"
 
     # Create the tools directory if it doesn't exist
@@ -22,6 +22,7 @@ def install_whisper_cpp():
             ["git", "clone", "https://github.com/ggerganov/whisper.cpp.git", str(WHISPER_DIR)],
             check=True,
         )
+        subprocess.run(["git", "checkout", "v1.7.4"], check=True, cwd=str(WHISPER_DIR))
     else:
         print(f"whisper.cpp already exists at {WHISPER_DIR}")
 
