@@ -1,6 +1,6 @@
 # Waddle 🦆
 
-**Waddle** is a preprocessor for podcasts, developed specifically for [RubberDuck.fm](https://rubberduck.fm). It streamlines the process of aligning, normalizing, and transcribing podcast audio files from multiple speakers or individual audio files.
+**Waddle** (`waddle-ai`) is a preprocessor for podcasts, developed specifically for [RubberDuck.fm](https://rubberduck.fm). It streamlines the process of aligning, normalizing, and transcribing podcast audio files from multiple speakers or individual audio files.
 
 ![Demo](https://github.com/emptymap/waddle/blob/main/assets/demo.gif?raw=true)
 
@@ -41,12 +41,20 @@ Before using **Waddle**, ensure the following requirements are installed:
 
 ## Installation
 
+You can install Waddle directly from PyPI:
+
+```bash
+pip install waddle-ai
+```
+
+Or install from source:
+
 1. Clone the repository:
    ```bash
    git clone https://github.com/emptymap/waddle.git
+   cd waddle
+   pip install -e .
    ```
-
-2. You’re ready to use **Waddle**!
 
 ## Usage
 
@@ -75,7 +83,6 @@ Before using **Waddle**, ensure the following requirements are installed:
   - `-t, --time`: Limit output duration (seconds).
   - `-c, --comp-duration`: Duration for alignment comparison (default: `10` seconds).
   - `-nc, --no-convert`: Skip conversion to WAV format.
-
 
 ## Example Commands
 
@@ -118,7 +125,6 @@ Before using **Waddle**, ensure the following requirements are installed:
    waddle single /path/to/audio.wav -t 30
    ```
 
-
 ## Developer Guide
 
 This section provides guidelines for developers contributing to **Waddle**. It includes setting up the development environment, running tests, and maintaining code quality.
@@ -131,12 +137,17 @@ This section provides guidelines for developers contributing to **Waddle**. It i
    cd waddle
    ```
 
-2. **Install `uv` (Recommended)**
-   We use [`uv`](https://github.com/astral-sh/uv) as a fast package manager.
+2. **Install `uv` (Required)**
+   We use [`uv`](https://github.com/astral-sh/uv) as our package manager.
    ```bash
    curl -LsSf https://astral.sh/uv/install.sh | sh
    ```
 
+3. **Install Dependencies**
+   ```bash
+   uv venv
+   uv pip install -e ".[dev]"
+   ```
 
 ### Running Tests
 
@@ -160,23 +171,18 @@ We use `pytest` with coverage analysis to ensure code quality.
 
 ### Linting and Formatting
 
-We use `ruff` for linting and formatting.
+We use `ruff` for linting and formatting, and `pyright` for type checking.
 
-- **Fix linting issues and format code automatically:**
+- **Fix linting issues and format code:**
   ```bash
-  uv run ruff check --fix | uv run ruff format
-  ```
-
-- **Check for linting errors without fixing:**
-  ```bash
-  uv run ruff check
-  ```
-
-- **Format code without running lint checks:**
-  ```bash
+  uv run ruff check --fix
   uv run ruff format
   ```
 
+- **Run type checking:**
+  ```bash
+  uv run pyright
+  ```
 
 ### Code Structure
 
@@ -184,53 +190,46 @@ The **Waddle** repository is organized as follows:
 
 ```
 waddle/
-├── pyproject.toml      # Project metadata, dependencies, and tool configurations
-├── src/                # Main library source code
-│   ├── waddle/         
-│   │   ├── __main__.py  # CLI entry point for Waddle
-│   │   ├── argparse.py  # Handles CLI arguments and command parsing
-│   │   ├── config.py    # Configuration settings for processing
-│   │   ├── processor.py # Core processing logic for audio preprocessing
-│   │   ├── utils.py     # Helper functions for audio handling
-│   │   ├── processing/  
-│   │   │   ├── combine.py   # Merges multiple audio sources
-│   │   │   ├── segment.py   # Segments audio into chunks
-│   │   ├── audios/
-│   │   │   ├── align_offset.py  # Synchronization logic for alignment
-│   │   │   ├── call_tools.py    # Interfaces with external audio tools
-│   │   ├── utils_test.py  # Unit tests for utilities
-│   └── waddle.egg-info/   # Packaging metadata for distribution
-├── tests/               # Unit and integration tests
-│   ├── integration_test.py   # End-to-end integration tests
-│   ├── ep0/             # Sample audio files for testing
-│   │   ├── GMT20250119-015233_Recording_1280x720.wav  # Reference audio
-│   │   ├── ep12-kotaro.wav  # Example speaker audio
-│   │   ├── ep12-masa.wav    # Example speaker audio
-│   │   ├── ep12-shun.wav    # Example speaker audio
-└── README.md           # Documentation for installation and usage
+├── .github/
+│   └── workflows/         # CI/CD workflows
+│       └── ci.yml        # Main CI pipeline and PyPI publishing
+├── src/
+│   └── waddle/           # Main package source
+│       ├── __main__.py   # CLI entry point
+│       ├── argparse.py   # CLI argument parsing
+│       ├── config.py     # Configuration management
+│       ├── processor.py  # Core processing logic
+│       ├── utils.py      # Utility functions
+│       ├── audios/       # Audio processing modules
+│       │   ├── align_offset.py  # Audio alignment
+│       │   ├── call_tools.py    # External tool integration
+│       │   └── clip.py          # Audio clipping
+│       └── processing/   # Audio processing modules
+│           ├── combine.py  # Audio combining
+│           └── segment.py  # Audio segmentation
+├── tests/                # Test suite
+│   ├── integration_test.py
+│   └── ep0/             # Test audio files
+├── pyproject.toml       # Project configuration
+└── README.md           # This file
 ```
 
-#### Key Files and Directories:
+### Publishing to PyPI
 
-- **`src/waddle/__main__.py`**  
-  - CLI entry point for running Waddle.
-  
-- **`src/waddle/processor.py`**  
-  - Core logic for aligning, normalizing, and transcribing audio.
+Waddle uses GitHub Actions to automatically publish releases to PyPI. To publish a new version:
 
-- **`src/waddle/processing/combine.py`**  
-  - Merges multiple speaker audio files into a single track.
+1. Update the version in `pyproject.toml`
+2. Create and push a new tag with the same version:
+   ```bash
+   git tag v0.1.0  # Use the same version as in pyproject.toml
+   git push origin v0.1.0
+   ```
+3. The CI workflow will automatically:
+   - Run all tests and checks
+   - Build the package
+   - Publish to PyPI if all checks pass
 
-- **`src/waddle/processing/segment.py`**  
-  - Splits long audio into manageable segments.
-
-- **`src/waddle/audios/align_offset.py`**  
-  - Handles audio synchronization using a reference track.
-
-- **`tests/integration_test.py`**  
-  - Runs integration tests to validate the preprocessing pipeline.
-
-
+The published package will be available at: https://pypi.org/project/waddle-ai/
 
 ### Contributing
 
@@ -239,34 +238,23 @@ waddle/
    git checkout -b feature/my-new-feature
    ```
 
-2. **Write Code & Add Tests**
-   - Ensure all functions are covered with tests in `tests/`.
+2. **Write Code & Tests**
+   - Add tests for new features in `tests/`
+   - Ensure type hints are used appropriately
 
-3. **Run Tests & Formatting**
+3. **Run Quality Checks**
    ```bash
-   uv run pytest
    uv run ruff check --fix
    uv run ruff format
+   uv run pyright
+   uv run pytest
    ```
 
-4. **Commit Changes**
-   ```bash
-   git add .
-   git commit -m "Add my new feature"
-   ```
+4. **Create a Pull Request**
+   - Push your changes and open a PR on GitHub
+   - Ensure all CI checks pass
+   - Request a review from maintainers
 
-5. **Push and Create a Pull Request**
-   ```bash
-   git push origin feature/my-new-feature
-   ```
-   - Open a PR on GitHub and request a review.
+## License
 
-### CI/CD
-
-- **GitHub Actions** will run:
-  - `pytest` for tests
-  - `ruff check` for linting
-  - `ruff format` for formatting
-  - Code coverage report generation
-
-Ensure your changes pass CI before merging!
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
