@@ -111,7 +111,10 @@ def create_waddle_parser():
         "--comp-duration",
         type=float,
         default=DEFAULT_COMP_AUDIO_DURATION,
-        help=f"Duration in seconds for alignment comparison (default: {DEFAULT_COMP_AUDIO_DURATION}s).",
+        help=(
+            "Duration in seconds for alignment comparison "
+            f"(default: {DEFAULT_COMP_AUDIO_DURATION}s)."
+        ),
     )
     preprocess_parser.add_argument(
         "-nc",
