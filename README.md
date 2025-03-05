@@ -11,6 +11,29 @@
 - **Remove Noise**: Cleans up audio by reducing background noise for clearer output using [`DeepFilterNet`](https://github.com/Rikorose/DeepFilterNet).
 - **Subtitle Generation**: Generates SRT subtitle files for transcription using [`whisper.cpp`](https://github.com/ggerganov/whisper.cpp).
 
+## Installation
+
+### From PyPI (Recommended)
+
+Install Waddle directly from PyPI:
+
+```bash
+pip install waddle-ai
+```
+
+### From Source
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/emptymap/waddle.git
+   cd waddle
+   ```
+
+2. Install with pip:
+   ```bash
+   pip install .
+   ```
+
 ## Prerequisites
 
 Before using **Waddle**, ensure the following requirements are installed:
@@ -39,43 +62,60 @@ Before using **Waddle**, ensure the following requirements are installed:
      ```
    - For other platforms, follow installation instructions from [fmt GitHub repository](https://github.com/fmtlib/fmt).
 
-## Installation
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/emptymap/waddle.git
-   ```
-
-2. You’re ready to use **Waddle**!
-
 ## Usage
 
 ### Prepare Audio Files
-   - Upload each speaker's audio files in the `audios` directory.
+   - Upload each speaker's audio files to your working directory.
    - Use the naming convention: `ep{N}-{SpeakerName}.[wav|aifc|m4a|mp4]`.
      - Example: `ep1-Alice.wav`, `ep1-Bob.aifc`
    - Include a reference audio file that covers the entire podcast. The reference file name must start with `GMT` (e.g., a Zoom recording).
 
-### CLI Options
+### CLI Commands
 
-- `single` - Process a single audio file:
-  ```bash
-  waddle single path/to/audio.wav -o ./output
-  ```
-  - `-o, --output`: Output directory (default: `./out`).
-  - `-t, --time`: Limit output duration (seconds).
+#### Single Audio Processing
 
-- `preprocess` - Process multiple audio files:
-  ```bash
-  waddle preprocess -d ./audios -r ./reference.wav -o ./output
-  ```
-  - `-d, --directory`: Directory containing audio files (default: `./`).
-  - `-r, --reference`: Reference audio file for alignment.
-  - `-o, --output`: Output directory (default: `./out`).
-  - `-t, --time`: Limit output duration (seconds).
-  - `-c, --comp-duration`: Duration for alignment comparison (default: `10` seconds).
-  - `-nc, --no-convert`: Skip conversion to WAV format.
+Process a single audio file:
+```bash
+waddle single path/to/audio.wav
+```
 
+Options:
+- `-o, --output`: Directory to save the output (default: `./out`).
+- `-ss`: Start time in seconds (default: `0.0`).
+- `-t, --time`: Limit output duration (seconds).
+- `-nnr, --no-noise-remove`: Skip noise removal.
+- `-wo, --whisper-options`: Options for Whisper transcription (default: `-l ja`).
+
+#### Preprocessing Multiple Audio Files
+
+Process and align multiple audio files:
+```bash
+waddle preprocess
+```
+
+Options:
+- `-d, --directory`: Directory containing audio files (default: `./`).
+- `-o, --output`: Output directory (default: `./out`).
+- `-ss`: Start time in seconds (default: `0.0`).
+- `-t, --time`: Limit output duration (seconds).
+- `-nnr, --no-noise-remove`: Skip noise removal.
+- `-r, --reference`: Reference audio file for alignment.
+- `-c, --comp-duration`: Duration for alignment comparison (default: `1200` seconds/20 minutes).
+- `-nc, --no-convert`: Skip conversion to WAV format.
+
+#### Postprocessing Audio Files
+
+Process audio files after alignment (silence removal, merging, transcription):
+```bash
+waddle postprocess
+```
+
+Options:
+- `-d, --directory`: Directory containing audio files (default: `./`).
+- `-o, --output`: Output directory (default: `./out`).
+- `-ss`: Start time in seconds (default: `0.0`).
+- `-t, --time`: Limit output duration (seconds).
+- `-wo, --whisper-options`: Options for Whisper transcription (default: `-l ja`).
 
 ## Example Commands
 
@@ -106,6 +146,11 @@ Before using **Waddle**, ensure the following requirements are installed:
    waddle preprocess -nc
    ```
 
+6. **Start Processing from a Specific Time Point**:
+   ```bash
+   waddle preprocess -ss 120
+   ```
+
 ### Single Audio File Processing
 
 1. **Basic Processing**:
@@ -118,10 +163,14 @@ Before using **Waddle**, ensure the following requirements are installed:
    waddle single /path/to/audio.wav -t 30
    ```
 
+3. **Custom Whisper Options**:
+   ```bash
+   waddle single /path/to/audio.wav -wo "-l en"
+   ```
 
 ## Developer Guide
 
-This section provides guidelines for developers contributing to **Waddle**. It includes setting up the development environment, running tests, and maintaining code quality.
+This section provides guidelines for developers contributing to **Waddle**.
 
 ### Setting Up the Development Environment
 
@@ -137,6 +186,10 @@ This section provides guidelines for developers contributing to **Waddle**. It i
    curl -LsSf https://astral.sh/uv/install.sh | sh
    ```
 
+3. **Install Development Dependencies**
+   ```bash
+   uv pip install -e ".[dev]"
+   ```
 
 ### Running Tests
 
@@ -158,13 +211,14 @@ We use `pytest` with coverage analysis to ensure code quality.
   uv run pytest -v
   ```
 
-### Linting and Formatting
+### Linting and Type Checking
 
-We use `ruff` for linting and formatting.
+We use `ruff` for linting and formatting, and `pyright` for type checking.
 
-- **Fix linting issues and format code automatically:**
+- **Fix linting issues and format code:**
   ```bash
-  uv run ruff check --fix | uv run ruff format
+  uv run ruff check --fix
+  uv run ruff format
   ```
 
 - **Check for linting errors without fixing:**
@@ -172,65 +226,34 @@ We use `ruff` for linting and formatting.
   uv run ruff check
   ```
 
-- **Format code without running lint checks:**
+- **Run type checking:**
   ```bash
-  uv run ruff format
+  uv run pyright
   ```
-
 
 ### Code Structure
 
 The **Waddle** repository is organized as follows:
 
 ```
-waddle/
-├── pyproject.toml      # Project metadata, dependencies, and tool configurations
-├── src/                # Main library source code
-│   ├── waddle/         
-│   │   ├── __main__.py  # CLI entry point for Waddle
-│   │   ├── argparse.py  # Handles CLI arguments and command parsing
-│   │   ├── config.py    # Configuration settings for processing
-│   │   ├── processor.py # Core processing logic for audio preprocessing
-│   │   ├── utils.py     # Helper functions for audio handling
-│   │   ├── processing/  
-│   │   │   ├── combine.py   # Merges multiple audio sources
-│   │   │   ├── segment.py   # Segments audio into chunks
-│   │   ├── audios/
-│   │   │   ├── align_offset.py  # Synchronization logic for alignment
-│   │   │   ├── call_tools.py    # Interfaces with external audio tools
-│   │   ├── utils_test.py  # Unit tests for utilities
-│   └── waddle.egg-info/   # Packaging metadata for distribution
-├── tests/               # Unit and integration tests
-│   ├── integration_test.py   # End-to-end integration tests
-│   ├── ep0/             # Sample audio files for testing
-│   │   ├── GMT20250119-015233_Recording_1280x720.wav  # Reference audio
-│   │   ├── ep12-kotaro.wav  # Example speaker audio
-│   │   ├── ep12-masa.wav    # Example speaker audio
-│   │   ├── ep12-shun.wav    # Example speaker audio
-└── README.md           # Documentation for installation and usage
+src/
+└── waddle/
+    ├── __main__.py            # CLI entry point
+    ├── argparse.py            # Command-line argument parsing
+    ├── config.py              # Configuration settings
+    ├── processor.py           # Main processing pipeline
+    ├── utils.py               # Utility functions
+    ├── audios/                # Audio processing modules
+    │   ├── align_offset.py    # Audio alignment functionality
+    │   ├── call_tools.py      # External tool integration
+    │   └── clip.py            # Audio clipping functionality
+    ├── processing/            # Core audio processing
+    │   ├── combine.py         # Combining audio segments
+    │   └── segment.py         # Audio segmentation
+    └── tools/                 # Installation tools
+        ├── install_deep_filter.py
+        └── install_whisper_cpp.py
 ```
-
-#### Key Files and Directories:
-
-- **`src/waddle/__main__.py`**  
-  - CLI entry point for running Waddle.
-  
-- **`src/waddle/processor.py`**  
-  - Core logic for aligning, normalizing, and transcribing audio.
-
-- **`src/waddle/processing/combine.py`**  
-  - Merges multiple speaker audio files into a single track.
-
-- **`src/waddle/processing/segment.py`**  
-  - Splits long audio into manageable segments.
-
-- **`src/waddle/audios/align_offset.py`**  
-  - Handles audio synchronization using a reference track.
-
-- **`tests/integration_test.py`**  
-  - Runs integration tests to validate the preprocessing pipeline.
-
-
 
 ### Contributing
 
@@ -266,7 +289,37 @@ waddle/
 - **GitHub Actions** will run:
   - `pytest` for tests
   - `ruff check` for linting
+  - `pyright` for type checking
   - `ruff format` for formatting
   - Code coverage report generation
+  - Automatic publishing to PyPI when a new tag is pushed (via the `publish-to-pypi` job)
 
-Ensure your changes pass CI before merging!
+### Releasing
+
+Waddle is available on PyPI as [waddle-ai](https://pypi.org/project/waddle-ai/).
+
+To create a new release:
+
+1. Update the version in `pyproject.toml`
+2. Create and push a new tag with the version prefixed by 'v' (e.g., `v0.1.1`)
+   ```bash
+   git tag v0.1.1
+   git push origin v0.1.1
+   ```
+3. GitHub Actions will automatically:
+   - Run all tests and checks
+   - Build the package
+   - Publish to PyPI
+
+The current version is specified in `pyproject.toml`.
+
+#### About pyproject.toml
+
+The `pyproject.toml` file contains important configuration for the project:
+
+- **Project metadata**: name, version, description, authors, etc.
+- **Dependencies**: Required packages for the project
+- **Build system**: Using hatchling as the build backend
+- **Development tools**: Configuration for ruff (linting/formatting), pyright (type checking), and pytest (testing)
+
+When making changes to the project, ensure that the `pyproject.toml` file is updated accordingly, especially when adding new dependencies or changing the version number for a release.
