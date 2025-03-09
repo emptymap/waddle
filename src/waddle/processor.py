@@ -214,12 +214,12 @@ def postprocess_multi_files(
             whisper_options=whisper_options,
         )
 
-    transcription_output_path = output_dir_path / "transcription.srt"
-    combine_srt_files(output_dir_path, transcription_output_path)
-
     audio_prefix = audio_file_paths[0].stem
     if "-" in audio_prefix:
         audio_prefix = audio_prefix.split("-")[0]
+
+    transcription_output_path = output_dir_path / f"{audio_prefix}.srt"
+    combine_srt_files(output_dir_path, transcription_output_path)
 
     final_audio_path = output_dir_path / f"{audio_prefix}.wav"
     combined_audio_paths = sorted(output_dir_path.glob("*.wav"))
