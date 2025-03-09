@@ -37,9 +37,8 @@ def combine_segments_into_audio(
         return
 
     if not timeline:
-        start_ms, _ = parse_audio_filename(str(seg_file_paths[0]))
         _, end_ms = parse_audio_filename(str(seg_file_paths[-1]))
-        timeline = [(start_ms, end_ms)]
+        timeline = [(0, end_ms)]
         max_end_ms = end_ms
 
     final_audio = AudioSegment.silent(duration=max_end_ms)
