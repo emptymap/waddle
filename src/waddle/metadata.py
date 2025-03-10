@@ -212,6 +212,10 @@ def embed_chapter_info(mp3_file: Path, chapters: list[Chapter]):
     print(f"[INFO] Embedding chapter information in: {mp3_file}")
     audio = ID3(str(mp3_file))
 
+    # Remove existing chapter information
+    audio.delall("CTOC")
+    audio.delall("CHAP")
+
     audio.add(
         CTOC(
             element_id="toc",
@@ -227,7 +231,7 @@ def embed_chapter_info(mp3_file: Path, chapters: list[Chapter]):
                 start_time=int(chapter.start * 1000),
                 end_time=int(chapter.end * 1000),
                 sub_frames=[
-                    TIT2(text=chapter.title.encode("utf-8")),
+                    TIT2(text=chapter.title),
                 ],
             )
         )
