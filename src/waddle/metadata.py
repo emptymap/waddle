@@ -56,7 +56,7 @@ def generate_metadata(
         raise FileNotFoundError(f"Audio file not found: {audio_file}")
 
     output_audio_path = output_dir / f"{audio_file_path.stem}.mp3"
-    if audio_file_path.suffix == "mp3":
+    if audio_file_path.suffix == ".mp3":
         shutil.copy(audio_file_path, output_audio_path)
     else:
         convert_to_mp3(audio_file_path, output_audio_path)
