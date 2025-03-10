@@ -250,6 +250,8 @@ def test_generate_metadata():
         assert audio_out.exists()
         id3 = ID3(audio_out)
         assert len(id3.getall("CHAP")) == 2
+        assert "Chapter 1" in id3.pprint()
+        assert "Chapter 2" in id3.pprint()
         show_notes_out = Path(tmpdir) / "ep12-masa.show_notes.md"
         show_notes_out.exists()
         chapters_out = Path(tmpdir) / "ep12-masa.chapters.txt"
