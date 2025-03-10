@@ -40,7 +40,16 @@ def generate_metadata(
     show_notes_file_path.write_text(show_notes, encoding="utf-8")
 
     if audio_file is None:
-        return
+        # check if the audio file with the same stem exists
+        for ext in ["mp3", "m4a", "wav"]:
+            audio_file_path = source_file_path.with_suffix(f".{ext}")
+            if audio_file_path.is_file():
+                print(f"[INFO] Found audio file: {audio_file_path}")
+                audio_file = audio_file_path
+                break
+        else:
+            print(f"[INFO] Audio file not found for: {source_file}")
+            return
 
     audio_file_path = Path(audio_file)
     if not audio_file_path.is_file():

@@ -1,4 +1,5 @@
 from pathlib import Path
+import shutil
 from tempfile import TemporaryDirectory
 from textwrap import dedent
 
@@ -228,7 +229,7 @@ def test_extract_metadata_03():
 
 
 def test_generate_metadata():
-    annotated_srt_file = EP0_DIR_PATH / "ep12.srt.md"
+    annotated_srt_file = EP0_DIR_PATH / "ep12.md"
     m4a_file = EP0_DIR_PATH / "ep12-masa.m4a"
 
     with TemporaryDirectory() as tmpdir:
@@ -241,3 +242,18 @@ def test_generate_metadata():
         show_notes_out.exists()
         chapters_out = Path(tmpdir) / "ep12-masa.chapters.txt"
         chapters_out.exists()
+
+
+def test_generate_metadata_find_audio_file():
+    annotated_srt_file = EP0_DIR_PATH / "ep12.md"
+    input_audio_file = EP0_DIR_PATH / "ep12-masa.m4a"
+
+    with TemporaryDirectory() as in_dir, TemporaryDirectory() as out_dir:
+        in_dir, out_dir = Path(in_dir), Path(out_dir)
+        shutil.copy(str(annotated_srt_file), in_dir / "ep12.md")
+        shutil.copy(str(input_audio_file), in_dir / "ep12.m4a")
+        generate_metadata(
+            in_dir / "ep12.md", None, out_dir
+        )  # No audio file specified but will find ep12.m4a
+        audio_out = out_dir / "ep12.mp3"
+        assert audio_out.exists()
