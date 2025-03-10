@@ -135,6 +135,22 @@ def test_convert_to_mp3_existing_mp3_force():
         assert len(output_mp3.read_bytes()) > 100
 
 
+def test_convert_to_mp3_error():
+    """Test when an error occurs during conversion."""
+    m4a_file = EP0_DIR_PATH / "ep12-masa.m4a"
+    if not m4a_file.exists():
+        pytest.skip(f"Sample file {m4a_file} not found")
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_dir_path = Path(temp_dir)
+        temp_m4a = temp_dir_path / m4a_file.name
+        temp_m4a.write_bytes(m4a_file.read_bytes())
+
+        with subprocess_run_with_error("ffmpeg"):
+            with pytest.raises(RuntimeError, match="Converting"):
+                convert_to_mp3(temp_m4a)
+
+
 def test_convert_to_wav():
     """Test that an `.m4a` file is converted to `.wav` format."""
     m4a_file = EP0_DIR_PATH / "ep12-masa.m4a"
