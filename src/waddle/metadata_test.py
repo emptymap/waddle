@@ -4,7 +4,9 @@ from tempfile import TemporaryDirectory
 from textwrap import dedent
 
 from mutagen.id3 import ID3
+import pytest
 
+from waddle.audios.call_tools import convert_to_mp3
 from waddle.metadata import (
     ChapterMarker,
     ShowNotesEntry,
@@ -251,9 +253,30 @@ def test_generate_metadata_find_audio_file():
     with TemporaryDirectory() as in_dir, TemporaryDirectory() as out_dir:
         in_dir, out_dir = Path(in_dir), Path(out_dir)
         shutil.copy(str(annotated_srt_file), in_dir / "ep12.md")
-        shutil.copy(str(input_audio_file), in_dir / "ep12.m4a")
+        convert_to_mp3(input_audio_file, in_dir / "ep12.mp3")
         generate_metadata(
             in_dir / "ep12.md", None, out_dir
         )  # No audio file specified but will find ep12.m4a
         audio_out = out_dir / "ep12.mp3"
         assert audio_out.exists()
+
+
+def test_generate_metadata_no_audio_file():
+    annotated_srt_file = EP0_DIR_PATH / "ep12.md"
+
+    with TemporaryDirectory() as in_dir, TemporaryDirectory() as out_dir:
+        in_dir, out_dir = Path(in_dir), Path(out_dir)
+        shutil.copy(str(annotated_srt_file), in_dir / "ep12.md")
+        generate_metadata(in_dir / "ep12.md", None, out_dir)  # No audio file
+        chapter_out = out_dir / "ep12.chapters.txt"
+        assert chapter_out.exists()
+
+
+def test_generate_metadata_invalid_audio():
+    annotated_srt_file = EP0_DIR_PATH / "ep12.md"
+
+    with TemporaryDirectory() as in_dir, TemporaryDirectory() as out_dir:
+        in_dir, out_dir = Path(in_dir), Path(out_dir)
+        shutil.copy(str(annotated_srt_file), in_dir / "ep12.md")
+        with pytest.raises(FileNotFoundError):
+            generate_metadata(in_dir / "ep12.md", "/foo/var", out_dir)  # No audio file
