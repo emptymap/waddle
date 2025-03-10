@@ -18,6 +18,37 @@ def get_tools_dir() -> Path:
     return Path(user_runtime_dir(APP_NAME, APP_AUTHOR)) / "tools"
 
 
+def convert_to_mp3(
+    input_path: Path, output_path_or_none: Path | None = None, force: bool = False
+) -> None:
+    """Convert audio file to MP3 format."""
+    output_path = output_path_or_none or input_path.with_suffix(".mp3")
+    if output_path.exists() and not force:
+        print(f"[INFO] Skipping {input_path}: MP3 file already exists.")
+        return
+
+    # Convert to MP3 using ffmpeg
+    print(f"[INFO] Converting {input_path} to {output_path}...")
+    try:
+        subprocess.run(
+            [
+                "ffmpeg",
+                "-y",
+                "-i",
+                str(input_path),
+                "-q:a",
+                "0",
+                str(output_path),
+            ],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        print(f"[INFO] Successfully converted: {output_path}")
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"[ERROR] Converting {input_path}: {e}") from e
+
+
 def convert_to_wav(input_path: Path, output_path_or_none: Path | None = None) -> None:
     """Convert audio file to WAV format."""
     output_path = output_path_or_none or input_path.with_suffix(".wav")

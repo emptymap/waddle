@@ -11,6 +11,7 @@ authors = [
 ]
 dependencies = [
     "librosa>=0.10.2.post1",
+    "mutagen>=1.47.0",
     "numpy==1.26.4",
     "platformdirs>=4.3.6",
     "pydub>=0.25.1",

@@ -1,4 +1,5 @@
 import argparse
+from textwrap import dedent
 
 from waddle.config import DEFAULT_COMP_AUDIO_DURATION, DEFAULT_LANGUAGE
 from waddle.utils import phrase_time_to_seconds
@@ -12,6 +13,7 @@ def create_waddle_parser():
     - single: Process a single audio file
     - preprocess: Preprocess multiple audio files
     - postprocess: Postprocess multiple audio files
+    - metadata: Extract and process metadata from an annotated SRT file
 
     Returns:
         argparse.ArgumentParser: Configured argument parser
@@ -121,6 +123,39 @@ def create_waddle_parser():
         "--no-convert",
         action="store_true",
         help="Skip converting audio files to WAV format.",
+    )
+
+    # metadata
+    show_notes_parser = subparsers.add_parser(
+        "metadata",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description=dedent("""\
+            Generate metadata from an annotated SRT file.
+
+            - `# Chapter` markers are used to define chapters.
+                - Similar to Markdown, `#` indicates the level of the chapter, up to 6 levels.
+                - The chapter starts at the next SRT timestamp and ends before next chapter.
+            - Any other text is considered show notes.
+            - Empty lines are ignored.
+                - Use `;` to add newlines in show notes. The `;` will be deleted.
+        """),
+    )
+    show_notes_parser.add_argument(
+        "source",
+        help="Path to the annotated SRT file.",
+    )
+    show_notes_parser.add_argument(
+        "-i",
+        "--input",
+        help="Path to the input audio file. If not specified, it will look for an audio file with"
+        " the same name.",
+        default=None,
+    )
+    show_notes_parser.add_argument(
+        "-o",
+        "--output",
+        help="Directory to save the metadata and audio files.",
+        default="./metadata",
     )
 
     return parser

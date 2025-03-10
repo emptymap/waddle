@@ -199,3 +199,31 @@ def test_integration_postprocess_no_source_dir():
         result = run_waddle_command(test_args)
 
         assert result.returncode != 0, "Command should fail without a source directory"
+
+
+def test_integration_metadata():
+    """Tests the metadata command for generating metadata."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        test_args = [
+            "metadata",
+            os.path.join(dir, "ep0", "ep12.md"),
+            "--input",
+            os.path.join(dir, "ep0", "ep12-masa.wav"),
+            "--output",
+            tmpdir,
+        ]
+        result = run_waddle_command(test_args)
+
+        assert result.returncode == 0, f"Command failed with error: {result.stderr}"
+
+        files = os.listdir(tmpdir)
+        print("Files in temporary directory:", files)
+
+        mp3_file = os.path.join(tmpdir, "ep12-masa.mp3")
+        assert os.path.exists(mp3_file), "MP3 file was not created"
+
+        chapters_file = os.path.join(tmpdir, "ep12.chapters.txt")
+        assert os.path.exists(chapters_file), "Chapters file was not created"
+
+        show_notes_file = os.path.join(tmpdir, "ep12.show_notes.md")
+        assert os.path.exists(show_notes_file), "Show notes file was not created"
