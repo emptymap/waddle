@@ -10,6 +10,7 @@ import pytest
 
 from waddle.audios.call_tools import (
     convert_all_files_to_wav,
+    convert_to_mp3,
     convert_to_wav,
     ensure_sampling_rate,
     remove_noise,
@@ -18,7 +19,7 @@ from waddle.audios.call_tools import (
 )
 
 # Define test directory paths
-TESTS_DIR_PATH = Path(__file__).resolve().parent.parents[2] / "tests"
+TESTS_DIR_PATH = Path(__file__).resolve().parents[3] / "tests"
 EP0_DIR_PATH = TESTS_DIR_PATH / "ep0"
 
 # Save the original subprocess.run
@@ -60,6 +61,94 @@ def get_total_noise_amount(file_path: Path, threshold: int = 150) -> float:
 
         noise_amount = np.sum(audio_array[audio_array < threshold])
         return noise_amount
+
+
+def test_convert_to_mp3():
+    """Test that an `.m4a` file is converted to `.mp3` format."""
+    m4a_file = EP0_DIR_PATH / "ep12-masa.m4a"
+    if not m4a_file.exists():
+        pytest.skip(f"Sample file {m4a_file} not found")
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_dir_path = Path(temp_dir)
+        temp_m4a = temp_dir_path / m4a_file.name
+        temp_m4a.write_bytes(m4a_file.read_bytes())
+
+        convert_to_mp3(temp_m4a)
+
+        expected_output = temp_m4a.with_suffix(".mp3")
+        assert expected_output.exists()
+
+
+def test_convert_to_mp3_with_output_path():
+    """Test that an `.m4a` file is converted to `.mp3` format with a custom output path."""
+    m4a_file = EP0_DIR_PATH / "ep12-masa.m4a"
+    if not m4a_file.exists():
+        pytest.skip(f"Sample file {m4a_file} not found")
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_dir_path = Path(temp_dir)
+        temp_m4a = temp_dir_path / m4a_file.name
+        temp_m4a.write_bytes(m4a_file.read_bytes())
+
+        output_mp3 = temp_dir_path / "output.mp3"
+        convert_to_mp3(temp_m4a, output_mp3)
+
+        assert output_mp3.exists()
+
+
+def test_convert_to_mp3_existing_mp3():
+    """Skip conversion when `.mp3` file already exists."""
+    m4a_file = EP0_DIR_PATH / "ep12-masa.m4a"
+    if not m4a_file.exists():
+        pytest.skip(f"Sample file {m4a_file} not found")
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_dir_path = Path(temp_dir)
+        temp_m4a = temp_dir_path / m4a_file.name
+        temp_m4a.write_bytes(m4a_file.read_bytes())
+
+        output_mp3 = temp_dir_path / "output.mp3"
+        output_mp3.write_text("Existing MP3 file")
+        convert_to_mp3(temp_m4a, output_mp3)
+
+        assert output_mp3.exists()
+        assert output_mp3.read_text() == "Existing MP3 file"
+
+
+def test_convert_to_mp3_existing_mp3_force():
+    """Convert with force=True even if `.mp3` file already exists."""
+    m4a_file = EP0_DIR_PATH / "ep12-masa.m4a"
+    if not m4a_file.exists():
+        pytest.skip(f"Sample file {m4a_file} not found")
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_dir_path = Path(temp_dir)
+        temp_m4a = temp_dir_path / m4a_file.name
+        temp_m4a.write_bytes(m4a_file.read_bytes())
+
+        output_mp3 = temp_dir_path / "output.mp3"
+        output_mp3.write_text("Existing MP3 file")
+        convert_to_mp3(temp_m4a, output_mp3, force=True)
+
+        assert output_mp3.exists()
+        assert len(output_mp3.read_bytes()) > 100
+
+
+def test_convert_to_mp3_error():
+    """Test when an error occurs during conversion."""
+    m4a_file = EP0_DIR_PATH / "ep12-masa.m4a"
+    if not m4a_file.exists():
+        pytest.skip(f"Sample file {m4a_file} not found")
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_dir_path = Path(temp_dir)
+        temp_m4a = temp_dir_path / m4a_file.name
+        temp_m4a.write_bytes(m4a_file.read_bytes())
+
+        with subprocess_run_with_error("ffmpeg"):
+            with pytest.raises(RuntimeError, match="Converting"):
+                convert_to_mp3(temp_m4a)
 
 
 def test_convert_to_wav():
