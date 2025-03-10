@@ -5,6 +5,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from mutagen.id3 import ID3
+
+# FIXME: Importing from private(?) modules. This is not good but these items are
+# not listed in `__all__` so can't be imported directly from the package as in the document.
+# ref: https://mutagen.readthedocs.io/en/latest/user/id3.html#chapter-extension
+from mutagen.id3._frames import CHAP, CTOC, TIT2
+from mutagen.id3._specs import CTOCFlags
+
 from waddle.audios.call_tools import convert_to_mp3
 
 
@@ -43,6 +51,8 @@ def generate_metadata(
         shutil.copy(audio_file_path, output_audio_path)
     else:
         convert_to_mp3(audio_file_path, output_audio_path)
+
+    embed_chapter_info(output_audio_path, chapters)
 
 
 @dataclass
@@ -196,3 +206,29 @@ def format_time(seconds: float) -> str:
 
 def format_chapters(chapters: list[Chapter]) -> str:
     return "\n".join(f"- ({format_time(chapter.start)}) {chapter.title}" for chapter in chapters)
+
+
+def embed_chapter_info(mp3_file: Path, chapters: list[Chapter]):
+    print(f"[INFO] Embedding chapter information in: {mp3_file}")
+    audio = ID3(str(mp3_file))
+
+    audio.add(
+        CTOC(
+            element_id="toc",
+            flags=CTOCFlags.TOP_LEVEL | CTOCFlags.ORDERED,
+            child_ids=[f"ch{idx + 1}".encode("utf-8") for idx, _ in enumerate(chapters)],
+        )
+    )
+
+    for idx, chapter in enumerate(chapters):
+        audio.add(
+            CHAP(
+                element_id=f"ch{idx + 1}".encode("utf-8"),
+                start_time=int(chapter.start * 1000),
+                end_time=int(chapter.end * 1000),
+                sub_frames=[
+                    TIT2(text=chapter.title.encode("utf-8")),
+                ],
+            )
+        )
+    audio.save()
