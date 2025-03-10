@@ -3,8 +3,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from textwrap import dedent
 
-from mutagen.id3 import ID3
 import pytest
+from mutagen.id3 import ID3
 
 from waddle.audios.call_tools import convert_to_mp3
 from waddle.metadata import (
@@ -12,6 +12,7 @@ from waddle.metadata import (
     ShowNotesEntry,
     SRTEntry,
     extract_metadata,
+    format_time,
     generate_metadata,
     parse_annotated_srt,
 )
@@ -19,6 +20,15 @@ from waddle.metadata import (
 # Define test directory paths
 TESTS_DIR_PATH = Path(__file__).resolve().parents[2] / "tests"
 EP0_DIR_PATH = TESTS_DIR_PATH / "ep0"
+
+
+def test_format_time_01():
+    assert format_time(0.0) == "00:00"
+    assert format_time(1.0) == "00:01"
+    assert format_time(60.0) == "01:00"
+    assert format_time(61.0) == "01:01"
+    assert format_time(3600.0) == "01:00:00"
+    assert format_time(3661.0) == "01:01:01"
 
 
 def test_parse_annotated_srt_01():

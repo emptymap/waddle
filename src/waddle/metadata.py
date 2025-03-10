@@ -208,7 +208,7 @@ def match_chapter_marker(s: str) -> ChapterMarker | None:
 
 
 def format_time(seconds: float) -> str:
-    if seconds > 3600:
+    if seconds >= 3600:
         return f"{int(seconds // 3600):02d}:{int(seconds // 60 % 60):02d}:{int(seconds % 60):02d}"
     return f"{int(seconds // 60):02d}:{int(seconds % 60):02d}"
 
