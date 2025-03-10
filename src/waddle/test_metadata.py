@@ -127,7 +127,7 @@ def test_extract_metadata_01():
 
         5
         00:00:15.000 --> 00:00:20.000
-        shun: それでは、今回はこの辺で\n\n""")
+        shun: それでは、今回はこの辺で\n\n""")  # noqa: E501
     entries = parse_annotated_srt(annotated_srt)
     chapters, show_notes = extract_metadata(entries)
     assert len(chapters) == 5
@@ -145,7 +145,7 @@ def test_extract_metadata_01():
         - [ガバメントクラウドの高すぎるハードル、国産勢唯一さくらインターネットの挑戦 | 日経クロステック（xTECH）](https://xtech.nikkei.com/atcl/nxt/column/18/03074/012300002/)
         - [[2307.03172] Lost in the Middle: How Language Models Use Long Contexts](https://arxiv.org/abs/2307.03172)
         - [[2406.16008] Found in the Middle: Calibrating Positional Attention Bias Improves Long Context Utilization](https://arxiv.org/abs/2406.16008)\n
-        """).strip()
+        """).strip()  # noqa: E501
     )
 
 
