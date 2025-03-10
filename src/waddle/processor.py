@@ -220,6 +220,7 @@ def postprocess_multi_files(
 
     transcription_output_path = output_dir_path / f"{audio_prefix}.srt"
     combine_srt_files(output_dir_path, transcription_output_path)
+    shutil.copy(transcription_output_path, output_dir_path / f"{audio_prefix}.md")
 
     final_audio_path = output_dir_path / f"{audio_prefix}.wav"
     combined_audio_paths = sorted(output_dir_path.glob("*.wav"))

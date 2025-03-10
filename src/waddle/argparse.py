@@ -12,6 +12,7 @@ def create_waddle_parser():
     - single: Process a single audio file
     - preprocess: Preprocess multiple audio files
     - postprocess: Postprocess multiple audio files
+    - metadata: Extract and process metadata from an annotated SRT file
 
     Returns:
         argparse.ArgumentParser: Configured argument parser
@@ -121,6 +122,25 @@ def create_waddle_parser():
         "--no-convert",
         action="store_true",
         help="Skip converting audio files to WAV format.",
+    )
+
+    # metadata
+    show_notes_parser = subparsers.add_parser(
+        "metadata",
+        description="Generate metadata from an annotated SRT file.",
+    )
+    show_notes_parser.add_argument(
+        "source",
+        help="Path to the annotated SRT file.",
+    )
+    show_notes_parser.add_argument(
+        "-i", "--input", help="Path to the input audio file.", default=None
+    )
+    show_notes_parser.add_argument(
+        "-o",
+        "--output",
+        help="Directory to save the metadata and audio files.",
+        default="./metadata",
     )
 
     return parser

@@ -1,6 +1,7 @@
 import shutil
 
 from waddle.argparse import create_waddle_parser
+from waddle.metadata import generate_metadata
 from waddle.processor import postprocess_multi_files, preprocess_multi_files, process_single_file
 from waddle.utils import to_path
 
@@ -19,6 +20,10 @@ def main():
             do_preprocess(args)
         case "postprocess":
             do_postprocess(args)
+        case "metadata":
+            do_metadata(args)
+        case _:
+            raise ValueError(f"Command not implemented: {args.subcommand}")
 
 
 def do_single(args):
@@ -83,6 +88,10 @@ def do_postprocess(args):
         whisper_options=args.whisper_options,
     )
     print(f"[INFO] Postprocessing complete. Output saved in: {output_dir_path}")
+
+
+def do_metadata(args):
+    generate_metadata(args.source, args.input, args.output)
 
 
 if __name__ == "__main__":
