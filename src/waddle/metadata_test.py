@@ -290,3 +290,10 @@ def test_generate_metadata_invalid_audio():
         shutil.copy(str(annotated_srt_file), in_dir / "ep12.md")
         with pytest.raises(FileNotFoundError):
             generate_metadata(in_dir / "ep12.md", "/foo/var", out_dir)  # No audio file
+
+
+def test_generate_metadata_invalid_source():
+    with TemporaryDirectory() as in_dir, TemporaryDirectory() as out_dir:
+        in_dir, out_dir = Path(in_dir), Path(out_dir)
+        with pytest.raises(FileNotFoundError):
+            generate_metadata(in_dir / "ep12.md", None, out_dir)  # No SRT file
