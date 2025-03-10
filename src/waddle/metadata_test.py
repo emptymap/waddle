@@ -1,12 +1,21 @@
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from textwrap import dedent
+
+from mutagen.id3 import ID3
 
 from waddle.metadata import (
     ChapterMarker,
     ShowNotesEntry,
     SRTEntry,
     extract_metadata,
+    generate_metadata,
     parse_annotated_srt,
 )
+
+# Define test directory paths
+TESTS_DIR_PATH = Path(__file__).resolve().parents[2] / "tests"
+EP0_DIR_PATH = TESTS_DIR_PATH / "ep0"
 
 
 def test_parse_annotated_srt_01():
@@ -216,3 +225,19 @@ def test_extract_metadata_03():
 
         The last line will be included in the show notes.""").strip()
     )
+
+
+def test_generate_metadata():
+    annotated_srt_file = EP0_DIR_PATH / "ep12.srt.md"
+    m4a_file = EP0_DIR_PATH / "ep12-masa.m4a"
+
+    with TemporaryDirectory() as tmpdir:
+        generate_metadata(annotated_srt_file, m4a_file, tmpdir)
+        audio_out = Path(tmpdir) / "ep12-masa.mp3"
+        assert audio_out.exists()
+        id3 = ID3(audio_out)
+        assert len(id3.getall("CHAP")) == 2
+        show_notes_out = Path(tmpdir) / "ep12-masa.show_notes.md"
+        show_notes_out.exists()
+        chapters_out = Path(tmpdir) / "ep12-masa.chapters.txt"
+        chapters_out.exists()

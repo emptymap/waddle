@@ -17,9 +17,9 @@ from waddle.audios.call_tools import convert_to_mp3
 
 
 def generate_metadata(
-    source_file: os.PathLike[Any],
-    audio_file: os.PathLike[Any] | None,
-    output_dir: os.PathLike[Any],
+    source_file: os.PathLike[Any] | str,
+    audio_file: os.PathLike[Any] | str | None,
+    output_dir: os.PathLike[Any] | str,
 ):
     source_file_path = Path(source_file)
     if not source_file_path.is_file():

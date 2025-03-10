@@ -19,7 +19,7 @@ from waddle.audios.call_tools import (
 )
 
 # Define test directory paths
-TESTS_DIR_PATH = Path(__file__).resolve().parent.parents[2] / "tests"
+TESTS_DIR_PATH = Path(__file__).resolve().parents[3] / "tests"
 EP0_DIR_PATH = TESTS_DIR_PATH / "ep0"
 
 # Save the original subprocess.run
