@@ -100,6 +100,7 @@ def preprocess_multi_files(
     out_duration: float | None = None,
     no_noise_remove: bool = False,
     convert: bool = True,
+    transcribe: bool = True,
     whisper_options: str = f"-l {DEFAULT_LANGUAGE}",
 ) -> None:
     source_dir_path = to_path(source_dir)
@@ -169,6 +170,7 @@ def preprocess_multi_files(
         process_segments(
             segments_dir,
             combined_speaker_path,
+            transcribe=transcribe,
             transcription_path=transcription_path,
             whisper_options=whisper_options,
             timeline=merged_timeline,
