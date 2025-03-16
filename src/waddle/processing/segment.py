@@ -134,7 +134,8 @@ def merge_segments(segments: SpeechTimeline) -> SpeechTimeline:
 def process_segments(
     segs_folder_path: Path,
     combined_audio_path: Path,
-    transcription_output_path: Path,
+    transcribe: bool = True,
+    transcription_path: Path | None = None,
     whisper_options: str = f"-l {DEFAULT_LANGUAGE}",
     timeline: SpeechTimeline | None = None,
 ) -> None:
@@ -145,36 +146,40 @@ def process_segments(
     Args:
         segs_folder_path (str): Path to the folder containing the speech segments.
         combined_audio_path (str): Path to save the combined audio file.
-        transcription_output_path (str): Path to save the combined transcription file.
+        transcription_path (str): Path to save the combined transcription file.
         language (str): Language code for transcription.
     """
+    if transcribe and transcription_path is None:
+        raise ValueError("Transcription output path is required.")
+
     seg_file_paths = sorted(segs_folder_path.glob("*.wav"), key=lambda x: int(x.stem.split("_")[1]))
     transcription_entries = []
 
-    input_output_paths = []
-    for segs_file_path in seg_file_paths:
-        # Transcribe segment
-        srt_output_path = Path(segs_file_path).with_suffix(".srt")
-        input_output_paths.append((segs_file_path, srt_output_path))
+    if transcribe:
+        input_output_paths = []
+        for segs_file_path in seg_file_paths:
+            # Transcribe segment
+            srt_output_path = Path(segs_file_path).with_suffix(".srt")
+            input_output_paths.append((segs_file_path, srt_output_path))
 
-    transcribe_in_batches(input_output_paths, options=whisper_options)
+        transcribe_in_batches(input_output_paths, options=whisper_options)
 
-    for segs_file_path, srt_output_path in input_output_paths:
-        start, _ = parse_audio_filename(str(segs_file_path))
-        start_seconds = float(start) / 1000
+        for segs_file_path, srt_output_path in input_output_paths:
+            start, _ = parse_audio_filename(str(segs_file_path))
+            start_seconds = float(start) / 1000
 
-        # Adjust transcription timestamps
-        process_segment_transcription(
-            segs_file_path.with_suffix(".srt"), start_seconds, transcription_entries
-        )
-        srt_output_path.unlink()
+            # Adjust transcription timestamps
+            process_segment_transcription(
+                segs_file_path.with_suffix(".srt"), start_seconds, transcription_entries
+            )
+            srt_output_path.unlink()
 
-    # Create a single SRT file from all segments
-    with open(str(transcription_output_path), "w", encoding="utf-8") as srt_out:
-        for idx, (start_time, end_time, text) in enumerate(transcription_entries, start=1):
-            srt_out.write(f"{idx}\n")
-            srt_out.write(f"{start_time} --> {end_time}\n")
-            srt_out.write(f"{text}\n\n")
+        # Create a single SRT file from all segments
+        with open(str(transcription_path), "w", encoding="utf-8") as srt_out:
+            for idx, (start_time, end_time, text) in enumerate(transcription_entries, start=1):
+                srt_out.write(f"{idx}\n")
+                srt_out.write(f"{start_time} --> {end_time}\n")
+                srt_out.write(f"{text}\n\n")
 
     # Combine segments into one audio file
     combine_segments_into_audio(
