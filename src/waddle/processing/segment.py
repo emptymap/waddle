@@ -136,6 +136,7 @@ def process_segments(
     combined_audio_path: Path,
     transcription_output_path: Path,
     whisper_options: str = f"-l {DEFAULT_LANGUAGE}",
+    timeline: SpeechTimeline | None = None,
 ) -> None:
     """
     Transcribe only the detected speech segments, adjust timestamps,
@@ -187,6 +188,7 @@ def process_segments(
     combine_segments_into_audio(
         segs_folder_path,
         combined_audio_path,
+        timeline=timeline,
     )
 
 
