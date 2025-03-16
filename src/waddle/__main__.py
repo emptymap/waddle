@@ -70,6 +70,8 @@ def do_preprocess(args):
         out_duration=args.time,
         no_noise_remove=args.no_noise_remove,
         convert=not args.no_convert,
+        transcribe=args.transcribe,
+        whisper_options=args.whisper_options,
     )
 
 

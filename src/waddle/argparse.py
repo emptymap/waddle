@@ -78,6 +78,15 @@ def create_waddle_parser():
             default=None,
             help="Duration in seconds for the output audio (default: None).",
         )
+        p.add_argument(
+            "-wo",
+            "--whisper-options",
+            default=f"-l {DEFAULT_LANGUAGE}",
+            help=(
+                f"Options to pass to Whisper transcription (default: '-l {DEFAULT_LANGUAGE}').\n"
+                "You can change the default language by modifying src/config.py."
+            ),
+        )
 
     # ===== OTHER OPTIONS =====
     # Noise removal (for audio preprocessing)
@@ -87,18 +96,6 @@ def create_waddle_parser():
             "--no-noise-remove",
             action="store_true",
             help="Skip removing noise from the audio.",
-        )
-
-    # Whisper transcription options
-    for p in [single_parser, postprocess_parser]:
-        p.add_argument(
-            "-wo",
-            "--whisper-options",
-            default=f"-l {DEFAULT_LANGUAGE}",
-            help=(
-                f"Options to pass to Whisper transcription (default: '-l {DEFAULT_LANGUAGE}').\n"
-                "You can change the default language by modifying src/config.py."
-            ),
         )
 
     # preprocess options
@@ -123,6 +120,12 @@ def create_waddle_parser():
         "--no-convert",
         action="store_true",
         help="Skip converting audio files to WAV format.",
+    )
+    preprocess_parser.add_argument(
+        "-tr",
+        "--transcribe",
+        action="store_true",
+        help="Transcribe the processed audio files.",
     )
 
     # metadata

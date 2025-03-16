@@ -14,7 +14,6 @@ from waddle.audios.clip import clip_audio
 from waddle.config import DEFAULT_COMP_AUDIO_DURATION, DEFAULT_LANGUAGE
 from waddle.processing.combine import (
     combine_audio_files,
-    combine_segments_into_audio,
     combine_srt_files,
     merge_timelines,
 )
@@ -85,7 +84,7 @@ def process_single_file(
     process_segments(
         segs_folder_path,
         combined_speaker_path,
-        transcription_path,
+        transcription_path=transcription_path,
         whisper_options=whisper_options,
     )
 
@@ -101,6 +100,8 @@ def preprocess_multi_files(
     out_duration: float | None = None,
     no_noise_remove: bool = False,
     convert: bool = True,
+    transcribe: bool = False,
+    whisper_options: str = f"-l {DEFAULT_LANGUAGE}",
 ) -> None:
     source_dir_path = to_path(source_dir)
     output_dir_path = to_path(output_dir)
@@ -162,21 +163,30 @@ def preprocess_multi_files(
 
     merged_timeline = merge_timelines(timelines)
 
-    def save_audio_with_timeline(audio_file_path: Path, segments_dir):
-        audio_file_name = Path(audio_file_path).stem
-        target_audio_path = output_dir_path / f"{audio_file_name}.wav"
-        combine_segments_into_audio(
+    for audio_file_path, segments_dir in zip(audio_file_paths, segments_dir_list, strict=False):
+        speaker_name = audio_file_path.stem
+        combined_speaker_path = output_dir_path / f"{speaker_name}.wav"
+        # If transcribe is False, transcription_path is None and not transcribed.
+        transcription_path = output_dir_path / f"{speaker_name}.srt" if transcribe else None
+        process_segments(
             segments_dir,
-            target_audio_path,
-            merged_timeline,
+            combined_speaker_path,
+            transcription_path=transcription_path,
+            whisper_options=whisper_options,
+            timeline=merged_timeline,
         )
-        return target_audio_path
-
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        executor.map(save_audio_with_timeline, audio_file_paths, segments_dir_list)
 
     # Clean up workspace_path
     shutil.rmtree(workspace_path, ignore_errors=True)
+
+    if not transcribe:
+        return
+
+    audio_prefix = audio_file_paths[0].stem
+    if "-" in audio_prefix:
+        audio_prefix = audio_prefix.split("-")[0]
+    transcription_output_path = output_dir_path / f"{audio_prefix}.srt"
+    combine_srt_files(output_dir_path, transcription_output_path)
 
 
 def postprocess_multi_files(
@@ -210,7 +220,7 @@ def postprocess_multi_files(
         process_segments(
             segments_dir,
             combined_speaker_path,
-            transcription_path,
+            transcription_path=transcription_path,
             whisper_options=whisper_options,
         )
 

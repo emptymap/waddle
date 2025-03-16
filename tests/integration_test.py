@@ -117,6 +117,41 @@ def test_integration_preprocess():
         reference_length = get_wav_duration(reference_file)
         assert lengths[0] < reference_length, "Length of processed audio is not less than reference"
 
+        # Check transcription files (should NOT be created)
+        srt_files = glob.glob(os.path.join(tmpdir, "*.srt"))
+        assert len(srt_files) == 0, f"Expected 0 SRT files, but found {len(srt_files)}"
+
+
+def test_integration_preprocess_transcribe():
+    """Tests the preprocess command with transcription disabled."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        test_args = [
+            "preprocess",
+            "--directory",
+            os.path.join(dir, "ep0"),
+            "--output",
+            tmpdir,
+            "-ss",
+            "5",
+            "-t",
+            "5",
+            "--transcribe",
+        ]
+        result = run_waddle_command(test_args)
+
+        assert result.returncode == 0, f"Command failed with error: {result.stderr}"
+
+        # Check WAV files (should still be created)
+        wav_files = glob.glob(os.path.join(tmpdir, "*.wav"))
+        assert len(wav_files) == 3, f"Expected 3 .wav files, but found {len(wav_files)}"
+
+        # Check transcription files
+        srt_files = glob.glob(os.path.join(tmpdir, "*.srt"))
+        assert len(srt_files) == 1, f"Expected 1 SRT file, but found {len(srt_files)}"
+        with open(srt_files[0], "r", encoding="utf-8") as f:
+            content = f.read()
+            assert len(content) > 0, f"SRT file {srt_files[0]} is empty"
+
 
 def test_integration_preprocess_no_reference():
     """Tests the preprocess command without a reference file."""
