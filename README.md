@@ -106,44 +106,72 @@ Before using **Waddle**, ensure the following requirements are installed:
 
 ## Example Commands
 
-### Podcast Preprocessing
+### `single` Command Examples
 
-1. **Basic Processing**:
+1. **Basic processing**:
+   ```bash
+   waddle single input.wav
+   ```
+
+2. **With output directory and duration limit**:
+   ```bash
+   waddle single input.wav -o output_dir -t 300
+   ```
+
+3. **With start time, language options, and no noise removal**:
+   ```bash
+   waddle single input.wav -ss 60 -wo "-l en -t 8" -nnr
+   ```
+
+### `preprocess` Command Examples
+
+1. **Basic preprocessing**:
    ```bash
    waddle preprocess
    ```
 
-2. **Specify an Audio Directory**:
+2. **With time limits**:
    ```bash
-   waddle preprocess -d /path/to/audio/files
+   waddle preprocess -ss 120 -t 1800
    ```
 
-3. **Use a Custom Reference File**:
+3. **With custom directory, reference file, and transcription**:
    ```bash
-   waddle preprocess -r /path/to/GMT-Reference.wav
+   waddle preprocess -d audio_dir -r reference.wav -tr
    ```
 
-4. **Limit Output Duration**:
+### `postprocess` Command Examples
+
+1. **Basic postprocessing**:
    ```bash
-   waddle preprocess -t 30
+   waddle postprocess
    ```
 
-5. **Skip WAV Conversion**:
+2. **With custom directory and output location**:
    ```bash
-   waddle preprocess -nc
+   waddle postprocess -d aligned_dir -o processed_dir
    ```
 
-### Single Audio File Processing
-
-1. **Basic Processing**:
+3. **With segment selection and transcription options**:
    ```bash
-   waddle single /path/to/audio.wav
+   waddle postprocess -ss 300 -t 600 -wo "-l ja -t 4"
    ```
 
-2. **Limit Output Duration**:
+### `metadata` Command Examples
+
+1. **Basic metadata generation**:
    ```bash
-   waddle single /path/to/audio.wav -t 30
+   waddle metadata transcript.srt
    ```
+
+2. **With input audio file**:
+   ```bash
+   waddle metadata transcript.srt -i episode.mp3
+   ```
+
+3. **With custom output directory**:
+   ```bash
+   waddle metadata transcript.srt -i episode.mp3 -o metadata_dir
 
 
 ## Developer Guide
