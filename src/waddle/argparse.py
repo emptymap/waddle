@@ -122,10 +122,10 @@ def create_waddle_parser():
         help="Skip converting audio files to WAV format.",
     )
     preprocess_parser.add_argument(
-        "-nt",
-        "--no-transcribe",
+        "-tr",
+        "--transcribe",
         action="store_true",
-        help="Skip transcribing the audio.",
+        help="Transcribe the processed audio files.",
     )
 
     # metadata

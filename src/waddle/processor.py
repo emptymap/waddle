@@ -100,7 +100,7 @@ def preprocess_multi_files(
     out_duration: float | None = None,
     no_noise_remove: bool = False,
     convert: bool = True,
-    transcribe: bool = True,
+    transcribe: bool = False,
     whisper_options: str = f"-l {DEFAULT_LANGUAGE}",
 ) -> None:
     source_dir_path = to_path(source_dir)
@@ -166,11 +166,11 @@ def preprocess_multi_files(
     for audio_file_path, segments_dir in zip(audio_file_paths, segments_dir_list, strict=False):
         speaker_name = audio_file_path.stem
         combined_speaker_path = output_dir_path / f"{speaker_name}.wav"
-        transcription_path = output_dir_path / f"{speaker_name}.srt"
+        # If transcribe is False, transcription_path is None and not transcribed.
+        transcription_path = output_dir_path / f"{speaker_name}.srt" if transcribe else None
         process_segments(
             segments_dir,
             combined_speaker_path,
-            transcribe=transcribe,
             transcription_path=transcription_path,
             whisper_options=whisper_options,
             timeline=merged_timeline,

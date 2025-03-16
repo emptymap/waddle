@@ -134,7 +134,6 @@ def merge_segments(segments: SpeechTimeline) -> SpeechTimeline:
 def process_segments(
     segs_folder_path: Path,
     combined_audio_path: Path,
-    transcribe: bool = True,
     transcription_path: Path | None = None,
     whisper_options: str = f"-l {DEFAULT_LANGUAGE}",
     timeline: SpeechTimeline | None = None,
@@ -149,13 +148,10 @@ def process_segments(
         transcription_path (str): Path to save the combined transcription file.
         language (str): Language code for transcription.
     """
-    if transcribe and transcription_path is None:
-        raise ValueError("Transcription output path is required.")
-
     seg_file_paths = sorted(segs_folder_path.glob("*.wav"), key=lambda x: int(x.stem.split("_")[1]))
     transcription_entries = []
 
-    if transcribe:
+    if transcription_path:
         input_output_paths = []
         for segs_file_path in seg_file_paths:
             # Transcribe segment
