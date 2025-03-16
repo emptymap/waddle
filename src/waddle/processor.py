@@ -179,10 +179,12 @@ def preprocess_multi_files(
     # Clean up workspace_path
     shutil.rmtree(workspace_path, ignore_errors=True)
 
+    if not transcribe:
+        return
+
     audio_prefix = audio_file_paths[0].stem
     if "-" in audio_prefix:
         audio_prefix = audio_prefix.split("-")[0]
-
     transcription_output_path = output_dir_path / f"{audio_prefix}.srt"
     combine_srt_files(output_dir_path, transcription_output_path)
 
