@@ -148,14 +148,6 @@ def process_segments(
         transcription_output_path (str): Path to save the combined transcription file.
         language (str): Language code for transcription.
     """
-    segs_folder_path = Path(segs_folder_path)  # TODO: Delete it after switch to Pathlib in test
-    combined_audio_path = Path(
-        combined_audio_path
-    )  # TODO: Delete it after switch to Pathlib in test
-    transcription_output_path = Path(
-        transcription_output_path
-    )  # TODO: Delete it after switch to Pathlib in test
-
     seg_file_paths = sorted(segs_folder_path.glob("*.wav"), key=lambda x: int(x.stem.split("_")[1]))
     transcription_entries = []
 
