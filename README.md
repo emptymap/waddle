@@ -10,6 +10,7 @@
 - **Normalization**: Ensures consistent audio quality by normalizing audio levels.
 - **Remove Noise**: Cleans up audio by reducing background noise for clearer output using [`DeepFilterNet`](https://github.com/Rikorose/DeepFilterNet).
 - **Subtitle Generation**: Generates SRT subtitle files for transcription using [`whisper.cpp`](https://github.com/ggerganov/whisper.cpp).
+- **Metadata Generation**: Processes annotated SRT files to create chapter markers and show notes for podcast episodes.
 
 ## Prerequisites
 
@@ -46,7 +47,7 @@ Before using **Waddle**, ensure the following requirements are installed:
    git clone https://github.com/emptymap/waddle.git
    ```
 
-2. You’re ready to use **Waddle**!
+2. You're ready to use **Waddle**!
 
 ## Usage
 
@@ -62,19 +63,44 @@ Before using **Waddle**, ensure the following requirements are installed:
   ```bash
   waddle single path/to/audio.wav -o ./output
   ```
-  - `-o, --output`: Output directory (default: `./out`).
-  - `-t, --time`: Limit output duration (seconds).
+  - `-o, --output`: Directory to save the output (default: `./out`).
+  - `-ss`: Start time in seconds for the audio segment (default: 0.0).
+  - `-t, --time`: Duration in seconds for the output audio (default: None).
+  - `-wo, --whisper-options`: Options to pass to Whisper transcription (default: `-l ja`). You can change the default language by modifying src/config.py.
+  - `-nnr, --no-noise-remove`: Skip removing noise from the audio. (no value required)
 
 - `preprocess` - Process multiple audio files:
   ```bash
   waddle preprocess -d ./audios -r ./reference.wav -o ./output
   ```
   - `-d, --directory`: Directory containing audio files (default: `./`).
-  - `-r, --reference`: Reference audio file for alignment.
-  - `-o, --output`: Output directory (default: `./out`).
-  - `-t, --time`: Limit output duration (seconds).
-  - `-c, --comp-duration`: Duration for alignment comparison (default: `10` seconds).
-  - `-nc, --no-convert`: Skip conversion to WAV format.
+  - `-o, --output`: Directory to save the output (default: `./out`).
+  - `-ss`: Start time in seconds for the audio segment (default: 0.0).
+  - `-t, --time`: Duration in seconds for the output audio (default: None).
+  - `-wo, --whisper-options`: Options to pass to Whisper transcription (default: `-l ja`).
+  - `-nnr, --no-noise-remove`: Skip removing noise from the audio. (no value required)
+  - `-r, --reference`: Path to the reference audio file (used in multi-file mode).
+  - `-c, --comp-duration`: Duration in seconds for alignment comparison (default: 1200.0s).
+  - `-nc, --no-convert`: Skip converting audio files to WAV format. (no value required)
+  - `-tr, --transcribe`: Transcribe the processed audio files. (no value required)
+
+- `postprocess` - Process aligned audio files:
+  ```bash
+  waddle postprocess -d ./audios -o ./output
+  ```
+  - `-d, --directory`: Directory containing audio files (default: `./`).
+  - `-o, --output`: Directory to save the output (default: `./out`).
+  - `-ss`: Start time in seconds for the audio segment (default: 0.0).
+  - `-t, --time`: Duration in seconds for the output audio (default: None).
+  - `-wo, --whisper-options`: Options to pass to Whisper transcription (default: `-l ja`).
+
+- `metadata` - Generate metadata from an annotated SRT file:
+  ```bash
+  waddle metadata path/to/annotated.srt -i path/to/audio.mp3 -o ./metadata
+  ```
+  - `source`: Path to the annotated SRT file.
+  - `-i, --input`: Path to the input audio file. If not specified, it will look for an audio file with the same name.
+  - `-o, --output`: Directory to save the metadata and audio files (default: `./metadata`).
 
 
 ## Example Commands
