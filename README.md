@@ -130,14 +130,14 @@ Before using **Waddle**, ensure the following requirements are installed:
    waddle preprocess
    ```
 
-2. **With time limits**:
+2. **With custom directory, reference file**:
    ```bash
-   waddle preprocess -ss 120 -t 1800
+   waddle preprocess -d audio_dir -r reference.wav
    ```
 
-3. **With custom directory, reference file, and transcription**:
+3. **With time limits and transcription**:
    ```bash
-   waddle preprocess -d audio_dir -r reference.wav -tr
+   waddle preprocess -ss 120 -t 1800 -tr
    ```
 
 ### `postprocess` Command Examples
@@ -173,6 +173,69 @@ Before using **Waddle**, ensure the following requirements are installed:
    ```bash
    waddle metadata transcript.srt -i episode.mp3 -o metadata_dir
 
+## Annotated SRT Format
+
+When using the `metadata` command, your SRT file should include annotations:
+
+- `# Chapter` markers define chapters (up to 6 levels with #)
+- Chapter starts at the next SRT timestamp and ends before the next chapter
+- Any other text is considered show notes
+- Empty lines are ignored
+- Use `;` to add newlines in show notes (the `;` will be deleted)
+
+### Example
+
+```
+# Introduction
+
+1
+00:00:00.000 --> 00:00:03.000
+alice: Welcome to our podcast!
+
+2
+00:00:03.000 --> 00:00:06.000
+bob: Today we'll discuss programming.
+
+## Topic 1: Rust
+
+3
+00:00:06.000 --> 00:00:09.000
+alice: Let's talk about Rust.
+
+- [Rust Language](https://rust-lang.org)
+;
+Great for systems programming!
+
+4
+00:00:09.000 --> 00:00:12.000
+bob: I love its memory safety.
+
+# Conclusion
+
+5
+00:00:12.000 --> 00:00:15.000
+alice: Thanks for listening!
+```
+
+### Output Files
+
+The above example would generate these files:
+
+1. **chapters.txt**:
+```
+- (00:00) Introduction
+- (00:06) Topic 1: Rust
+- (00:12) Conclusion
+```
+
+2. **show_notes.md**:
+```markdown
+- [Rust Language](https://rust-lang.org)
+
+Great for systems programming!
+```
+
+3. The chapter markers would also be embedded in the MP3 metadata for podcast apps
 
 ## Developer Guide
 
