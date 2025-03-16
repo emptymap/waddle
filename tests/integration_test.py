@@ -119,7 +119,7 @@ def test_integration_preprocess():
 
         # Check transcription files
         srt_files = glob.glob(os.path.join(tmpdir, "*.srt"))
-        assert not len(srt_files) == 1, f"Expected 1 SRT file, but found {len(srt_files)}"
+        assert len(srt_files) == 1, f"Expected 1 SRT file, but found {len(srt_files)}"
         with open(srt_files[0], "r", encoding="utf-8") as f:
             content = f.read()
             assert len(content) > 0, f"SRT file {srt_files[0]} is empty"
