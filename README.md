@@ -348,6 +348,21 @@ waddle/
   - Runs integration tests to validate the preprocessing pipeline.
 
 
+## Tool Installation Details
+
+**Waddle** automatically installs required tools in your user runtime directory:
+
+- **Location**: The tools are installed in the platform-specific user runtime directory:
+  - **Linux**: `/run/user/{uid}/waddle/tools/`
+  - **macOS**: `~/Library/Caches/TemporaryItems/waddle/tools/`
+  - **Windows**: `C:\Users\<username>\AppData\Local\Temp\waddle\tools\`
+
+- **Installed Tools**:
+  - **whisper.cpp**: Installed in `<runtime_dir>/tools/whisper.cpp/`
+  - **DeepFilterNet**: Installed as `<runtime_dir>/tools/deep-filter`
+
+The installation scripts (`src/waddle/tools/install_whisper_cpp.py` and `src/waddle/tools/install_deep_filter.py`) automatically detect your system architecture and download the appropriate binaries.
+
 
 ### Contributing
 
