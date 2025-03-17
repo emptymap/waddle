@@ -302,30 +302,26 @@ The **Waddle** repository is organized as follows:
 
 ```
 waddle/
-├── pyproject.toml      # Project metadata, dependencies, and tool configurations
-├── src/                # Main library source code
-│   ├── waddle/         
-│   │   ├── __main__.py  # CLI entry point for Waddle
-│   │   ├── argparse.py  # Handles CLI arguments and command parsing
-│   │   ├── config.py    # Configuration settings for processing
-│   │   ├── processor.py # Core processing logic for audio preprocessing
-│   │   ├── utils.py     # Helper functions for audio handling
-│   │   ├── processing/  
-│   │   │   ├── combine.py   # Merges multiple audio sources
-│   │   │   ├── segment.py   # Segments audio into chunks
-│   │   ├── audios/
-│   │   │   ├── align_offset.py  # Synchronization logic for alignment
-│   │   │   ├── call_tools.py    # Interfaces with external audio tools
-│   │   ├── utils_test.py  # Unit tests for utilities
-│   └── waddle.egg-info/   # Packaging metadata for distribution
-├── tests/               # Unit and integration tests
-│   ├── integration_test.py   # End-to-end integration tests
-│   ├── ep0/             # Sample audio files for testing
-│   │   ├── GMT20250119-015233_Recording_1280x720.wav  # Reference audio
-│   │   ├── ep12-kotaro.wav  # Example speaker audio
-│   │   ├── ep12-masa.wav    # Example speaker audio
-│   │   ├── ep12-shun.wav    # Example speaker audio
-└── README.md           # Documentation for installation and usage
+├── pyproject.toml              # Project metadata, dependencies, and tool configurations
+├── src/                        # Main library source code
+│   └── waddle/         
+│       ├── __main__.py         # CLI entry point for Waddle
+│       ├── argparse.py         # Handles CLI arguments and command parsing
+│       ├── config.py           # Configuration settings for processing
+│       ├── processor.py        # Core processing logic for audio preprocessing
+│       ├── utils.py            # Helper functions for audio handling
+│       ├── metadata.py         # Metadata generation from annotated SRT files
+│       ├── processing/  
+│       │   ├── combine.py      # Merges multiple audio sources
+│       │   └── segment.py      # Segments audio into chunks
+│       ├── audios/
+│       │   ├── align_offset.py # Synchronization logic for alignment
+│       │   └── call_tools.py   # Interfaces with external audio tools
+│       └── utils_test.py       # Unit tests for utilities
+├── tests/                      # Unit and integration tests
+│   ├── integration_test.py     # End-to-end integration tests
+│   └── ep0/                    # Sample audio files for testing
+└── README.md                   # Documentation for installation and usage
 ```
 
 #### Key Files and Directories:
@@ -335,6 +331,9 @@ waddle/
   
 - **`src/waddle/processor.py`**  
   - Core logic for aligning, normalizing, and transcribing audio.
+
+- **`src/waddle/metadata.py`**  
+  - Handles metadata generation from annotated SRT files.
 
 - **`src/waddle/processing/combine.py`**  
   - Merges multiple speaker audio files into a single track.
