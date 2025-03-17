@@ -171,7 +171,7 @@ def parse_annotated_srt(annotated_srt: str) -> list[ChapterMarker | ShowNotesEnt
 
 
 srt_pattern = re.compile(
-    r"^(\d+)\n(\d{2}:\d{2}:\d{2}\.\d{3}) --> (\d{2}:\d{2}:\d{2}\.\d{3})\n([^:]+): (.+)\n\n"
+    r"^(\d+)\n(\d{2}:\d{2}:\d{2}\.\d{3}) --> (\d{2}:\d{2}:\d{2}\.\d{3})\n([^:]+): (.+)(?:\n\n|$)"
 )
 
 
