@@ -31,15 +31,7 @@ def convert_to_mp3(
     print(f"[INFO] Converting {input_path} to {output_path}...")
     try:
         subprocess.run(
-            [
-                "ffmpeg",
-                "-y",
-                "-i",
-                str(input_path),
-                "-q:a",
-                "0",
-                str(output_path),
-            ],
+            ["lame", str(input_path), str(output_path)],
             check=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
