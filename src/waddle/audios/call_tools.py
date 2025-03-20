@@ -36,8 +36,6 @@ def convert_to_mp3(
                 "-y",
                 "-i",
                 str(input_path),
-                "-q:a",
-                "0",
                 str(output_path),
             ],
             check=True,

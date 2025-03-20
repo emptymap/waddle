@@ -219,24 +219,20 @@ def format_chapters(chapters: list[Chapter]) -> str:
 
 def embed_chapter_info(mp3_file: Path, chapters: list[Chapter]):
     print(f"[INFO] Embedding chapter information in: {mp3_file}")
-    audio = ID3(str(mp3_file))
-
-    # Remove existing chapter information
-    audio.delall("CTOC")
-    audio.delall("CHAP")
+    audio = ID3()
 
     audio.add(
         CTOC(
             element_id="toc",
             flags=CTOCFlags.TOP_LEVEL | CTOCFlags.ORDERED,
-            child_ids=[f"ch{idx + 1}".encode("utf-8") for idx, _ in enumerate(chapters)],
+            child_element_ids=[f"ch{idx + 1}" for idx, _ in enumerate(chapters)],
         )
     )
 
     for idx, chapter in enumerate(chapters):
         audio.add(
             CHAP(
-                element_id=f"ch{idx + 1}".encode("utf-8"),
+                element_id=f"ch{idx + 1}",
                 start_time=int(chapter.start * 1000),
                 end_time=int(chapter.end * 1000),
                 sub_frames=[
@@ -244,4 +240,5 @@ def embed_chapter_info(mp3_file: Path, chapters: list[Chapter]):
                 ],
             )
         )
-    audio.save()
+
+    audio.save(str(mp3_file))
