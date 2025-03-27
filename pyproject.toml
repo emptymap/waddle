@@ -64,6 +64,7 @@ select = [
     "F", # pyflakes
     "I", # isort
     "B", # flake8-bugbear
+    "PTH", # flake8-use-pathlib
 ]
 
 [tool.coverage.run]
