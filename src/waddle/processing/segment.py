@@ -171,7 +171,7 @@ def process_segments(
             srt_output_path.unlink()
 
         # Create a single SRT file from all segments
-        with open(str(transcription_path), "w", encoding="utf-8") as srt_out:
+        with transcription_path.open("w", encoding="utf-8") as srt_out:
             for idx, (start_time, end_time, text) in enumerate(transcription_entries, start=1):
                 srt_out.write(f"{idx}\n")
                 srt_out.write(f"{start_time} --> {end_time}\n")
@@ -204,7 +204,7 @@ def process_segment_transcription(
         print(f"[Warning] SRT file not found for segment: {transcribe_file_path}")
         return
 
-    with open(str(transcribe_file_path), "r", encoding="utf-8") as srt_file:
+    with transcribe_file_path.open("r", encoding="utf-8") as srt_file:
         blocks = srt_file.read().strip().split("\n\n")
 
     for block in blocks:

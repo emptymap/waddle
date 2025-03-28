@@ -115,7 +115,7 @@ def parse_srt(file_path: Path, speaker_name: Optional[str] = None) -> SrtEntries
         list: List of tuples (start_time_for_sorting, end_timestamp, text_with_speaker).
     """
     entries: SrtEntries = []
-    with open(str(file_path), "r", encoding="utf-8") as f:
+    with file_path.open("r", encoding="utf-8") as f:
         blocks = f.read().strip().split("\n\n")
 
     for block in blocks:
@@ -156,7 +156,7 @@ def combine_srt_files(input_dir_path: Path, output_file_path: Path) -> None:
     all_entries.sort(key=lambda x: x[0])
 
     # Write combined SRT file
-    with open(str(output_file_path), "w", encoding="utf-8") as f:
+    with output_file_path.open("w", encoding="utf-8") as f:
         for i, (start, end, text) in enumerate(all_entries, start=1):
             f.write(f"{i}\n")
             f.write(f"{start} --> {end}\n")
