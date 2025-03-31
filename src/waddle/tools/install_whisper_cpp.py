@@ -26,8 +26,8 @@ def install_whisper_cpp():
     else:
         print(f"whisper.cpp already exists at {WHISPER_DIR}")
 
-    # Check if WHISPER_MODEL_NAME is defined, if not assign "large-v3" as default
-    WHISPER_MODEL_NAME = os.getenv("WHISPER_MODEL_NAME", "large-v3")
+    # Check if WHISPER_MODEL_NAME is defined, if not assign "large-v3-turbo" as default
+    WHISPER_MODEL_NAME = os.getenv("WHISPER_MODEL_NAME", "large-v3-turbo")
     print(f"WHISPER_MODEL_NAME is set to: {WHISPER_MODEL_NAME}")
 
     # Download the model if not already downloaded
