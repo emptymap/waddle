@@ -19,10 +19,9 @@ def install_whisper_cpp():
     if not WHISPER_DIR.is_dir():
         print("Cloning whisper.cpp repository...")
         subprocess.run(
-            ["git", "clone", "https://github.com/ggerganov/whisper.cpp.git", str(WHISPER_DIR)],
+            ["git", "clone", "https://github.com/ggml-org/whisper.cpp.git", "-b", "v1.7.4", "--depth=1", str(WHISPER_DIR)],
             check=True,
         )
-        subprocess.run(["git", "checkout", "v1.7.4"], check=True, cwd=str(WHISPER_DIR))
     else:
         print(f"whisper.cpp already exists at {WHISPER_DIR}")
 
