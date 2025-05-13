@@ -177,7 +177,7 @@ def transcribe_in_batches(
         tools_dir
         / "whisper.cpp"
         / "models"
-        / f"ggml-{os.getenv('WHISPER_MODEL_NAME') or 'large-v3'}.bin"
+        / f"ggml-{os.getenv('WHISPER_MODEL_NAME') or 'large-v3-turbo'}.bin"
     )
 
     # Check if the Whisper binary exists
@@ -236,7 +236,7 @@ def transcribe(
         tools_dir
         / "whisper.cpp"
         / "models"
-        / f"ggml-{os.getenv('WHISPER_MODEL_NAME') or 'large-v3'}.bin"
+        / f"ggml-{os.getenv('WHISPER_MODEL_NAME') or 'large-v3-turbo'}.bin"
     )
     temp_audio_path = input_path.with_stem(input_path.stem + "_16k_16bit")
 
