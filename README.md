@@ -34,12 +34,28 @@ Before using **Waddle**, ensure the following requirements are installed:
      - Download and install FFmpeg from [FFmpeg Downloads](https://ffmpeg.org/download.html).
      - Ensure FFmpeg is added to your system's PATH.
 
-3. **fmt** (A C++ formatting library for compiling `whisper.cpp`):
-   - **MacOS**:
-     ```bash
-     brew install fmt
-     ```
-   - For other platforms, follow installation instructions from [fmt GitHub repository](https://github.com/fmtlib/fmt).
+3. **Dependencies for compiling `whisper.cpp`**:
+   - **CMake**:
+     - **MacOS**:
+       ```bash
+       brew install cmake
+       ```
+     - **Ubuntu/Debian**:
+       ```bash
+       sudo apt update
+       sudo apt install cmake
+       ```
+   
+   - **fmt**:
+     - **MacOS**:
+       ```bash
+       brew install fmt
+       ```
+     - **Ubuntu/Debian**:
+       ```bash
+       sudo apt update
+       sudo apt install libfmt-dev
+       ```
 
 ## Installation
 
