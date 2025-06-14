@@ -7,8 +7,8 @@ from pydub.silence import detect_silence
 
 def split_audio_by_longest_silence(
     audio_path: Path,
-    min_ms=2000,
-    max_ms=10000,
+    min_ms=5000,
+    max_ms=20000,
     silence_thresh=-40,
     min_silence_len=100,
 ) -> Path:
