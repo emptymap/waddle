@@ -11,7 +11,7 @@ from waddle.audios.call_tools import (
     remove_noise,
 )
 from waddle.audios.clip import clip_audio
-from waddle.audios.enhancer import nr_reduce_noise, simple_loudness_processing
+from waddle.audios.enhancer import simple_loudness_processing
 from waddle.config import DEFAULT_COMP_AUDIO_DURATION, DEFAULT_LANGUAGE
 from waddle.processing.combine import (
     combine_audio_files,
@@ -150,8 +150,6 @@ def preprocess_multi_files(
         aligned_audio = simple_loudness_processing(aligned_audio_path)
         aligned_audio.export(aligned_audio_path, format="wav")
         if not no_noise_remove:
-            nr_seg = nr_reduce_noise(aligned_audio)
-            nr_seg.export(aligned_audio_path, format="wav")
             remove_noise(aligned_audio_path, aligned_audio_path)
 
         # 2) Preprocess the aligned audio file
