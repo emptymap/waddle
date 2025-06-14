@@ -7,6 +7,7 @@ from pydub.silence import detect_silence
 
 def split_audio_by_longest_silence(
     audio_path: Path,
+    splited_dir_path_or_none: Path | None = None,
     min_ms=5000,
     max_ms=15000,
     silence_thresh=-40,
@@ -22,7 +23,7 @@ def split_audio_by_longest_silence(
     - silence_thresh: Silence detection threshold (dBFS)
     - min_silence_len: Minimum silence length to detect (milliseconds)
     """
-    splited_dir_path = audio_path.parent / "splited"
+    splited_dir_path = splited_dir_path_or_none or audio_path.parent / "splited"
     if splited_dir_path.exists():
         shutil.rmtree(splited_dir_path)
     splited_dir_path.mkdir(parents=True, exist_ok=True)
