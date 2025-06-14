@@ -2,6 +2,7 @@ from pathlib import Path
 
 import numpy as np
 from pydub import AudioSegment
+from pydub.effects import compress_dynamic_range
 
 type_path_or_seg = Path | AudioSegment
 
@@ -30,10 +31,10 @@ def simple_loudness_processing(audio: type_path_or_seg) -> AudioSegment:
     boosted = samples * boost
 
     # Compress loud peaks
-    threshold = 0.7
+    threshold = 0.6
     compressed = np.where(
         np.abs(boosted) > threshold,
-        np.sign(boosted) * (threshold + (np.abs(boosted) - threshold) * 0.1),
+        np.sign(boosted) * (threshold + (np.abs(boosted) - threshold) * 0.15),
         boosted,
     )
 
@@ -58,10 +59,10 @@ def enhance_audio_quality(audio: type_path_or_seg) -> AudioSegment:
     audio_seg = audio_path_or_seg(audio)
 
     audio_seg = normalize_rms(audio_seg)
-    # audio_seg = compress_dynamic_range(
-    #     audio_seg, threshold=-20.0, ratio=4.0, attack=5.0, release=50.0
-    # )
-    audio_seg = apply_limiter(audio_seg)
+    audio_seg = compress_dynamic_range(
+        audio_seg, threshold=-20.0, ratio=4.0, attack=5.0, release=50.0
+    )
+    # audio_seg = apply_limiter(audio_seg)
 
     return audio_seg
 
