@@ -24,11 +24,6 @@ def normalize_rms(audio, target_rms=-20.0):
     # Apply gain but check for clipping
     normalized = audio + gain_db
 
-    # # If clipping would occur, reduce gain
-    # if normalized.max > max_amplitude_90:
-    #     reduction = 20 * np.log10(normalized.max_possible_amplitude / normalized.max)
-    #     normalized = audio + (gain_db + reduction - 0.1)  # 0.1 dB headroom
-
     return normalized
 
 
