@@ -62,7 +62,6 @@ def enhance_audio_quality(audio: type_path_or_seg) -> AudioSegment:
     audio_seg = compress_dynamic_range(
         audio_seg, threshold=-20.0, ratio=4.0, attack=5.0, release=50.0
     )
-    # audio_seg = apply_limiter(audio_seg)
 
     return audio_seg
 
@@ -82,25 +81,3 @@ def normalize_rms(audio: type_path_or_seg, target_rms=-20.0):
     normalized = audio_seg + gain_db
 
     return normalized
-
-
-def apply_limiter(audio: type_path_or_seg, threshold: float = -3.0) -> AudioSegment:
-    """Apply soft limiting to prevent clipping."""
-    audio_seg = audio_path_or_seg(audio)
-    samples = np.array(audio_seg.get_array_of_samples())
-    max_val = 10 ** (threshold / 20.0) * audio_seg.max_possible_amplitude
-    samples = np.tanh(samples / max_val) * max_val
-    return audio_seg._spawn(samples.astype(np.int16).tobytes())
-
-
-if __name__ == "__main__":
-    from pathlib import Path
-
-    audio_paths = Path("./pre-full").glob("*.wav")
-    for audio_path in audio_paths:
-        print(f"Processing {audio_path.name}...")
-        audio = AudioSegment.from_file(audio_path)
-        enhanced_audio = simple_loudness_processing(audio)
-        output_path = Path(f"./enhanced_{audio_path.name}")
-        enhanced_audio.export(output_path, format="wav")
-        print(f"Saved enhanced audio to {output_path.name}")
