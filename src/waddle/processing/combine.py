@@ -4,8 +4,6 @@ from typing import Optional, TypeAlias
 
 from pydub import AudioSegment
 
-from waddle.audios.enhancer import simple_loudness_processing
-from waddle.audios.split_quiet import split_audio_by_longest_silence
 from waddle.utils import parse_audio_filename
 
 SpeechSegment: TypeAlias = tuple[int, int]
@@ -102,18 +100,6 @@ def combine_audio_files(aligned_audio_paths: list[Path], output_audio_path: Path
 
     if combined_audio:
         combined_audio.export(output_audio_path, format="wav")
-
-    splited_dir_path = split_audio_by_longest_silence(output_audio_path)
-    output_audio_path.unlink()
-
-    chunk_paths = sorted(splited_dir_path.glob("*.wav"))
-    combined_audio = AudioSegment.empty()
-    for chunk_path in chunk_paths:
-        chunk = AudioSegment.from_file(str(chunk_path))
-        chunk = simple_loudness_processing(chunk)
-        combined_audio = combined_audio.append(chunk, crossfade=0)
-
-    combined_audio.export(output_audio_path, format="wav")
 
 
 def parse_srt(file_path: Path, speaker_name: Optional[str] = None) -> SrtEntries:
