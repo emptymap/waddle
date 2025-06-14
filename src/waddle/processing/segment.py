@@ -1,11 +1,11 @@
 import shutil
 from pathlib import Path
 
-import numpy as np
 from pydub import AudioSegment
 from tqdm import tqdm
 
 from waddle.audios.call_tools import transcribe_in_batches
+from waddle.audios.enhancer import enhance_audio_quality
 from waddle.config import (
     DEFAULT_BUFFER_DURATION,
     DEFAULT_CHUNK_DURATION,
@@ -56,7 +56,7 @@ def detect_speech_timeline(
     duration = len(audio)
     for i in tqdm(
         range(0, duration, chunk_size_ms),
-        desc="[INFO] Detecting speech segments",
+        desc=f"[INFO] Detecting speech segments in {identifier}",
     ):
         chunk = audio[i : i + chunk_size_ms]
         if chunk.dBFS > threshold_db:
@@ -88,32 +88,23 @@ def detect_speech_timeline(
         shutil.rmtree(segs_folder_path)
     segs_folder_path.mkdir(parents=True, exist_ok=True)
 
-    # collect max_dBFS for each segment
-    max_dBFS_list = []
-    for seg in merged_segments:
-        seg_audio = audio[seg[0] : seg[1]]
-        max_dBFS_list.append(seg_audio.dBFS)
-
-    # calculate 95th percentile of max_dBFS
-    if not max_dBFS_list:
+    # Apply audio enhancement to all segments
+    if not merged_segments:
         print("[Warning] No speech segments detected.")
         return segs_folder_path, []
-    max_dBFS_95th_percentile = np.percentile(max_dBFS_list, 95)
 
-    # Calculate gain adjustment to achieve target_dBFS for 95th percentile
-    gain_adjustment = target_dBFS - max_dBFS_95th_percentile
-
-    # Apply normalization to all segments
-    for seg in merged_segments:
+    # for seg in merged_segments:
+    for seg in tqdm(
+        merged_segments,
+        desc=f"[INFO] Enhancing audio quality for segments in {audio_file_name}",
+    ):
         seg_audio = audio[seg[0] : seg[1]]
-        normalized_audio = seg_audio.apply_gain(gain_adjustment)
+        enhanced_audio = enhance_audio_quality(seg_audio, target_dBFS)
         seg_audio_path = segs_folder_path / format_audio_filename("seg", seg[0], seg[1])
-        normalized_audio.export(seg_audio_path, format="wav")
+        enhanced_audio.export(seg_audio_path, format="wav")
 
     # Clean up audio
     audio_path.unlink()
-
-    print(f"[INFO] Global normalization applied with gain adjustment: {gain_adjustment} dB")
 
     return segs_folder_path, merged_segments
 
