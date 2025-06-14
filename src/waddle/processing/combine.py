@@ -4,7 +4,7 @@ from typing import Optional, TypeAlias
 
 from pydub import AudioSegment
 
-from waddle.audios.enhancer import enhance_audio_quality
+from waddle.audios.enhancer import simple_loudness_processing
 from waddle.audios.split_quiet import split_audio_by_longest_silence
 from waddle.utils import parse_audio_filename
 
@@ -110,7 +110,7 @@ def combine_audio_files(aligned_audio_paths: list[Path], output_audio_path: Path
     combined_audio = AudioSegment.empty()
     for chunk_path in chunk_paths:
         chunk = AudioSegment.from_file(str(chunk_path))
-        chunk = enhance_audio_quality(chunk)
+        chunk = simple_loudness_processing(chunk)
         combined_audio = combined_audio.append(chunk, crossfade=0)
 
     combined_audio.export(output_audio_path, format="wav")
