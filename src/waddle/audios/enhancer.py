@@ -2,7 +2,7 @@ import numpy as np
 from pydub import AudioSegment
 
 
-def enhance_audio_quality(audio: AudioSegment, target_dBFS: float = -16.0) -> AudioSegment:
+def enhance_audio_quality(audio: AudioSegment) -> AudioSegment:
     """Apply audio enhancement processing chain."""
     audio = normalize_rms(audio)
     # audio = compress_dynamic_range(audio, threshold=-20.0, ratio=4.0, attack=5.0, release=50.0)
