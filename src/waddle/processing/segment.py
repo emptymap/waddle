@@ -9,7 +9,6 @@ from waddle.config import (
     DEFAULT_BUFFER_DURATION,
     DEFAULT_CHUNK_DURATION,
     DEFAULT_LANGUAGE,
-    DEFAULT_TARGET_DB,
     DEFAULT_THRESHOLD_DB,
 )
 from waddle.processing.combine import SpeechTimeline, combine_segments_into_audio
@@ -21,22 +20,19 @@ def detect_speech_timeline(
     threshold_db: float = DEFAULT_THRESHOLD_DB,
     chunk_size_ms: int = int(DEFAULT_CHUNK_DURATION * 1000),
     buffer_size_ms: int = int(DEFAULT_BUFFER_DURATION * 1000),
-    target_dBFS: float = DEFAULT_TARGET_DB,
 ) -> tuple[Path, SpeechTimeline]:
     """
     Detects speech segments in an audio file based on a specified loudness threshold.
     Each detected segment includes a buffer of audio before and after to ensure completeness.
-    The detected segments are normalized to achieve a global mean dBFS of target_dBFS.
 
     Args:
         audio_path (str): Path to the input audio file.
         threshold_db (float): Loudness threshold in dBFS for detecting speech.
         chunk_size_ms (int): Duration of each audio chunk in milliseconds.
         buffer_size_ms (int): Additional buffer duration in milliseconds for segment merging.
-        target_dBFS (float): Target loudness level (dBFS) for normalized audio segments.
         out_duration (float, optional): Maximum duration of the processed output audio in seconds.
 
-    Returns
+    Returns:
         segs_folder_path (str): Path to the directory containing the extracted speech segments.
         merged_segments (SpeechTimeline): List of detected and merged speech segments.
     """
