@@ -72,9 +72,9 @@ def normalize_rms(audio: type_path_or_seg, target_rms=-20.0):
     """
     audio_seg = audio_path_or_seg(audio)
     current_rms = audio_seg.rms
-    max_amplitude_90 = audio_seg.max_possible_amplitude * 0.90
+    max_amplitude = audio_seg.max_possible_amplitude * 0.95
 
-    current_dbfs = 20 * np.log10(current_rms / max_amplitude_90)
+    current_dbfs = 20 * np.log10(current_rms / max_amplitude)
     gain_db = target_rms - current_dbfs
 
     # Apply gain but check for clipping
