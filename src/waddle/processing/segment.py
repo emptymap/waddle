@@ -91,10 +91,9 @@ def detect_speech_timeline(
     # for seg in merged_segments:
     for seg in tqdm(
         merged_segments,
-        desc=f"[INFO] Enhancing audio quality for segments in {audio_file_name}",
+        desc=f"[INFO] Extracting speech segments from {audio_file_name}",
     ):
         seg_audio = audio[seg[0] : seg[1]]
-        # seg_audio = enhance_audio_quality(seg_audio, target_dBFS)
         seg_audio_path = segs_folder_path / format_audio_filename("seg", seg[0], seg[1])
         seg_audio.export(seg_audio_path, format="wav")
 
