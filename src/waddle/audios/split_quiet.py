@@ -130,10 +130,9 @@ def analyze_silence_distribution(audio_file_path: Path, silence_thresh=-40, min_
 
 
 if __name__ == "__main__":
-    input_file = Path("ep13-a1ef8b5141bd85c07ed245291d5d5639a8ffd03c.m4a")
+    input_file = Path("tests/ep0/ep12-shun.wav")
 
-    if input_file.exists():
-        analyze_silence_distribution(input_file)
+    analyze_silence_distribution(input_file)
 
     split_audio_by_longest_silence(
         audio_path=input_file,
@@ -142,5 +141,7 @@ if __name__ == "__main__":
         silence_thresh=-40,
         min_silence_len=100,
     )
+
+    shutil.rmtree(input_file.parent / "splited", ignore_errors=True)
 
     print("\nSplitting completed!")
