@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import noisereduce as nr
 import numpy as np
 from pydub import AudioSegment
 from pydub.effects import compress_dynamic_range
@@ -82,66 +81,3 @@ def normalize_rms(audio: type_path_or_seg, target_rms=-20.0):
     normalized = audio_seg + gain_db
 
     return normalized
-
-
-def nr_reduce_noise(audio: type_path_or_seg, noise_segment=None) -> AudioSegment:
-    """
-    Apply noise reduction to a pydub AudioSegment using noisereduce.
-
-    Args:
-        audio_segment: pydub AudioSegment containing the audio to denoise
-        noise_segment: Optional pydub AudioSegment containing noise sample
-
-    Returns:
-        pydub AudioSegment with noise reduced
-    """
-    audio_seg = audio_path_or_seg(audio)
-    audio_data = np.array(audio_seg.get_array_of_samples(), dtype=np.float32)
-
-    # Reshape audio data if stereo
-    if audio_seg.channels == 2:
-        audio_data = audio_data.reshape((-1, 2)).T
-    if audio_seg.sample_width == 2:  # 16-bit
-        audio_data = audio_data / 32768.0
-    elif audio_seg.sample_width == 4:  # 32-bit
-        audio_data = audio_data / 2147483648.0
-
-    # Process noise segment if provided
-    noise_data = None
-    if noise_segment is not None:
-        noise_data = np.array(noise_segment.get_array_of_samples(), dtype=np.float32)
-        if noise_segment.channels == 2:
-            noise_data = noise_data.reshape((-1, 2)).T
-        if noise_segment.sample_width == 2:
-            noise_data = noise_data / 32768.0
-        elif noise_segment.sample_width == 4:
-            noise_data = noise_data / 2147483648.0
-
-    # Apply noise reduction
-    reduced_noise = nr.reduce_noise(
-        y=audio_data,
-        sr=audio_seg.frame_rate,
-        y_noise=noise_data,
-        prop_decrease=0.7,
-        stationary=True,
-        n_std_thresh_stationary=2.0,
-        freq_mask_smooth_hz=250,
-        time_mask_smooth_ms=25,
-        n_fft=512,
-        hop_length=128,
-    )
-
-    # Convert back to AudioSegment
-    if audio_seg.sample_width == 2:
-        reduced_noise = (reduced_noise * 32767).astype(np.int16)
-    elif audio_seg.sample_width == 4:
-        reduced_noise = (reduced_noise * 2147483647).astype(np.int32)
-    if audio_seg.channels == 2:
-        reduced_noise = reduced_noise.T.flatten()
-
-    return AudioSegment(
-        data=reduced_noise.tobytes(),
-        sample_width=audio_seg.sample_width,
-        frame_rate=audio_seg.frame_rate,
-        channels=audio_seg.channels,
-    )
