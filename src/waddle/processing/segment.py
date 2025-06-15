@@ -1,7 +1,6 @@
 import shutil
 from pathlib import Path
 
-import numpy as np
 from pydub import AudioSegment
 from tqdm import tqdm
 
@@ -10,7 +9,6 @@ from waddle.config import (
     DEFAULT_BUFFER_DURATION,
     DEFAULT_CHUNK_DURATION,
     DEFAULT_LANGUAGE,
-    DEFAULT_TARGET_DB,
     DEFAULT_THRESHOLD_DB,
 )
 from waddle.processing.combine import SpeechTimeline, combine_segments_into_audio
@@ -22,22 +20,19 @@ def detect_speech_timeline(
     threshold_db: float = DEFAULT_THRESHOLD_DB,
     chunk_size_ms: int = int(DEFAULT_CHUNK_DURATION * 1000),
     buffer_size_ms: int = int(DEFAULT_BUFFER_DURATION * 1000),
-    target_dBFS: float = DEFAULT_TARGET_DB,
 ) -> tuple[Path, SpeechTimeline]:
     """
     Detects speech segments in an audio file based on a specified loudness threshold.
     Each detected segment includes a buffer of audio before and after to ensure completeness.
-    The detected segments are normalized to achieve a global mean dBFS of target_dBFS.
 
     Args:
         audio_path (str): Path to the input audio file.
         threshold_db (float): Loudness threshold in dBFS for detecting speech.
         chunk_size_ms (int): Duration of each audio chunk in milliseconds.
         buffer_size_ms (int): Additional buffer duration in milliseconds for segment merging.
-        target_dBFS (float): Target loudness level (dBFS) for normalized audio segments.
         out_duration (float, optional): Maximum duration of the processed output audio in seconds.
 
-    Returns
+    Returns:
         segs_folder_path (str): Path to the directory containing the extracted speech segments.
         merged_segments (SpeechTimeline): List of detected and merged speech segments.
     """
@@ -47,8 +42,8 @@ def detect_speech_timeline(
     current_segment = None
 
     # Create a clean 'chunks' folder
-    identifier = audio_path.stem
-    chunks_folder = audio_path.parent / "chunks" / identifier
+    audio_file_name = audio_path.stem
+    chunks_folder = audio_path.parent / "chunks" / audio_file_name
     if chunks_folder.exists():
         shutil.rmtree(chunks_folder)
     chunks_folder.mkdir(parents=True, exist_ok=True)
@@ -56,7 +51,7 @@ def detect_speech_timeline(
     duration = len(audio)
     for i in tqdm(
         range(0, duration, chunk_size_ms),
-        desc="[INFO] Detecting speech segments",
+        desc=f"[INFO] Detecting speech segments in {audio_file_name}",
     ):
         chunk = audio[i : i + chunk_size_ms]
         if chunk.dBFS > threshold_db:
@@ -82,38 +77,26 @@ def detect_speech_timeline(
     merged_segments = merge_segments(segments)
 
     # Save segment to disk
-    audio_file_name = audio_path.stem
     segs_folder_path = audio_path.parent / f"{audio_file_name}_segs"
     if segs_folder_path.exists():
         shutil.rmtree(segs_folder_path)
     segs_folder_path.mkdir(parents=True, exist_ok=True)
 
-    # collect max_dBFS for each segment
-    max_dBFS_list = []
-    for seg in merged_segments:
-        seg_audio = audio[seg[0] : seg[1]]
-        max_dBFS_list.append(seg_audio.dBFS)
-
-    # calculate 95th percentile of max_dBFS
-    if not max_dBFS_list:
+    # Apply audio enhancement to all segments
+    if not merged_segments:
         print("[Warning] No speech segments detected.")
         return segs_folder_path, []
-    max_dBFS_95th_percentile = np.percentile(max_dBFS_list, 95)
 
-    # Calculate gain adjustment to achieve target_dBFS for 95th percentile
-    gain_adjustment = target_dBFS - max_dBFS_95th_percentile
-
-    # Apply normalization to all segments
-    for seg in merged_segments:
+    for seg in tqdm(
+        merged_segments,
+        desc=f"[INFO] Extracting speech segments from {audio_file_name}",
+    ):
         seg_audio = audio[seg[0] : seg[1]]
-        normalized_audio = seg_audio.apply_gain(gain_adjustment)
         seg_audio_path = segs_folder_path / format_audio_filename("seg", seg[0], seg[1])
-        normalized_audio.export(seg_audio_path, format="wav")
+        seg_audio.export(seg_audio_path, format="wav")
 
     # Clean up audio
     audio_path.unlink()
-
-    print(f"[INFO] Global normalization applied with gain adjustment: {gain_adjustment} dB")
 
     return segs_folder_path, merged_segments
 

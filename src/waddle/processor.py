@@ -11,6 +11,7 @@ from waddle.audios.call_tools import (
     deep_filtering,
 )
 from waddle.audios.clip import clip_audio
+from waddle.audios.enhancer import simple_loudness_processing
 from waddle.config import DEFAULT_COMP_AUDIO_DURATION, DEFAULT_LANGUAGE
 from waddle.processing.combine import (
     combine_audio_files,
@@ -146,6 +147,8 @@ def preprocess_multi_files(
             comp_duration=comp_duration,
         )
         clip_audio(aligned_audio_path, aligned_audio_path, ss=ss, out_duration=out_duration)
+        aligned_audio = simple_loudness_processing(aligned_audio_path)
+        aligned_audio.export(aligned_audio_path, format="wav")
         if not no_noise_remove:
             deep_filtering(aligned_audio_path, aligned_audio_path)
 
