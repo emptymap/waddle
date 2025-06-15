@@ -30,13 +30,26 @@ def simple_loudness_processing(audio: type_path_or_seg) -> AudioSegment:
     boost = min(target_level / (current_level + 0.001), 3.0)
     boosted = samples * boost
 
-    # Compress loud peaks
+    # Compress loud peaks using logarithmic compression
     threshold = 0.6
-    compressed = np.where(
-        np.abs(boosted) > threshold,
-        np.sign(boosted) * (threshold + (np.abs(boosted) - threshold) * 0.15),
-        boosted,
-    )
+    max_output = 0.9
+
+    # Apply logarithmic scaling to values above threshold
+    above_threshold_mask = np.abs(boosted) > threshold
+    log_compressed = boosted.copy()
+
+    # For values above threshold, apply logarithmic scaling
+    above_threshold_values = np.abs(boosted)[above_threshold_mask]
+    log_scaled = threshold + np.log1p(above_threshold_values - threshold)
+    log_compressed[above_threshold_mask] = np.sign(boosted[above_threshold_mask]) * log_scaled
+
+    # Scale the entire signal so the maximum value becomes 0.9
+    current_max = np.max(np.abs(log_compressed))
+    if current_max > 0:
+        scale_factor = max_output / current_max
+        compressed = log_compressed * scale_factor
+    else:
+        compressed = log_compressed
 
     # Prevent clipping
     final = np.clip(compressed, -0.95, 0.95)
