@@ -42,8 +42,8 @@ def detect_speech_timeline(
     current_segment = None
 
     # Create a clean 'chunks' folder
-    identifier = audio_path.stem
-    chunks_folder = audio_path.parent / "chunks" / identifier
+    audio_file_name = audio_path.stem
+    chunks_folder = audio_path.parent / "chunks" / audio_file_name
     if chunks_folder.exists():
         shutil.rmtree(chunks_folder)
     chunks_folder.mkdir(parents=True, exist_ok=True)
@@ -51,7 +51,7 @@ def detect_speech_timeline(
     duration = len(audio)
     for i in tqdm(
         range(0, duration, chunk_size_ms),
-        desc=f"[INFO] Detecting speech segments in {identifier}",
+        desc=f"[INFO] Detecting speech segments in {audio_file_name}",
     ):
         chunk = audio[i : i + chunk_size_ms]
         if chunk.dBFS > threshold_db:
@@ -77,7 +77,6 @@ def detect_speech_timeline(
     merged_segments = merge_segments(segments)
 
     # Save segment to disk
-    audio_file_name = audio_path.stem
     segs_folder_path = audio_path.parent / f"{audio_file_name}_segs"
     if segs_folder_path.exists():
         shutil.rmtree(segs_folder_path)
