@@ -7,7 +7,7 @@ from pydub.silence import detect_silence
 
 def split_audio_by_longest_silence(
     audio_path: Path,
-    splited_dir_path_or_none: Path | None = None,
+    splitted_dir_path_or_none: Path | None = None,
     min_ms=5000,
     max_ms=15000,
     silence_thresh=-40,
@@ -23,10 +23,10 @@ def split_audio_by_longest_silence(
     - silence_thresh: Silence detection threshold (dBFS)
     - min_silence_len: Minimum silence length to detect (milliseconds)
     """
-    splited_dir_path = splited_dir_path_or_none or audio_path.parent / "splited"
-    if splited_dir_path.exists():
-        shutil.rmtree(splited_dir_path)
-    splited_dir_path.mkdir(parents=True, exist_ok=True)
+    splitted_dir_path = splitted_dir_path_or_none or audio_path.parent / "splitted"
+    if splitted_dir_path.exists():
+        shutil.rmtree(splitted_dir_path)
+    splitted_dir_path.mkdir(parents=True, exist_ok=True)
     audio = AudioSegment.from_file(str(audio_path))
 
     silent_segments = detect_silence(
@@ -97,10 +97,10 @@ def split_audio_by_longest_silence(
 
         chunk = audio[start_time:end_time]
         output_filename = f"silence_chunk_{i + 1:06d}.wav"
-        output_path = splited_dir_path / output_filename
+        output_path = splitted_dir_path / output_filename
         chunk.export(str(output_path), format="wav")
 
-    return splited_dir_path
+    return splitted_dir_path
 
 
 def analyze_silence_distribution(audio_file_path: Path, silence_thresh=-40, min_silence_len=100):
@@ -143,6 +143,6 @@ if __name__ == "__main__":
         min_silence_len=100,
     )
 
-    shutil.rmtree(input_file.parent / "splited", ignore_errors=True)
+    shutil.rmtree(input_file.parent / "splitted", ignore_errors=True)
 
     print("\nSplitting completed!")
