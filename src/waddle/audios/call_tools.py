@@ -124,7 +124,7 @@ def ensure_sampling_rate(
 deep_filter_install_lock = threading.Lock()
 
 
-def remove_noise(input_path: Path, output_path: Path) -> None:
+def deep_filtering(input_path: Path, output_path: Path) -> None:
     """
     Enhance audio by removing noise using DeepFilterNet.
     """

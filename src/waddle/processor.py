@@ -8,7 +8,7 @@ from waddle.audios.align_offset import align_speaker_to_reference
 from waddle.audios.call_tools import (
     convert_all_files_to_wav,
     convert_to_wav,
-    remove_noise,
+    deep_filtering,
 )
 from waddle.audios.clip import clip_audio
 from waddle.config import DEFAULT_COMP_AUDIO_DURATION, DEFAULT_LANGUAGE
@@ -73,7 +73,7 @@ def process_single_file(
     if ss > 0 or out_duration:
         clip_audio(aligned_audio_path, aligned_audio_path, ss=ss, out_duration=out_duration)
     if not no_noise_remove:
-        remove_noise(aligned_audio_path, aligned_audio_path)
+        deep_filtering(aligned_audio_path, aligned_audio_path)
 
     segs_folder_path, _ = detect_speech_timeline(aligned_audio_path)
 
@@ -147,7 +147,7 @@ def preprocess_multi_files(
         )
         clip_audio(aligned_audio_path, aligned_audio_path, ss=ss, out_duration=out_duration)
         if not no_noise_remove:
-            remove_noise(aligned_audio_path, aligned_audio_path)
+            deep_filtering(aligned_audio_path, aligned_audio_path)
 
         # 2) Preprocess the aligned audio file
         segments_dir, timeline = detect_speech_timeline(aligned_audio_path)

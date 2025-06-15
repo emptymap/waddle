@@ -12,8 +12,8 @@ from waddle.audios.call_tools import (
     convert_all_files_to_wav,
     convert_to_mp3,
     convert_to_wav,
+    deep_filtering,
     ensure_sampling_rate,
-    remove_noise,
     transcribe,
     transcribe_in_batches,
 )
@@ -289,7 +289,7 @@ def test_ensure_sampling_rate_error():
                 ensure_sampling_rate(fake_input, output_wav, target_rate=16000)
 
 
-def test_remove_noise():
+def test_deep_filtering():
     """Test noise removal using DeepFilterNet."""
     wav_file_path = EP0_DIR_PATH / "ep12-masa.wav"
     if not wav_file_path.exists():
@@ -302,7 +302,7 @@ def test_remove_noise():
 
         output_wav = temp_dir_path / "denoised.wav"
 
-        remove_noise(temp_wav_path, output_wav)
+        deep_filtering(temp_wav_path, output_wav)
 
         assert output_wav.exists()
         assert get_wav_duration(output_wav) == pytest.approx(
@@ -318,7 +318,7 @@ def test_remove_noise():
         )
 
 
-def test_remove_noise_same_output_path():
+def test_deep_filtering_same_output_path():
     """Test noise removal when input and output paths are the same."""
     wav_file_path = EP0_DIR_PATH / "ep12-masa.wav"
     if not wav_file_path.exists():
@@ -329,7 +329,7 @@ def test_remove_noise_same_output_path():
         wav_path = temp_dir_path / wav_file_path.name
         wav_path.write_bytes(wav_file_path.read_bytes())
 
-        remove_noise(wav_path, wav_path)
+        deep_filtering(wav_path, wav_path)
 
         assert wav_path.exists()
         assert get_wav_duration(wav_path) == pytest.approx(get_wav_duration(wav_file_path), rel=0.1)
@@ -343,19 +343,19 @@ def test_remove_noise_same_output_path():
         )
 
 
-def test_remove_noise_file_not_found():
-    """Test remove_noise when input file does not exist."""
+def test_deep_filtering_file_not_found():
+    """Test deep_filtering when input file does not exist."""
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_dir_path = Path(temp_dir)
         fake_input = temp_dir_path / "non_existent.wav"
         output_wav = temp_dir_path / "output.wav"
 
         with pytest.raises(FileNotFoundError, match="Input file not found"):
-            remove_noise(fake_input, output_wav)
+            deep_filtering(fake_input, output_wav)
 
 
-def test_remove_noise_error():
-    """Test remove_noise when subprocess raises an error."""
+def test_deep_filtering_error():
+    """Test deep_filtering when subprocess raises an error."""
     wav_file_path = EP0_DIR_PATH / "ep12-masa.wav"
     if not wav_file_path.exists():
         pytest.skip(f"Sample file {wav_file_path} not found")
@@ -369,10 +369,10 @@ def test_remove_noise_error():
 
         with subprocess_run_with_error("deep-filter"):
             with pytest.raises(RuntimeError, match="Running DeepFilterNet"):
-                remove_noise(temp_wav_path, output_wav)
+                deep_filtering(temp_wav_path, output_wav)
 
 
-def test_remove_noise_with_missing_deep_filter():
+def test_deep_filtering_with_missing_deep_filter():
     """Test that the DeepFilterNet installation command is executed when the tool is missing."""
     wav_file_path = EP0_DIR_PATH / "ep12-masa.wav"
     if not wav_file_path.exists():
@@ -391,7 +391,7 @@ def test_remove_noise_with_missing_deep_filter():
             patch("waddle.audios.call_tools.get_tools_dir", return_value=temp_dir_path),
         ):
             with pytest.raises(RuntimeError, match="install_deep_filter was called"):
-                remove_noise(temp_wav_path, temp_wav_path)
+                deep_filtering(temp_wav_path, temp_wav_path)
 
 
 def test_transcribe():
