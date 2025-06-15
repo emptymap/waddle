@@ -87,7 +87,6 @@ def detect_speech_timeline(
         print("[Warning] No speech segments detected.")
         return segs_folder_path, []
 
-    # for seg in merged_segments:
     for seg in tqdm(
         merged_segments,
         desc=f"[INFO] Extracting speech segments from {audio_file_name}",
