@@ -1,6 +1,8 @@
 # Waddle 🦆
 
-**Waddle** is an OSS podcast production toolkit, originally developed for [RubberDuck.fm](https://rubberduck.fm). It provides a complete end-to-end pipeline for podcast creation - from raw audio files to production-ready episodes with chapters, transcriptions, and show notes. Whether you're working with multiple speakers or single audio files, Waddle handles audio alignment, processing, transcription, and metadata generation to streamline your entire podcast workflow.
+**Waddle** is an open-source podcast production toolkit that converts raw audio recordings into production-ready episodes. Originally created for [RubberDuck.fm](https://rubberduck.fm), Waddle automates common podcast production tasks.
+
+It handles multi-speaker audio alignment, noise removal, transcription, and chapter generation. Waddle provides a structured workflow for podcast production.
 
 ![waddle](https://github.com/user-attachments/assets/40856b03-4d17-4a0c-abcc-93e5fefe1b19)
 
@@ -34,7 +36,8 @@
 
 3. You're ready to use **Waddle**!
 
-### Manual Installation (Optional)
+<details>
+<summary><b>Manual Installation (Optional)</b></summary>
 
 If you prefer to install dependencies manually:
 
@@ -78,8 +81,14 @@ If you prefer to install dependencies manually:
        sudo apt install libfmt-dev
        ```
 
-### Development Installation
+</details>
+
+<details>
+<summary><b>Development Installation</b></summary>
+
 For developers who want to contribute to **Waddle**, see [CONTRIBUTING.md](CONTRIBUTING.md) for detailed setup instructions.
+
+</details>
 
 ## Waddle Flow
 
