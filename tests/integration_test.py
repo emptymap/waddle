@@ -1,3 +1,5 @@
+import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -267,3 +269,127 @@ def test_integration_metadata():
 
         show_notes_file = tmpdir_path / "ep12.show_notes.md"
         assert show_notes_file.exists(), "Show notes file was not created"
+
+
+def test_integration_init():
+    """Tests the init command for creating folder structure in current directory."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmpdir_path = Path(tmpdir)
+        test_args = ["init"]
+
+        # Change to the temporary directory
+        original_cwd = os.getcwd()
+        os.chdir(tmpdir)
+
+        try:
+            result = run_waddle_command(test_args)
+            assert result.returncode == 0, f"Command failed with error: {result.stderr}"
+
+            # Check that all required folders were created
+            expected_folders = ["0_raw", "1_pre", "2_edited", "3_post", "4_meta"]
+            for folder in expected_folders:
+                folder_path = tmpdir_path / folder
+                assert folder_path.exists() and folder_path.is_dir(), (
+                    f"Folder {folder} was not created"
+                )
+
+        finally:
+            os.chdir(original_cwd)
+
+
+def test_integration_init_with_project_name():
+    """Tests the init command for creating folder structure with project name."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmpdir_path = Path(tmpdir)
+        project_name = "Test Episode"
+        test_args = ["init", project_name]
+
+        # Change to the temporary directory
+        original_cwd = os.getcwd()
+        os.chdir(tmpdir)
+
+        try:
+            result = run_waddle_command(test_args)
+            assert result.returncode == 0, f"Command failed with error: {result.stderr}"
+
+            # Check that project directory was created
+            project_path = tmpdir_path / project_name
+            assert project_path.exists() and project_path.is_dir(), (
+                f"Project directory {project_name} was not created"
+            )
+
+            # Check that all required folders were created inside the project directory
+            expected_folders = ["0_raw", "1_pre", "2_edited", "3_post", "4_meta"]
+            for folder in expected_folders:
+                folder_path = project_path / folder
+                assert folder_path.exists() and folder_path.is_dir(), (
+                    f"Folder {folder} was not created in project directory"
+                )
+
+        finally:
+            os.chdir(original_cwd)
+
+
+def test_integration_waddle_flow():
+    """Tests the complete Waddle Flow: init -> preprocess -> postprocess -> metadata."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmpdir_path = Path(tmpdir)
+        project_name = "test_project"
+
+        original_cwd = os.getcwd()
+        os.chdir(tmpdir)
+
+        try:
+            # Step 1: Initialize project
+            result = run_waddle_command(["init", project_name])
+            assert result.returncode == 0, f"Init failed: {result.stderr}"
+
+            project_path = tmpdir_path / project_name
+            assert project_path.exists(), "Project directory not created"
+
+            # Check folders were created
+            for folder in ["0_raw", "1_pre", "2_edited", "3_post", "4_meta"]:
+                folder_path = project_path / folder
+                assert folder_path.exists(), f"Folder {folder} not created"
+
+            # Change to project directory
+            os.chdir(project_path)
+
+            # Step 2: Copy test files to 0_raw
+            test_files_dir = dir / "ep0"
+            for file in test_files_dir.glob("*.wav"):
+                shutil.copy(file, "0_raw/")
+
+            # Step 3: Run preprocess
+            result = run_waddle_command(["preprocess", "-ss", "5", "-t", "5"])
+            assert result.returncode == 0, f"Preprocess failed: {result.stderr}"
+
+            # Check 1_pre has output files
+            pre_files = list(Path("1_pre").glob("*.wav"))
+            assert len(pre_files) > 0, "No files in 1_pre after preprocess"
+
+            # Step 4: Copy files from 1_pre to 2_edited (simulating manual editing)
+            for file in Path("1_pre").glob("*.wav"):
+                shutil.copy(file, "2_edited/")
+
+            # Step 5: Run postprocess
+            result = run_waddle_command(["postprocess", "-ss", "2", "-t", "3"])
+            assert result.returncode == 0, f"Postprocess failed: {result.stderr}"
+
+            # Check 3_post has output files
+            post_files = list(Path("3_post").glob("*.wav"))
+            assert len(post_files) > 0, "No audio files in 3_post after postprocess"
+
+            srt_files = list(Path("3_post").glob("*.srt"))
+            assert len(srt_files) > 0, "No SRT files in 3_post after postprocess"
+
+            # Step 6: Run metadata (should find SRT automatically)
+            result = run_waddle_command(["metadata"])
+            assert result.returncode == 0, f"Metadata failed: {result.stderr}"
+
+            # Check 4_meta has output files
+            meta_files = list(Path("4_meta").iterdir())
+            assert len(meta_files) > 0, "No files in 4_meta after metadata generation"
+
+        finally:
+            os.chdir(original_cwd)
