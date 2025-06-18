@@ -9,9 +9,12 @@ Waddle is a Python-based podcast preprocessing library that aligns, normalizes, 
 ## Development Commands
 
 ### Package Management
-- **Package manager**: Uses `uv` (fast Python package manager)
+- **Package manager**: Uses `uv` (fast Python package manager) - NEVER use `pip`
 - **Install dependencies**: `uv sync`
 - **Run with dependencies**: `uv run <command>`
+- **Add new package**: `uv add package`
+- **Add dev package**: `uv add --dev package`
+- **Upgrade package**: `uv add --upgrade-package package`
 
 ### Testing
 - **Run tests**: `uv run pytest`
