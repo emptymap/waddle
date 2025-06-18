@@ -37,10 +37,15 @@ jobs:
           pip install --upgrade pip
           pip install waddle-ai
 
-      - uses: emptymap/setup-ffmpeg@5644f1ea8a58c026223ed8d5147314e7fb7ae3ba
-        id: setup-ffmpeg
-        with:
-          ffmpeg-version: 7.0.2
+      - name: Install FFmpeg
+        run: |
+          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+            sudo apt-get update
+            sudo apt-get install -y ffmpeg
+          elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            brew install ffmpeg
+          fi
+
       # - name: Test waddle install
       #   run: |
       #     waddle install
