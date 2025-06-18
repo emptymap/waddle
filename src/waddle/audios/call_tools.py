@@ -232,19 +232,26 @@ def transcribe_in_batches(
                     )
 
                     current_file = 0
-                    while True:
-                        output = process.stderr.readline()
-                        if output == "" and process.poll() is not None:
-                            break
-                        if output:
-                            # Look for progress indicators in Whisper output
-                            if "processing" in output.lower() or "transcribing" in output.lower():
-                                if current_file < len(batch):
-                                    pbar.set_description(f"[INFO] {output.strip()}")
-                            elif "done" in output.lower() or "finished" in output.lower():
-                                if current_file < len(batch):
-                                    current_file += 1
-                                    pbar.update(1)
+                    if process.stderr is not None:
+                        while True:
+                            output = process.stderr.readline()
+                            if output == "" and process.poll() is not None:
+                                break
+                            if output:
+                                if (
+                                    "processing" in output.lower()
+                                    or "transcribing" in output.lower()
+                                ):
+                                    if current_file < len(batch):
+                                        pbar.set_description(f"[INFO] {output.strip()}")
+                                elif "done" in output.lower() or "finished" in output.lower():
+                                    if current_file < len(batch):
+                                        current_file += 1
+                                        pbar.update(1)
+                    else:
+                        # If stderr is None, just wait for completion and update progress
+                        process.wait()
+                        pbar.update(len(batch))
 
                     # Wait for process to complete
                     process.wait()
