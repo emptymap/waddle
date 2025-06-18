@@ -3,20 +3,21 @@ name = "waddle-ai"
 version = "0.1.0"
 description = "A podcast preprocessing library for aligning, normalizing, and transcribing audio files."
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 license = { text = "MIT" }
 authors = [
     { name = "Masamune Ishihara", email = "mwishiha@ucsc.edu" },
     { name = "Shun Kashiwa", email = "skashiwa@ucsd.edu" },
 ]
 dependencies = [
-    "librosa>=0.10.2.post1",
+    "librosa>=0.11.0",
     "mutagen>=1.47.0",
-    "numpy==1.26.4",
+    "numpy>=2.0.0",
     "platformdirs>=4.3.6",
     "pydub>=0.25.1",
     "soundfile>=0.12.1",
     "tqdm>=4.67.1",
+    "numba>=0.61.2",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -25,7 +26,7 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Multimedia :: Sound/Audio",
     "Topic :: Multimedia :: Sound/Audio :: Analysis",
     "Topic :: Utilities",
@@ -55,7 +56,7 @@ dev = ["pyright>=1.1.394", "pytest>=8.3.4", "pytest-cov>=6.0.0", "ruff>=0.9.5"]
 
 [tool.ruff]
 line-length = 100
-target-version = "py312"
+target-version = "py313"
 
 [tool.ruff.lint]
 select = [
@@ -74,7 +75,7 @@ omit = ["*/tests/*", "*_test.py"]
 [tool.pyright]
 venvPath = "."
 venv = ".venv"
-pythonVersion = "3.12"
+pythonVersion = "3.13"
 typeCheckingMode = "basic"     # TODO: Change to "strict" after fixing basic issues
 reportMissingImports = true
 reportMissingTypeStubs = false
