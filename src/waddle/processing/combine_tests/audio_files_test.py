@@ -1,6 +1,7 @@
 import tempfile
 import wave
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 from pydub import AudioSegment
@@ -27,7 +28,9 @@ def test_combine_audio_files_single_file():
             assert wf.getnframes() > 0, "Output audio file is empty."
 
 
-def generate_sine_wave(frequency=440, duration_ms=500, sample_rate=44100, amplitude=0.5):
+def generate_sine_wave(
+    frequency: int = 440, duration_ms: int = 500, sample_rate: int = 44100, amplitude: float = 0.5
+) -> Any:
     """
     Generate a NumPy array representing a sine wave.
     """
@@ -57,11 +60,11 @@ def test_combine_audio_files_with_numpy_verification():
         )
 
         # Save the three segments as separate WAV files
-        paths = []
+        paths: list[Path] = []
         for i, segment in enumerate([segment1, segment2, segment3]):
             path = temp_dir / f"segment_{i}.wav"
             wavfile.write(str(path), sample_rate, segment)
-            paths.append(str(path))
+            paths.append(path)
 
         # Output path for combined audio
         output_audio_path = temp_dir / "combined.wav"

@@ -102,12 +102,10 @@ def test_parse_audio_filename():
     )
 
 
-class PathLikeBytes(os.PathLike):
+class PathLikeBytes(os.PathLike[bytes]):
     """Custom os.PathLike class returning bytes."""
 
     def __init__(self, path: bytes):
-        if not isinstance(path, bytes):
-            raise TypeError("Path must be a bytes object")
         self._path = path
 
     def __fspath__(self) -> bytes:
@@ -119,7 +117,7 @@ def test_to_path():
     assert to_path(Path("abc/23/a.txt")) == Path("abc/23/a.txt")
     assert to_path("test") == Path("test")
     assert to_path("test/test") == Path("test/test")
-    assert to_path(os.path.join("test", "test")) == Path("test/test") # noqa
+    assert to_path(os.path.join("test", "test")) == Path("test/test")  # noqa
     assert to_path(b"z/1/2") == Path("z/1/2")
     assert to_path(b"test/test.png") == Path("test/test.png")
     assert to_path(PathLikeBytes(b"a/b.py")) == Path("a/b.py")

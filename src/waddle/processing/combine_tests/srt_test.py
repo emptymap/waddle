@@ -42,7 +42,7 @@ def test_parse_srt_empty_file():
         }
         create_srt_files(temp_dir_path, srt_files)
 
-        expected_srt_files = {"empty": []}
+        expected_srt_files: dict[str, SrtEntries] = {"empty": []}
         check_srt_entries(temp_dir_path, expected_srt_files)
 
 
@@ -55,7 +55,9 @@ def test_parse_srt_single_entry():
         }
         create_srt_files(temp_dir_path, srt_files)
 
-        expected_srt_files = {"single": [("00:00:00.000", "00:00:05.000", "Hello world.")]}
+        expected_srt_files: dict[str, SrtEntries] = {
+            "single": [("00:00:00.000", "00:00:05.000", "Hello world.")]
+        }
         check_srt_entries(temp_dir_path, expected_srt_files)
 
 
@@ -118,7 +120,7 @@ def test_combine_srt_files_empty_directory():
 
         combine_srt_files(temp_dir_path, output_srt_path)
 
-        expected_srt_files = {"combined": []}
+        expected_srt_files: dict[str, SrtEntries] = {"combined": []}
         check_srt_entries(temp_dir_path, expected_srt_files)
 
 

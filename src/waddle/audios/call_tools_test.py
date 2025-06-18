@@ -3,6 +3,7 @@ import subprocess
 import tempfile
 import wave
 from pathlib import Path
+from typing import Any, List, Optional, Tuple, Union
 from unittest.mock import patch
 
 import numpy as np
@@ -23,17 +24,19 @@ TESTS_DIR_PATH = Path(__file__).resolve().parents[3] / "tests"
 EP0_DIR_PATH = TESTS_DIR_PATH / "ep0"
 
 # Save the original subprocess.run
-_orig_run = subprocess.run
+_orig_run: Any = subprocess.run
 
 
-def subprocess_run_with_error(error_on=None):
+def subprocess_run_with_error(error_on: Optional[str] = None) -> Any:
     """Patch `subprocess.run` to raise an error only when `error_on` is found in the command."""
 
-    def side_effect(cmd, *args, **kwargs):
-        cmd_str = " ".join(str(arg) for arg in cmd) if isinstance(cmd, (list, tuple)) else str(cmd)
+    def side_effect(cmd: Union[str, List[str], Tuple[str, ...]], *args: Any, **kwargs: Any) -> Any:
+        cmd_str: str = (
+            " ".join(str(arg) for arg in cmd) if isinstance(cmd, (list, tuple)) else str(cmd)
+        )
         if error_on and error_on in cmd_str:
             raise subprocess.CalledProcessError(1, cmd)
-        return _orig_run(cmd, *args, **kwargs)  # Call the original subprocess.run
+        return _orig_run(cmd, *args, **kwargs)
 
     return patch("subprocess.run", side_effect=side_effect)
 
@@ -259,7 +262,8 @@ def test_ensure_sampling_rate():
 
         assert output_wav.exists()
         assert get_wav_duration(output_wav) == pytest.approx(
-            get_wav_duration(temp_wav_path), rel=0.1
+            get_wav_duration(temp_wav_path),
+            rel=0.1,
         )
 
 
@@ -306,7 +310,8 @@ def test_deep_filtering():
 
         assert output_wav.exists()
         assert get_wav_duration(output_wav) == pytest.approx(
-            get_wav_duration(temp_wav_path), rel=0.1
+            get_wav_duration(temp_wav_path),
+            rel=0.1,
         )
         assert output_wav.read_bytes() != temp_wav_path.read_bytes()
 
@@ -450,7 +455,7 @@ def test_transcribe_in_batches_1():
 
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_dir_path = Path(temp_dir)
-        input_output_paths = []
+        input_output_paths: List[Tuple[Path, Path]] = []
         for i in range(5):
             temp_wav_path = temp_dir_path / f"audio_{i}.wav"
             shutil.copy(wav_file_path, temp_wav_path)
@@ -471,7 +476,7 @@ def test_transcribe_in_batches_2():
 
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_dir_path = Path(temp_dir)
-        input_output_paths = []
+        input_output_paths: List[Tuple[Path, Path]] = []
         for i in range(2):
             temp_wav_path = temp_dir_path / f"audio_{i}.wav"
             shutil.copy(wav_file_path, temp_wav_path)

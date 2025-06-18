@@ -5,11 +5,12 @@ import sys
 import tempfile
 import wave
 from pathlib import Path
+from typing import Any
 
 dir = Path(__file__).resolve().parent
 
 
-def run_waddle_command(args):
+def run_waddle_command(args: list[str]) -> subprocess.CompletedProcess[str]:
     """Runs the waddle command using subprocess and captures the output."""
     result = subprocess.run(
         [sys.executable, "-m", "waddle"] + args,
@@ -19,7 +20,7 @@ def run_waddle_command(args):
     return result
 
 
-def get_wav_duration(filename):
+def get_wav_duration(filename: Any) -> float:
     """Returns the duration of a WAV file."""
     with wave.open(filename, "r") as wav_file:
         frames = wav_file.getnframes()
@@ -28,7 +29,7 @@ def get_wav_duration(filename):
         return duration
 
 
-def test_integration_install():
+def test_integration_install() -> None:
     """Tests the install command for installing all tools."""
     test_args = ["install"]
     result = run_waddle_command(test_args)
@@ -43,7 +44,7 @@ def test_integration_install():
     assert "✅ All tools installed successfully!" in result.stdout
 
 
-def test_integration_single():
+def test_integration_single() -> None:
     """Tests single file processing in Waddle."""
     with tempfile.TemporaryDirectory() as tmpdir:
         input_file = "ep12-masa.wav"

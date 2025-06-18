@@ -1,8 +1,10 @@
 import tempfile
 import wave
 from pathlib import Path
+from typing import Tuple
 
 import numpy as np
+import numpy.typing as npt
 
 from waddle.audios.align_offset import (
     align_speaker_to_reference,
@@ -13,7 +15,9 @@ from waddle.audios.align_offset import (
 DEFAULT_SR = 48000
 
 
-def generate_test_audio(sr=DEFAULT_SR, s_padding=0, e_padding=0):
+def generate_test_audio(
+    sr: int = DEFAULT_SR, s_padding: int = 0, e_padding: int = 0
+) -> Tuple[npt.NDArray[np.float32], int]:
     """
     Generate a test audio with s_padding seconds of silence, followed by 1 second of sine wave,
     followed by e_padding seconds of silence.
@@ -28,7 +32,7 @@ def generate_test_audio(sr=DEFAULT_SR, s_padding=0, e_padding=0):
     return audio, sr
 
 
-def write_wav(file_path, audio, sr):
+def write_wav(file_path: Path, audio: npt.NDArray[np.float32], sr: int) -> None:
     """Write an audio file in WAV format."""
     with wave.open(str(file_path), "w") as wav_file:
         wav_file.setnchannels(1)
@@ -37,7 +41,7 @@ def write_wav(file_path, audio, sr):
         wav_file.writeframes(audio.tobytes())
 
 
-def read_wav(file_path):
+def read_wav(file_path: Path) -> Tuple[npt.NDArray[np.float32], int]:
     """Read an audio file in WAV format."""
     with wave.open(str(file_path), "r") as wav_file:
         sr = wav_file.getframerate()
