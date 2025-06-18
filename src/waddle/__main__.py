@@ -26,6 +26,18 @@ def main():
         raise ValueError(f"Command not implemented: {args.subcommand}")
 
 
+def do_install(_):
+    install_all_tools()
+
+
+def do_init(args):
+    base_path = Path(args.project_name) if args.project_name.strip() else Path.cwd()
+    base_path.mkdir(parents=True, exist_ok=True)
+
+    for folder in ["0_raw", "1_pre", "2_edited", "3_post", "4_meta"]:
+        (base_path / folder).mkdir(exist_ok=True)
+
+
 def do_single(args):
     audio_path = to_path(args.audio)
     if not audio_path.is_file():
@@ -99,19 +111,6 @@ def do_metadata(args):
         source = str(srt_files[0])
 
     generate_metadata(source, args.input, args.output)
-
-
-def do_init(args):
-    base_path = Path(args.project_name) if args.project_name.strip() else Path.cwd()
-    base_path.mkdir(parents=True, exist_ok=True)
-
-    for folder in ["0_raw", "1_pre", "2_edited", "3_post", "4_meta"]:
-        (base_path / folder).mkdir(exist_ok=True)
-
-
-def do_install(args):
-    del args  # Unused parameter
-    install_all_tools()
 
 
 if __name__ == "__main__":
