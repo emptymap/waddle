@@ -193,9 +193,7 @@ def transcribe_in_batches(
     # List of pairs of tmp audio paths and output paths
     tmp_output_paths = []
     with tempfile.TemporaryDirectory() as temp_dir:
-        for input_path, output_path in tqdm(
-            input_output_paths, desc="[INFO] Preparing audio files for transcription"
-        ):
+        for input_path, output_path in input_output_paths:
             # Ensure input is 16kHz and 16-bit
             tmp_audio_path = Path(temp_dir) / input_path.name
             ensure_sampling_rate(input_path, tmp_audio_path, target_rate=16000)
@@ -232,7 +230,7 @@ def transcribe_in_batches(
                     if process.stderr is not None:
                         for output in iter(process.stderr.readline, ""):
                             if "processing" in output.lower():
-                                desc = f"[INFO] {output.strip().split("'")[0]}"
+                                desc = f"[INFO] {output.strip().split("'")[1]}"
                                 pbar.set_description(desc)
                                 pbar.update(1)
                     else:
