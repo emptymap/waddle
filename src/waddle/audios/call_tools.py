@@ -219,35 +219,22 @@ def transcribe_in_batches(
 
             try:
                 # Run with progress tracking
-                with tqdm(
-                    total=len(batch), desc=f"[INFO] Processing {len(batch)} files", leave=False
-                ) as pbar:
+                with tqdm(total=len(batch), desc=f"[INFO] Processing {len(batch)} files") as pbar:
                     process = subprocess.Popen(
                         command,
                         stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE,
                         text=True,
                         bufsize=1,
-                        universal_newlines=True,
                     )
 
                     current_file = 0
                     if process.stderr is not None:
-                        while True:
-                            output = process.stderr.readline()
-                            if output == "" and process.poll() is not None:
-                                break
-                            if output:
-                                if (
-                                    "processing" in output.lower()
-                                    or "transcribing" in output.lower()
-                                ):
-                                    if current_file < len(batch):
-                                        pbar.set_description(f"[INFO] {output.strip()}")
-                                elif "done" in output.lower() or "finished" in output.lower():
-                                    if current_file < len(batch):
-                                        current_file += 1
-                                        pbar.update(1)
+                        for output in iter(process.stderr.readline, ""):
+                            if "processing" in output.lower():
+                                desc = f"[INFO] {output.strip().split("'")[0]}"
+                                pbar.set_description(desc)
+                                pbar.update(1)
                     else:
                         # If stderr is None, just wait for completion and update progress
                         process.wait()
