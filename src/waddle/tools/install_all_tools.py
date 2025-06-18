@@ -95,6 +95,7 @@ def install_system_dependencies():
             print("- Download FFmpeg from https://ffmpeg.org/download.html")
             print("- Install CMake from https://cmake.org/download/")
             print("- Install fmt library or use vcpkg")
+        sys.exit(1)
 
 
 def install_all_tools():
