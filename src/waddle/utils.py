@@ -70,7 +70,7 @@ def to_path(obj: Union[str, bytes, os.PathLike[str], os.PathLike[bytes]]) -> Pat
     if isinstance(obj, Path):
         return obj
 
-    fs_path = os.fspath(obj)
+    fs_path = os.fspath(obj)  # type: ignore
     if isinstance(fs_path, (bytes, bytearray, memoryview)):
         fs_path = bytes(fs_path).decode()
     return Path(fs_path)
