@@ -3,8 +3,11 @@ name: Release Tests
 on:
   workflow_run:
     workflows: ["CI"]
-    branches: [main]
-    types: [completed]
+    types:
+      - completed
+    branches:
+      - main
+
   workflow_dispatch: # Allow manual triggering
 
 env:
@@ -13,7 +16,7 @@ env:
 jobs:
   test-release:
     runs-on: ${{ matrix.os }}
-    if: ${{ contains(github.event.workflow_run.head_branch, 'v') && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || (contains(github.event.workflow_run.head_branch, 'v') && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push') }}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
