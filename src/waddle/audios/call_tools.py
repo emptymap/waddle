@@ -237,12 +237,17 @@ def transcribe_in_batches(
                                     desc = f"[INFO] {match.group(1)}"
                                     pbar.set_description(desc)
                                 pbar.update(1)
+                    else:
+                        # If stderr is None, just wait for completion and update progress
+                        process.wait()
+                        pbar.update(len(batch))
 
                     # Wait for process to complete and get return code
-                    process.wait()
+                    if process.returncode is None:
+                        process.wait()
                     if process.returncode != 0:
                         raise subprocess.CalledProcessError(process.returncode, command)
-                    # Ensure progress bar reaches 100%
+
                     if pbar.n < pbar.total:
                         pbar.update(pbar.total - pbar.n)
 
