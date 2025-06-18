@@ -64,17 +64,122 @@ Before using **Waddle**, ensure the following requirements are installed:
    git clone https://github.com/emptymap/waddle.git
    ```
 
+2. Install the package using pip:
+   ```bash
+   pip install waddle/
+   ```
+
 2. You're ready to use **Waddle**!
 
-## Usage
+## Waddle Flow
 
-### Prepare Audio Files
-   - Upload each speaker's audio files in the `audios` directory.
-   - Use the naming convention: `ep{N}-{SpeakerName}.[wav|aifc|m4a|mp4]`.
-     - Example: `ep1-Alice.wav`, `ep1-Bob.aifc`
-   - Include a reference audio file that covers the entire podcast. The reference file name must start with `GMT` (e.g., a Zoom recording).
+**Waddle Flow** is the recommended workflow for podcast production using Waddle. It follows a structured approach through five stages, each with its own directory:
 
-### CLI Options
+### Initialize Project
+First, create a new project with the 5-stage folder structure:
+```bash
+waddle init EPISODE_NUM
+cd EPISODE_NUM
+```
+This creates the following directories:
+- `0_raw/` - Raw audio files
+- `1_pre/` - Preprocessed audio files  
+- `2_edited/` - Manually edited audio files
+- `3_post/` - Post-processed audio files
+- `4_meta/` - Metadata files
+
+### Stage 0: Raw (`0_raw/`)
+Place your original audio recordings here:
+- Upload each speaker's audio files using the naming convention: `ep{N}-{SpeakerName}.[wav|aifc|m4a|mp4]`
+  - Example: `ep1-Alice.wav`, `ep1-Bob.aifc`
+- Include a reference audio file that covers the entire podcast. The reference file name must start with `GMT` (e.g., a Zoom recording)
+  - Example: `GMT-recording.wav`
+
+### Stage 1: Preprocessed (`1_pre/`)
+Use the `preprocess` command to align and clean audio files:
+```bash
+waddle preprocess
+```
+This stage produces aligned and cleaned audio files.
+
+### Stage 2: Edited (`2_edited/`)
+Manual editing stage for fine-tuning:
+- Edit files from `1_pre/` using your preferred audio editor
+- Remove unwanted sections, adjust levels, add effects
+  - If you want to edit with transcription, you can run `waddle preprocess -tr` to generate SRT files for each speaker.
+- Save edited files here
+
+### Stage 3: Post-processed (`3_post/`)
+Use the `postprocess` command to finalize audio:
+```bash
+waddle postprocess
+```
+This stage produces:
+- Final merged audio
+- Transcription (SRT files)
+
+### Stage 4: Metadata (`4_meta/`)
+Edit the SRT files in `3_post/` to add chapter markers and show notes. Then, generate podcast metadata:
+```bash
+waddle metadata
+```
+This stage produces:
+- Chapter markers
+- Show notes
+- MP3 with embedded metadata
+
+Then you can upload the final audio and metadata to your podcast hosting platform.
+
+### Complete Workflow Example
+```bash
+# Initialize project
+waddle init my-podcast
+cd my-podcast
+
+# Place raw files in 0_raw/
+cp ~/recordings/* 0_raw/
+
+# Stage 1: Preprocess
+waddle preprocess
+
+# Stage 2: Manual editing (use your audio editor such as Audacity)
+# Edit files from 1_pre/ and save to 2_edited/
+
+# Stage 3: Post-process  
+waddle postprocess
+
+# Edit 3_post/{episode_name}.srt to add chapter markers and show notes
+# Example:
+# 
+# 1
+# 00:00:00.000 --> 00:00:03.000
+# alice: Welcome to our podcast!
+#
+# # Programming Discussion
+#
+# 2
+# 00:00:03.000 --> 00:00:06.000
+# bob: Today we'll discuss programming.
+#
+# - [Rust Language](https://rust-lang.org)
+
+# Stage 4: Generate metadata
+waddle metadata
+```
+
+## Commands
+
+- `init` - Initialize a new waddle project with folder structure:
+  ```bash
+  waddle init [project_name]
+  ```
+  - `project_name` (optional): Name of the project directory. If not provided, creates folders in the current directory.
+  - Creates the following folder structure:
+    - `0_raw/` - Raw audio files
+    - `1_pre/` - Preprocessed audio files
+    - `2_edited/` - Manually edited audio files
+    - `3_post/` - Post-processed audio files
+    - `4_meta/` - Metadata files
 
 - `single` - Process a single audio file:
   ```bash
@@ -88,10 +193,10 @@ Before using **Waddle**, ensure the following requirements are installed:
 
 - `preprocess` - Process multiple audio files:
   ```bash
-  waddle preprocess -d ./audios -r ./reference.wav -o ./output
+  waddle preprocess
   ```
-  - `-d, --directory`: Directory containing audio files (default: `./`).
-  - `-o, --output`: Directory to save the output (default: `./out`).
+  - `-d, --directory`: Directory containing audio files (default: `0_raw`).
+  - `-o, --output`: Directory to save the output (default: `1_pre`).
   - `-ss`: Start time in seconds for the audio segment (default: 0.0).
   - `-t, --time`: Duration in seconds for the output audio (default: None).
   - `-wo, --whisper-options`: Options to pass to Whisper transcription (default: `-l ja`).
@@ -103,91 +208,21 @@ Before using **Waddle**, ensure the following requirements are installed:
 
 - `postprocess` - Process aligned audio files:
   ```bash
-  waddle postprocess -d ./audios -o ./output
+  waddle postprocess
   ```
-  - `-d, --directory`: Directory containing audio files (default: `./`).
-  - `-o, --output`: Directory to save the output (default: `./out`).
+  - `-d, --directory`: Directory containing audio files (default: `2_edited`).
+  - `-o, --output`: Directory to save the output (default: `3_post`).
   - `-ss`: Start time in seconds for the audio segment (default: 0.0).
   - `-t, --time`: Duration in seconds for the output audio (default: None).
   - `-wo, --whisper-options`: Options to pass to Whisper transcription (default: `-l ja`).
 
 - `metadata` - Generate metadata from an annotated SRT file:
   ```bash
-  waddle metadata path/to/annotated.srt -i path/to/audio.mp3 -o ./metadata
+  waddle metadata
   ```
-  - `source`: Path to the annotated SRT file.
+  - `source` (optional): Path to the annotated SRT file (default: looks for SRT files in `3_post/`).
   - `-i, --input`: Path to the input audio file. If not specified, it will look for an audio file with the same name.
-  - `-o, --output`: Directory to save the metadata and audio files (default: `./metadata`).
-
-
-## Example Commands
-
-### `single` Command Examples
-
-1. **Basic processing**:
-   ```bash
-   waddle single input.wav
-   ```
-
-2. **With output directory and duration limit**:
-   ```bash
-   waddle single input.wav -o output_dir -t 300
-   ```
-
-3. **With start time, language options, and no noise removal**:
-   ```bash
-   waddle single input.wav -ss 60 -wo "-l en -t 8" -nnr
-   ```
-
-### `preprocess` Command Examples
-
-1. **Basic preprocessing**:
-   ```bash
-   waddle preprocess
-   ```
-
-2. **With custom directory, reference file**:
-   ```bash
-   waddle preprocess -d audio_dir -r reference.wav
-   ```
-
-3. **With time limits and transcription**:
-   ```bash
-   waddle preprocess -ss 120 -t 1800 -tr
-   ```
-
-### `postprocess` Command Examples
-
-1. **Basic postprocessing**:
-   ```bash
-   waddle postprocess
-   ```
-
-2. **With custom directory and output location**:
-   ```bash
-   waddle postprocess -d aligned_dir -o processed_dir
-   ```
-
-3. **With segment selection and transcription options**:
-   ```bash
-   waddle postprocess -ss 300 -t 600 -wo "-l ja -t 4"
-   ```
-
-### `metadata` Command Examples
-
-1. **Basic metadata generation**:
-   ```bash
-   waddle metadata transcript.srt
-   ```
-
-2. **With input audio file**:
-   ```bash
-   waddle metadata transcript.srt -i episode.mp3
-   ```
-
-3. **With custom output directory**:
-   ```bash
-   waddle metadata transcript.srt -i episode.mp3 -o metadata_dir
+  - `-o, --output`: Directory to save the metadata and audio files (default: `4_meta`).
 
 ## Annotated SRT Format
 
