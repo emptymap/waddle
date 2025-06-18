@@ -1,6 +1,6 @@
 # Waddle 🦆
 
-**Waddle** is a preprocessor for podcasts, developed specifically for [RubberDuck.fm](https://rubberduck.fm). It streamlines the process of aligning, normalizing, and transcribing podcast audio files from multiple speakers or individual audio files.
+**Waddle** is an OSS podcast production toolkit, originally developed for [RubberDuck.fm](https://rubberduck.fm). It provides a complete end-to-end pipeline for podcast creation - from raw audio files to production-ready episodes with chapters, transcriptions, and show notes. Whether you're working with multiple speakers or single audio files, Waddle handles audio alignment, processing, transcription, and metadata generation to streamline your entire podcast workflow.
 
 ![waddle](https://github.com/user-attachments/assets/40856b03-4d17-4a0c-abcc-93e5fefe1b19)
 
@@ -307,3 +307,7 @@ Great for systems programming!
 ## Contributing
 
 Want to contribute to **Waddle**? We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development setup, testing guidelines, and contribution workflows.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

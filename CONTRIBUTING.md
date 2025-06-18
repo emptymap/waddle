@@ -24,20 +24,6 @@ For developers who want to contribute to **Waddle**, follow these steps:
 
 4. Ready to use **Waddle**!
 
-## Setting Up the Development Environment
-
-1. **Clone the Repository**
-   ```bash
-   git clone https://github.com/emptymap/waddle.git
-   cd waddle
-   ```
-
-2. **Install `uv` (Recommended)**
-   We use [`uv`](https://github.com/astral-sh/uv) as a fast package manager.
-   ```bash
-   curl -LsSf https://astral.sh/uv/install.sh | sh
-   ```
-
 ## Running Tests
 
 We use `pytest` with coverage analysis to ensure code quality.
