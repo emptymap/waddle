@@ -3,7 +3,7 @@ name = "waddle-ai"
 version = "0.1.0"
 description = "A podcast preprocessing library for aligning, normalizing, and transcribing audio files."
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 license = { text = "MIT" }
 authors = [
     { name = "Masamune Ishihara", email = "mwishiha@ucsc.edu" },
@@ -25,7 +25,7 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Multimedia :: Sound/Audio",
     "Topic :: Multimedia :: Sound/Audio :: Analysis",
     "Topic :: Utilities",
@@ -74,7 +74,7 @@ omit = ["*/tests/*", "*_test.py"]
 [tool.pyright]
 venvPath = "."
 venv = ".venv"
-pythonVersion = "3.12"
+pythonVersion = "3.13"
 typeCheckingMode = "basic"     # TODO: Change to "strict" after fixing basic issues
 reportMissingImports = true
 reportMissingTypeStubs = false

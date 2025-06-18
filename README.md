@@ -17,7 +17,7 @@
 
 Before using **Waddle**, ensure the following requirements are installed:
 
-1. **Python 3.12 or higher**:
+1. **Python 3.13 or higher**:
     - Install Python from [python.org](https://www.python.org/).
 
 2. **FFmpeg**:
