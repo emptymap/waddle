@@ -28,6 +28,21 @@ def get_wav_duration(filename):
         return duration
 
 
+def test_integration_install():
+    """Tests the install command for installing all tools."""
+    test_args = ["install"]
+    result = run_waddle_command(test_args)
+
+    assert result.returncode == 0, f"Install command failed with error: {result.stderr}"
+
+    # Check that install output contains expected messages
+    assert "Installing all required tools for waddle..." in result.stdout
+    assert "=== Installing System Dependencies ===" in result.stdout
+    assert "=== Installing DeepFilterNet ===" in result.stdout
+    assert "=== Installing whisper.cpp ===" in result.stdout
+    assert "✅ All tools installed successfully!" in result.stdout
+
+
 def test_integration_single():
     """Tests single file processing in Waddle."""
     with tempfile.TemporaryDirectory() as tmpdir:
