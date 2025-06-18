@@ -5,6 +5,7 @@ import threading
 from pathlib import Path
 
 from platformdirs import user_runtime_dir
+from tqdm import tqdm
 
 from waddle.config import APP_AUTHOR, APP_NAME, DEFAULT_LANGUAGE
 from waddle.tools.install_deep_filter import install_deep_filter
@@ -192,7 +193,9 @@ def transcribe_in_batches(
     # List of pairs of tmp audio paths and output paths
     tmp_output_paths = []
     with tempfile.TemporaryDirectory() as temp_dir:
-        for input_path, output_path in input_output_paths:
+        for input_path, output_path in tqdm(
+            input_output_paths, desc="[INFO] Preparing audio files for transcription"
+        ):
             # Ensure input is 16kHz and 16-bit
             tmp_audio_path = Path(temp_dir) / input_path.name
             ensure_sampling_rate(input_path, tmp_audio_path, target_rate=16000)
@@ -203,7 +206,7 @@ def transcribe_in_batches(
             for i in range(0, len(tmp_output_paths), batch_size)
         ]
 
-        for batch in batches:
+        for batch in tqdm(batches, desc="[INFO] Transcribing audio batches"):
             command = [
                 str(whisper_bin),
                 "-m",
