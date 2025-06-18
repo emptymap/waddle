@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess
 import tempfile
 import threading
@@ -220,7 +221,7 @@ def transcribe_in_batches(
                 with tqdm(total=len(batch), desc=f"[INFO] Processing {len(batch)} files") as pbar:
                     process = subprocess.Popen(
                         command,
-                        stdout=subprocess.PIPE,
+                        stdout=subprocess.DEVNULL,
                         stderr=subprocess.PIPE,
                         text=True,
                         bufsize=1,
@@ -229,8 +230,12 @@ def transcribe_in_batches(
                     if process.stderr is not None:
                         for output in iter(process.stderr.readline, ""):
                             if "processing" in output.lower():
-                                desc = f"[INFO] {output.strip().split("'")[1]}"
-                                pbar.set_description(desc)
+                                match = re.search(
+                                    r"processing\s+['\"](.*?)['\"]", output, re.IGNORECASE
+                                )
+                                if match:
+                                    desc = f"[INFO] {match.group(1)}"
+                                    pbar.set_description(desc)
                                 pbar.update(1)
                     else:
                         # If stderr is None, just wait for completion and update progress
@@ -242,6 +247,9 @@ def transcribe_in_batches(
                         process.wait()
                     if process.returncode != 0:
                         raise subprocess.CalledProcessError(process.returncode, command)
+                    # Ensure progress bar reaches 100%
+                    if pbar.n < pbar.total:
+                        pbar.update(pbar.total - pbar.n)
 
                 for _, output_path in batch:
                     Path(f"{output_path}.srt").replace(output_path)
