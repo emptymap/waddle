@@ -267,3 +267,18 @@ def test_integration_metadata():
 
         show_notes_file = tmpdir_path / "ep12.show_notes.md"
         assert show_notes_file.exists(), "Show notes file was not created"
+
+
+def test_integration_install():
+    """Tests the install command for installing all tools."""
+    test_args = ["install"]
+    result = run_waddle_command(test_args)
+
+    assert result.returncode == 0, f"Install command failed with error: {result.stderr}"
+
+    # Check that install output contains expected messages
+    assert "Installing all required tools for waddle..." in result.stdout
+    assert "=== Installing System Dependencies ===" in result.stdout
+    assert "=== Installing DeepFilterNet ===" in result.stdout
+    assert "=== Installing whisper.cpp ===" in result.stdout
+    assert "✅ All tools installed successfully!" in result.stdout

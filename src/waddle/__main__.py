@@ -3,6 +3,7 @@ import shutil
 from waddle.argparse import create_waddle_parser
 from waddle.metadata import generate_metadata
 from waddle.processor import postprocess_multi_files, preprocess_multi_files, process_single_file
+from waddle.tools.install_all_tools import install_all_tools
 from waddle.utils import to_path
 
 
@@ -22,6 +23,8 @@ def main():
             do_postprocess(args)
         case "metadata":
             do_metadata(args)
+        case "install":
+            do_install(args)
         case _:
             raise ValueError(f"Command not implemented: {args.subcommand}")
 
@@ -94,6 +97,11 @@ def do_postprocess(args):
 
 def do_metadata(args):
     generate_metadata(args.source, args.input, args.output)
+
+
+def do_install(args):
+    del args  # Unused parameter
+    install_all_tools()
 
 
 if __name__ == "__main__":
