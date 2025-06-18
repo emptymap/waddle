@@ -143,6 +143,15 @@ def create_waddle_parser():
         help="Transcribe the processed audio files.",
     )
 
+    # install
+    subparsers.add_parser(
+        "install",
+        description=(
+            "Install all required tools for waddle "
+            "(DeepFilterNet, whisper.cpp, FFmpeg, CMake, fmt)."
+        ),
+    )
+
     # metadata
     show_notes_parser = subparsers.add_parser(
         "metadata",

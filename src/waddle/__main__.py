@@ -4,6 +4,7 @@ from pathlib import Path
 from waddle.argparse import create_waddle_parser
 from waddle.metadata import generate_metadata
 from waddle.processor import postprocess_multi_files, preprocess_multi_files, process_single_file
+from waddle.tools.install_all_tools import install_all_tools
 from waddle.utils import to_path
 
 
@@ -12,13 +13,13 @@ def main():
     args = parser.parse_args()
 
     handlers = {
+        "install": do_install,
+        "init": do_init,
         "single": do_single,
         "preprocess": do_preprocess,
         "postprocess": do_postprocess,
         "metadata": do_metadata,
-        "init": do_init,
     }
-
     if args.subcommand in handlers:
         handlers[args.subcommand](args)
     else:
@@ -106,6 +107,11 @@ def do_init(args):
 
     for folder in ["0_raw", "1_pre", "2_edited", "3_post", "4_meta"]:
         (base_path / folder).mkdir(exist_ok=True)
+
+
+def do_install(args):
+    del args  # Unused parameter
+    install_all_tools()
 
 
 if __name__ == "__main__":
