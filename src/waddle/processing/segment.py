@@ -1,5 +1,6 @@
 import shutil
 from pathlib import Path
+from typing import Optional
 
 from pydub import AudioSegment
 from tqdm import tqdm
@@ -36,10 +37,10 @@ def detect_speech_timeline(
         segs_folder_path (str): Path to the directory containing the extracted speech segments.
         merged_segments (SpeechTimeline): List of detected and merged speech segments.
     """
-    audio = AudioSegment.from_file(str(audio_path))
+    audio: AudioSegment = AudioSegment.from_file(str(audio_path))
 
-    segments = []
-    current_segment = None
+    segments: SpeechTimeline = []
+    current_segment: Optional[list[int]] = None
 
     # Create a clean 'chunks' folder
     audio_file_name = audio_path.stem
@@ -48,12 +49,12 @@ def detect_speech_timeline(
         shutil.rmtree(chunks_folder)
     chunks_folder.mkdir(parents=True, exist_ok=True)
 
-    duration = len(audio)
+    duration: int = len(audio)
     for i in tqdm(
         range(0, duration, chunk_size_ms),
         desc=f"[INFO] Detecting speech segments in {audio_file_name}",
     ):
-        chunk = audio[i : i + chunk_size_ms]
+        chunk: AudioSegment = audio[i : i + chunk_size_ms]
         if chunk.dBFS > threshold_db:
             start_ms = max(0, i - buffer_size_ms)
             end_ms = min(duration, i + chunk_size_ms + buffer_size_ms)
@@ -91,7 +92,7 @@ def detect_speech_timeline(
         merged_segments,
         desc=f"[INFO] Extracting speech segments from {audio_file_name}",
     ):
-        seg_audio = audio[seg[0] : seg[1]]
+        seg_audio: AudioSegment = audio[seg[0] : seg[1]]
         seg_audio_path = segs_folder_path / format_audio_filename("seg", seg[0], seg[1])
         seg_audio.export(seg_audio_path, format="wav")
 
@@ -102,7 +103,7 @@ def detect_speech_timeline(
 
 
 def merge_segments(segments: SpeechTimeline) -> SpeechTimeline:
-    merged_segments = []
+    merged_segments: SpeechTimeline = []
     for seg in segments:
         if not merged_segments or seg[0] > merged_segments[-1][1]:
             merged_segments.append(seg)
@@ -132,10 +133,10 @@ def process_segments(
         language (str): Language code for transcription.
     """
     seg_file_paths = sorted(segs_folder_path.glob("*.wav"), key=lambda x: int(x.stem.split("_")[1]))
-    transcription_entries = []
+    transcription_entries: list[tuple[str, str, str]] = []
 
     if transcription_path:
-        input_output_paths = []
+        input_output_paths: list[tuple[Path, Path]] = []
         for segs_file_path in seg_file_paths:
             # Transcribe segment
             srt_output_path = Path(segs_file_path).with_suffix(".srt")
@@ -149,7 +150,9 @@ def process_segments(
 
             # Adjust transcription timestamps
             process_segment_transcription(
-                segs_file_path.with_suffix(".srt"), start_seconds, transcription_entries
+                segs_file_path.with_suffix(".srt"),
+                start_seconds,
+                transcription_entries,
             )
             srt_output_path.unlink()
 
@@ -169,7 +172,9 @@ def process_segments(
 
 
 def process_segment_transcription(
-    transcribe_file_path: Path, start_offset: float, transcription_entries: list
+    transcribe_file_path: Path,
+    start_offset: float,
+    transcription_entries: list[tuple[str, str, str]],
 ) -> None:
     """
     Adjust timestamps in a segment's transcription file by adding the start offset,

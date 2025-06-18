@@ -1,5 +1,7 @@
 import shutil
+from argparse import Namespace
 from pathlib import Path
+from typing import Callable, Dict
 
 from waddle.argparse import create_waddle_parser
 from waddle.metadata import generate_metadata
@@ -8,11 +10,11 @@ from waddle.tools.install_all_tools import install_all_tools
 from waddle.utils import to_path
 
 
-def main():
+def main() -> None:
     parser = create_waddle_parser()
     args = parser.parse_args()
 
-    handlers = {
+    handlers: Dict[str, Callable[[Namespace], None]] = {
         "install": do_install,
         "init": do_init,
         "single": do_single,
@@ -26,11 +28,11 @@ def main():
         raise ValueError(f"Command not implemented: {args.subcommand}")
 
 
-def do_install(_):
+def do_install(_: Namespace) -> None:
     install_all_tools()
 
 
-def do_init(args):
+def do_init(args: Namespace) -> None:
     base_path = Path(args.project_name) if args.project_name.strip() else Path.cwd()
     base_path.mkdir(parents=True, exist_ok=True)
 
@@ -38,7 +40,7 @@ def do_init(args):
         (base_path / folder).mkdir(exist_ok=True)
 
 
-def do_single(args):
+def do_single(args: Namespace) -> None:
     audio_path = to_path(args.audio)
     if not audio_path.is_file():
         raise FileNotFoundError(f"Audio file not found: {args.audio}")
@@ -60,7 +62,7 @@ def do_single(args):
     )
 
 
-def do_preprocess(args):
+def do_preprocess(args: Namespace) -> None:
     reference = to_path(args.reference) if args.reference else None
     if reference and not reference.is_file():
         raise FileNotFoundError(f"Reference file not found: {args.reference}")
@@ -85,7 +87,7 @@ def do_preprocess(args):
     )
 
 
-def do_postprocess(args):
+def do_postprocess(args: Namespace) -> None:
     source_dir = to_path(args.directory)
     if not source_dir.is_dir():
         raise FileNotFoundError(f"Directory not found: {args.directory}")
@@ -101,7 +103,7 @@ def do_postprocess(args):
     )
 
 
-def do_metadata(args):
+def do_metadata(args: Namespace) -> None:
     source = args.source
 
     if source == "3_post/*.srt":

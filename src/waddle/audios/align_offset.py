@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 
 import librosa
 import numpy as np
@@ -11,7 +12,9 @@ from waddle.config import (
 )
 
 
-def find_offset_via_cross_correlation(ref_audio: np.ndarray, spk_audio: np.ndarray) -> int:
+def find_offset_via_cross_correlation(
+    ref_audio: np.ndarray[Any, np.dtype[Any]], spk_audio: np.ndarray[Any, np.dtype[Any]]
+) -> int:
     """
     Return the sample offset (lag) that best aligns spk_audio to ref_audio
     using cross-correlation.
@@ -27,7 +30,9 @@ def find_offset_via_cross_correlation(ref_audio: np.ndarray, spk_audio: np.ndarr
     return offset
 
 
-def shift_audio(spk_audio: np.ndarray, offset: int, ref_length: int) -> np.ndarray:
+def shift_audio(
+    spk_audio: np.ndarray[Any, np.dtype[Any]], offset: int, ref_length: int
+) -> np.ndarray[Any, np.dtype[Any]]:
     """
     Shift the spk_audio by 'offset' samples relative to the reference track.
     Ensures the returned array is the same length as the reference.
@@ -47,7 +52,10 @@ def shift_audio(spk_audio: np.ndarray, offset: int, ref_length: int) -> np.ndarr
         shifted = shifted[:ref_length]
     elif len(shifted) < ref_length:
         shifted = np.pad(
-            shifted, (0, ref_length - len(shifted)), mode="constant", constant_values=0
+            shifted,
+            (0, ref_length - len(shifted)),
+            mode="constant",
+            constant_values=0,
         )
 
     return shifted

@@ -1,5 +1,6 @@
 import shutil
 from pathlib import Path
+from typing import List, Tuple
 
 from pydub import AudioSegment
 from pydub.silence import detect_silence
@@ -8,10 +9,10 @@ from pydub.silence import detect_silence
 def split_audio_by_longest_silence(
     audio_path: Path,
     splitted_dir_path_or_none: Path | None = None,
-    min_ms=5000,
-    max_ms=15000,
-    silence_thresh=-40,
-    min_silence_len=100,
+    min_ms: int = 5000,
+    max_ms: int = 15000,
+    silence_thresh: int = -40,
+    min_silence_len: int = 100,
 ) -> Path:
     """
     Split audio file by finding the longest quiet parts within specified segment duration ranges
@@ -27,14 +28,14 @@ def split_audio_by_longest_silence(
     if splitted_dir_path.exists():
         shutil.rmtree(splitted_dir_path)
     splitted_dir_path.mkdir(parents=True, exist_ok=True)
-    audio = AudioSegment.from_file(str(audio_path))
+    audio: AudioSegment = AudioSegment.from_file(str(audio_path))
 
-    silent_segments = detect_silence(
+    silent_segments: List[List[int]] = detect_silence(
         audio, min_silence_len=min_silence_len, silence_thresh=silence_thresh
     )
 
     # Pre-calculate silence centers and durations for efficiency
-    silence_data = []
+    silence_data: List[Tuple[int, int, int, int]] = []
     for start, end in silent_segments:
         center = (start + end) // 2
         duration = end - start
@@ -42,9 +43,9 @@ def split_audio_by_longest_silence(
     silence_data.sort(key=lambda x: x[0])
 
     # Find optimal split points
-    split_points = [0]  # Always start from beginning
-    current_pos = 0
-    silence_index = 0  # Track position in sorted silence list
+    split_points: List[int] = [0]  # Always start from beginning
+    current_pos: int = 0
+    silence_index: int = 0  # Track position in sorted silence list
 
     while current_pos < len(audio):
         # Calculate the search range for next split point
@@ -57,7 +58,7 @@ def split_audio_by_longest_silence(
         latest_split = min(latest_split, len(audio))
 
         # Find silence segments within the valid range more efficiently
-        candidate_silences = []
+        candidate_silences: List[Tuple[int, int]] = []
         temp_index = silence_index
 
         # Skip silences before our range
@@ -95,7 +96,7 @@ def split_audio_by_longest_silence(
         start_time = split_points[i]
         end_time = split_points[i + 1]
 
-        chunk = audio[start_time:end_time]
+        chunk: AudioSegment = audio[start_time:end_time]
         output_filename = f"silence_chunk_{i + 1:06d}.wav"
         output_path = splitted_dir_path / output_filename
         chunk.export(str(output_path), format="wav")
@@ -103,7 +104,9 @@ def split_audio_by_longest_silence(
     return splitted_dir_path
 
 
-def analyze_silence_distribution(audio_file_path: Path, silence_thresh=-40, min_silence_len=100):
+def analyze_silence_distribution(
+    audio_file_path: Path, silence_thresh: int = -40, min_silence_len: int = 100
+) -> None:
     """
     Analyze silence distribution in audio file for debugging purposes
 
@@ -112,8 +115,8 @@ def analyze_silence_distribution(audio_file_path: Path, silence_thresh=-40, min_
     - silence_thresh: Silence detection threshold (dBFS)
     - min_silence_len: Minimum silence length to detect (milliseconds)
     """
-    audio = AudioSegment.from_file(str(audio_file_path))
-    silent_segments = detect_silence(
+    audio: AudioSegment = AudioSegment.from_file(str(audio_file_path))
+    silent_segments: List[List[int]] = detect_silence(
         audio, min_silence_len=min_silence_len, silence_thresh=silence_thresh
     )
 

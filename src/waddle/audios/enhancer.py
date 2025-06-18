@@ -17,7 +17,7 @@ def simple_loudness_processing(audio: type_path_or_seg) -> AudioSegment:
     audio_seg = audio_path_or_seg(audio)
 
     # Convert to numpy array for processing
-    samples = np.array(audio_seg.get_array_of_samples())
+    samples = np.array(audio_seg.get_array_of_samples(), dtype=np.float32)
     if audio_seg.channels == 2:
         samples = samples.reshape((-1, 2))
 
@@ -79,7 +79,7 @@ def enhance_audio_quality(audio: type_path_or_seg) -> AudioSegment:
     return audio_seg
 
 
-def normalize_rms(audio: type_path_or_seg, target_rms=-20.0):
+def normalize_rms(audio: type_path_or_seg, target_rms: float = -20.0) -> AudioSegment:
     """
     Normalize based on RMS (perceived loudness) rather than peaks
     """

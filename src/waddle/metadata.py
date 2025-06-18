@@ -20,7 +20,7 @@ def generate_metadata(
     source_file: os.PathLike[Any] | str,
     audio_file: os.PathLike[Any] | str | None,
     output_dir: os.PathLike[Any] | str,
-):
+) -> None:
     source_file_path = Path(source_file)
     if not source_file_path.is_file():
         raise FileNotFoundError(f"Source file not found: {source_file}")
@@ -217,7 +217,7 @@ def format_chapters(chapters: list[Chapter]) -> str:
     return "\n".join(f"- ({format_time(chapter.start)}) {chapter.title}" for chapter in chapters)
 
 
-def embed_chapter_info(mp3_file: Path, chapters: list[Chapter]):
+def embed_chapter_info(mp3_file: Path, chapters: list[Chapter]) -> None:
     print(f"[INFO] Embedding chapter information in: {mp3_file}")
     audio = ID3()
 

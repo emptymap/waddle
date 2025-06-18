@@ -47,7 +47,8 @@ def combine_segments_into_audio(
         seg_audio = AudioSegment.from_file(str(seg_file_path))
         start_ms, _ = parse_audio_filename(str(seg_file_path))
         final_audio = final_audio.overlay(
-            seg_audio, position=adjust_pos_to_timeline(timeline, start_ms)
+            seg_audio,
+            position=adjust_pos_to_timeline(timeline, start_ms),
         )
 
     final_audio.export(str(combined_audio_path), format="wav")
@@ -91,7 +92,7 @@ def combine_audio_files(aligned_audio_paths: list[Path], output_audio_path: Path
         aligned_audio_paths (list): Paths to aligned audio files.
         output_audio_path (str): Path to save the combined audio file.
     """
-    combined_audio = None
+    combined_audio: Optional[AudioSegment] = None
     # Sort for making max duration audio
     aligned_audio_paths.sort(key=lambda x: AudioSegment.from_file(x).duration_seconds, reverse=True)
     for path in aligned_audio_paths:
