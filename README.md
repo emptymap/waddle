@@ -13,9 +13,30 @@
 - **Subtitle Generation**: Generates SRT subtitle files for transcription using [`whisper.cpp`](https://github.com/ggerganov/whisper.cpp).
 - **Metadata Generation**: Processes annotated SRT files to create chapter markers and show notes for podcast episodes.
 
+
 ## Prerequisites
 
-Before using **Waddle**, ensure the following requirements are installed:
+**Waddle** requires Python 3.13 or higher. All other dependencies can be installed automatically using the `waddle install` command.
+
+## Installation
+
+### Quick Start (Recommended)
+
+1. Install waddle via pip:
+   ```bash
+   pip install waddle-ai
+   ```
+
+2. Install all required tools and dependencies:
+   ```bash
+   waddle install
+   ```
+
+3. You're ready to use **Waddle**!
+
+### Manual Installation (Optional)
+
+If you prefer to install dependencies manually:
 
 1. **Python 3.13 or higher**:
     - Install Python from [python.org](https://www.python.org/).
@@ -57,19 +78,26 @@ Before using **Waddle**, ensure the following requirements are installed:
        sudo apt install libfmt-dev
        ```
 
-## Installation
+### Development Installation
+For developers who want to contribute to **Waddle**, follow these steps:
 
 1. Clone the repository:
    ```bash
    git clone https://github.com/emptymap/waddle.git
+   cd waddle
    ```
 
-2. Install the package using pip:
-   ```bash
-   pip install waddle/
-   ```
+2. Install Python dependencies and external tools:
+    ```bash
+    uv sync
+    ```
 
-2. You're ready to use **Waddle**!
+3. Install additional tools:
+    ```bash
+    uv run waddle install
+    ```
+
+4. Ready to use **Waddle**!
 
 ## Waddle Flow
 
@@ -180,6 +208,12 @@ waddle metadata
     - `2_edited/` - Manually edited audio files
     - `3_post/` - Post-processed audio files
     - `4_meta/` - Metadata files
+
+- `install` - Install all required tools and dependencies:
+  ```bash
+  waddle install
+  ```
+  Automatically installs FFmpeg, CMake, fmt, DeepFilterNet, and whisper.cpp based on your platform (macOS/Linux).
 
 - `single` - Process a single audio file:
   ```bash
@@ -419,7 +453,7 @@ The installation scripts (`src/waddle/tools/install_whisper_cpp.py` and `src/wad
 
 1. **Create a Feature Branch**
    ```bash
-   git checkout -b feature/my-new-feature
+   git checkout -b feat/my-new-feature
    ```
 
 2. **Write Code & Add Tests**
@@ -435,12 +469,12 @@ The installation scripts (`src/waddle/tools/install_whisper_cpp.py` and `src/wad
 4. **Commit Changes**
    ```bash
    git add .
-   git commit -m "Add my new feature"
+   git commit -m "feat: Add my new feature"
    ```
 
 5. **Push and Create a Pull Request**
    ```bash
-   git push origin feature/my-new-feature
+   git push origin feat/my-new-feature
    ```
    - Open a PR on GitHub and request a review.
 
