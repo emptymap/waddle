@@ -167,3 +167,7 @@ The installation scripts (`src/waddle/tools/install_whisper_cpp.py` and `src/wad
   - Code coverage report generation
 
 Ensure your changes pass CI before merging!
+
+## Claude Code
+
+This project has a `CLAUDE.md` file for Claude Code (claude.ai/code). It contains project setup instructions and development rules.
