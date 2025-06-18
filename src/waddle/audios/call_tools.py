@@ -1,10 +1,12 @@
 import os
+import re
 import subprocess
 import tempfile
 import threading
 from pathlib import Path
 
 from platformdirs import user_runtime_dir
+from tqdm import tqdm
 
 from waddle.config import APP_AUTHOR, APP_NAME, DEFAULT_LANGUAGE
 from waddle.tools.install_deep_filter import install_deep_filter
@@ -213,10 +215,42 @@ def transcribe_in_batches(
             ]
             for temp_audio_path, output_path in batch:
                 command.extend([str(temp_audio_path), "-of", str(output_path)])
+
             try:
-                subprocess.run(
-                    command, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-                )
+                # Run with progress tracking
+                with tqdm(total=len(batch), desc=f"[INFO] Processing {len(batch)} files") as pbar:
+                    process = subprocess.Popen(
+                        command,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.PIPE,
+                        text=True,
+                        bufsize=1,
+                    )
+
+                    if process.stderr is not None:
+                        for output in iter(process.stderr.readline, ""):
+                            if "processing" in output.lower():
+                                match = re.search(
+                                    r"processing\s+['\"](.*?)['\"]", output, re.IGNORECASE
+                                )
+                                if match:
+                                    desc = f"[INFO] {match.group(1)}"
+                                    pbar.set_description(desc)
+                                pbar.update(1)
+                    else:
+                        # If stderr is None, just wait for completion and update progress
+                        process.wait()
+                        pbar.update(len(batch))
+
+                    # Wait for process to complete and get return code
+                    if process.returncode is None:
+                        process.wait()
+                    if process.returncode != 0:
+                        raise subprocess.CalledProcessError(process.returncode, command)
+
+                    if pbar.n < pbar.total:
+                        pbar.update(pbar.total - pbar.n)
+
                 for _, output_path in batch:
                     Path(f"{output_path}.srt").replace(output_path)
             except subprocess.CalledProcessError as e:
