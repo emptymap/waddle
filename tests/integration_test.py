@@ -278,7 +278,7 @@ def test_integration_init():
         test_args = ["init"]
 
         # Change to the temporary directory
-        original_cwd = os.getcwd()
+        original_cwd = Path.cwd()
         os.chdir(tmpdir)
 
         try:
@@ -305,7 +305,7 @@ def test_integration_init_with_project_name():
         test_args = ["init", project_name]
 
         # Change to the temporary directory
-        original_cwd = os.getcwd()
+        original_cwd = Path.cwd()
         os.chdir(tmpdir)
 
         try:
@@ -336,7 +336,7 @@ def test_integration_waddle_flow():
         tmpdir_path = Path(tmpdir)
         project_name = "test_project"
 
-        original_cwd = os.getcwd()
+        original_cwd = Path.cwd()
         os.chdir(tmpdir)
 
         try:
