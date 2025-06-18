@@ -5,6 +5,8 @@ on:
     workflows: ["CI"]
     branches: [main]
     types: [completed]
+  pull_request:
+    branches: [main]
   workflow_dispatch: # Allow manual triggering
 
 env:
