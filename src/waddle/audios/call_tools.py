@@ -226,7 +226,6 @@ def transcribe_in_batches(
                         bufsize=1,
                     )
 
-                    current_file = 0
                     if process.stderr is not None:
                         for output in iter(process.stderr.readline, ""):
                             if "processing" in output.lower():
@@ -243,9 +242,6 @@ def transcribe_in_batches(
                         process.wait()
                     if process.returncode != 0:
                         raise subprocess.CalledProcessError(process.returncode, command)
-
-                    # Ensure progress bar reaches 100%
-                    pbar.update(len(batch) - current_file)
 
                 for _, output_path in batch:
                     Path(f"{output_path}.srt").replace(output_path)
