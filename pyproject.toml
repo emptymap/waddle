@@ -10,13 +10,14 @@ authors = [
     { name = "Shun Kashiwa", email = "skashiwa@ucsd.edu" },
 ]
 dependencies = [
-    "librosa>=0.10.2.post1",
+    "librosa>=0.11.0",
     "mutagen>=1.47.0",
-    "numpy==1.26.4",
+    "numpy>=2.0.0",
     "platformdirs>=4.3.6",
     "pydub>=0.25.1",
     "soundfile>=0.12.1",
     "tqdm>=4.67.1",
+    "numba>=0.61.2",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -55,7 +56,7 @@ dev = ["pyright>=1.1.394", "pytest>=8.3.4", "pytest-cov>=6.0.0", "ruff>=0.9.5"]
 
 [tool.ruff]
 line-length = 100
-target-version = "py312"
+target-version = "py313"
 
 [tool.ruff.lint]
 select = [
