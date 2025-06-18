@@ -75,7 +75,7 @@ Waddle is a Python-based podcast preprocessing library that aligns, normalizes, 
 - **Write with type annotations**: Always include type hints for function parameters and return values
 - **After writing code**: Always run `uv run ruff check` and `uv run ruff format`
 - **Testing**: Use `uv run pytest` to run tests
-- **Component tests**: Create `{filename}_test.py` in the same directory as the source file
+- **Unit tests**: Create `{filename}_test.py` in the same directory as the source file
 - **Integration tests**: Write in the `tests/` folder
 
 ## Development Notes
