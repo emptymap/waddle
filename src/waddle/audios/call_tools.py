@@ -206,7 +206,7 @@ def transcribe_in_batches(
             for i in range(0, len(tmp_output_paths), batch_size)
         ]
 
-        for batch in tqdm(batches, desc="[INFO] Transcribing audio batches"):
+        for batch in batches:
             command = [
                 str(whisper_bin),
                 "-m",
@@ -216,10 +216,44 @@ def transcribe_in_batches(
             ]
             for temp_audio_path, output_path in batch:
                 command.extend([str(temp_audio_path), "-of", str(output_path)])
+
             try:
-                subprocess.run(
-                    command, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-                )
+                # Run with progress tracking
+                with tqdm(
+                    total=len(batch), desc=f"[INFO] Processing {len(batch)} files", leave=False
+                ) as pbar:
+                    process = subprocess.Popen(
+                        command,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        text=True,
+                        bufsize=1,
+                        universal_newlines=True,
+                    )
+
+                    current_file = 0
+                    while True:
+                        output = process.stderr.readline()
+                        if output == "" and process.poll() is not None:
+                            break
+                        if output:
+                            # Look for progress indicators in Whisper output
+                            if "processing" in output.lower() or "transcribing" in output.lower():
+                                if current_file < len(batch):
+                                    pbar.set_description(f"[INFO] {output.strip()}")
+                            elif "done" in output.lower() or "finished" in output.lower():
+                                if current_file < len(batch):
+                                    current_file += 1
+                                    pbar.update(1)
+
+                    # Wait for process to complete
+                    process.wait()
+                    if process.returncode != 0:
+                        raise subprocess.CalledProcessError(process.returncode, command)
+
+                    # Ensure progress bar reaches 100%
+                    pbar.update(len(batch) - current_file)
+
                 for _, output_path in batch:
                     Path(f"{output_path}.srt").replace(output_path)
             except subprocess.CalledProcessError as e:
