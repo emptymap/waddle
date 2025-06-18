@@ -59,6 +59,8 @@ jobs:
       - name: Test waddle postprocess
         run: |
           waddle postprocess --directory /tmp/preprocess_out --output /tmp/postprocess_out -t 5
-          # Check that output files were created
+          # Check that output WAV files were created
           ls /tmp/postprocess_out/*.wav || (echo "No WAV files created by postprocess" && exit 1)
+          # Check that SRT transcription files were created
+          ls /tmp/postprocess_out/*.srt || (echo "No SRT files created by postprocess" && exit 1)
           echo "Release tests completed successfully!"
