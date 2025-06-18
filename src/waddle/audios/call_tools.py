@@ -238,6 +238,9 @@ def transcribe_in_batches(
                         process.wait()
                         pbar.update(len(batch))
 
+                    # Wait for process to complete and get return code
+                    if process.returncode is None:
+                        process.wait()
                     if process.returncode != 0:
                         raise subprocess.CalledProcessError(process.returncode, command)
 
