@@ -9,11 +9,12 @@ def create_waddle_parser():
     """
     Create a command-line argument parser for the Waddle audio processing tool.
 
-    The parser supports three subcommands:
+    The parser supports four subcommands:
     - single: Process a single audio file
     - preprocess: Preprocess multiple audio files
     - postprocess: Postprocess multiple audio files
     - metadata: Extract and process metadata from an annotated SRT file
+    - init: Initialize a new waddle project with folder structure
 
     Returns:
         argparse.ArgumentParser: Configured argument parser
@@ -49,21 +50,35 @@ def create_waddle_parser():
 
     # Add directory input for multi-file operations
     for p in [preprocess_parser, postprocess_parser]:
+        if p == preprocess_parser:
+            default_directory = "0_raw"
+        elif p == postprocess_parser:
+            default_directory = "2_edited"
+        else:
+            default_directory = "./"
+
         p.add_argument(
             "-d",
             "--directory",
-            default="./",
-            help="Directory containing audio files (default: './').",
+            default=default_directory,
+            help=f"Directory containing audio files (default: '{default_directory}').",
         )
 
     # ===== COMMON ARGUMENTS FOR ALL PARSERS =====
     parsers = [single_parser, preprocess_parser, postprocess_parser]
     for p in parsers:
+        if p == preprocess_parser:
+            default_output = "1_pre"
+        elif p == postprocess_parser:
+            default_output = "3_post"
+        else:  # single_parser
+            default_output = "./out"
+
         p.add_argument(
             "-o",
             "--output",
-            default="./out",
-            help="Directory to save the output (default: './out').",
+            default=default_output,
+            help=f"Directory to save the output (default: '{default_output}').",
         )
         p.add_argument(
             "-ss",
@@ -145,7 +160,9 @@ def create_waddle_parser():
     )
     show_notes_parser.add_argument(
         "source",
-        help="Path to the annotated SRT file.",
+        nargs="?",
+        default="3_post/*.srt",
+        help="Path to the annotated SRT file (default: looks for SRT files in 3_post/).",
     )
     show_notes_parser.add_argument(
         "-i",
@@ -158,7 +175,19 @@ def create_waddle_parser():
         "-o",
         "--output",
         help="Directory to save the metadata and audio files.",
-        default="./metadata",
+        default="4_meta",
+    )
+
+    # init
+    init_parser = subparsers.add_parser(
+        "init",
+        description="Initialize a new waddle project with folder structure.",
+    )
+    init_parser.add_argument(
+        "project_name",
+        nargs="?",
+        default="",
+        help="Name of the project directory (default: create folders in current directory).",
     )
 
     return parser
