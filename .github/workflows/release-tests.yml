@@ -9,6 +9,9 @@ on:
     branches: [main]
   workflow_dispatch: # Allow manual triggering
 
+env:
+  WHISPER_MODEL_NAME: "tiny" # Set the default Whisper model name for tests
+
 jobs:
   test-release:
     runs-on: ${{ matrix.os }}
