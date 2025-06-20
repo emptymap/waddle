@@ -134,9 +134,9 @@ def preprocess_multi_files(
         raise ValueError("No speaker audio files found in the directory.")
 
     timelines: list[SpeechTimeline] = []
-    segments_dir_list = []
+    segments_dir_list: list[Path] = []
 
-    def process_file(speaker_audio_path: Path):
+    def process_file(speaker_audio_path: Path) -> tuple[Path, SpeechTimeline]:
         print(f"\033[92m[INFO] Processing file: {str(speaker_audio_path)}\033[0m")
 
         # 1) Align each speaker audio to the reference

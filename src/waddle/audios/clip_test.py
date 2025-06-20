@@ -8,7 +8,7 @@ TESTS_DIR_PATH = Path(__file__).resolve().parent.parents[2] / "tests"
 EP0_DIR_PATH = TESTS_DIR_PATH / "ep0"
 
 
-def get_wav_duration(filename):
+def get_wav_duration(filename: str) -> float:
     """Returns the duration of a WAV file."""
     with wave.open(filename, "r") as wav_file:
         frames = wav_file.getnframes()

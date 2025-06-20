@@ -4,6 +4,7 @@ import subprocess
 import tempfile
 import threading
 from pathlib import Path
+from typing import List, Tuple
 
 from platformdirs import user_runtime_dir
 from tqdm import tqdm
@@ -192,7 +193,7 @@ def transcribe_in_batches(
         raise FileNotFoundError(f"Whisper model not found. Please ensure {whisper_model} exists.")
 
     # List of pairs of tmp audio paths and output paths
-    tmp_output_paths = []
+    tmp_output_paths: List[Tuple[Path, Path]] = []
     with tempfile.TemporaryDirectory() as temp_dir:
         for input_path, output_path in tqdm(
             input_output_paths, desc="[INFO] Preparing audio files for transcription"
@@ -202,7 +203,7 @@ def transcribe_in_batches(
             ensure_sampling_rate(input_path, tmp_audio_path, target_rate=16000)
             tmp_output_paths.append((tmp_audio_path, output_path))
 
-        batches = [
+        batches: List[List[Tuple[Path, Path]]] = [
             tmp_output_paths[i : i + batch_size]
             for i in range(0, len(tmp_output_paths), batch_size)
         ]

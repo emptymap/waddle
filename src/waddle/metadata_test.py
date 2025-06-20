@@ -3,6 +3,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from textwrap import dedent
 
+# Type stubs provide proper typing
 import pytest
 from mutagen.id3 import ID3
 

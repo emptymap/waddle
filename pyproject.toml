@@ -50,9 +50,13 @@ waddle = "waddle.__main__:main"
 [tool.uv]
 package = true
 
-
 [dependency-groups]
-dev = ["pyright>=1.1.394", "pytest>=8.3.4", "pytest-cov>=6.0.0", "ruff>=0.9.5"]
+dev = [
+    "pyright>=1.1.394",
+    "pytest>=8.3.4",
+    "pytest-cov>=6.0.0",
+    "ruff>=0.9.5",
+]
 
 [tool.ruff]
 line-length = 100
@@ -76,8 +80,10 @@ omit = ["*/tests/*", "*_test.py"]
 venvPath = "."
 venv = ".venv"
 pythonVersion = "3.13"
-typeCheckingMode = "basic"     # TODO: Change to "strict" after fixing basic issues
+typeCheckingMode = "strict"
 reportMissingImports = true
 reportMissingTypeStubs = false
+reportMissingModuleSource = false
 useLibraryCodeForTypes = true
+stubPath = "stubs"
 include = ["src", "tests"]

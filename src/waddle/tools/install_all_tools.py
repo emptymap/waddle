@@ -6,7 +6,7 @@ from waddle.tools.install_deep_filter import install_deep_filter
 from waddle.tools.install_whisper_cpp import install_whisper_cpp
 
 
-def check_dependency_installed(command):
+def check_dependency_installed(command: str) -> bool:
     """Check if a command is available in the system PATH."""
     try:
         subprocess.run([command, "--version"], capture_output=True, check=True)
@@ -15,7 +15,7 @@ def check_dependency_installed(command):
         return False
 
 
-def check_brew_package_installed(package):
+def check_brew_package_installed(package: str) -> bool:
     """Check if a Homebrew package is installed."""
     try:
         _ = subprocess.run(["brew", "list", package], capture_output=True, check=True)
@@ -24,7 +24,7 @@ def check_brew_package_installed(package):
         return False
 
 
-def install_system_dependencies():
+def install_system_dependencies() -> None:
     """Install system dependencies based on the current platform."""
     system = platform.system().lower()
 
@@ -61,7 +61,7 @@ def install_system_dependencies():
             ("pkg-config --exists fmt", "libfmt-dev"),
         ]
 
-        packages_to_install = []
+        packages_to_install: list[str] = []
         for check_cmd, package in dependencies:
             try:
                 subprocess.run(check_cmd.split(), capture_output=True, check=True)
@@ -98,7 +98,7 @@ def install_system_dependencies():
         sys.exit(1)
 
 
-def install_all_tools():
+def install_all_tools() -> None:
     """Install all necessary tools for waddle."""
     print("Installing all required tools for waddle...")
 

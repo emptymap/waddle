@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from typing import Union
 
 
 def time_to_seconds(timestamp: str) -> float:
@@ -57,19 +58,19 @@ def format_audio_filename(prefix: str, start: int, end: int) -> str:
     return f"{prefix}_{start}_{end}.wav"
 
 
-def parse_audio_filename(filename: str) -> tuple:
+def parse_audio_filename(filename: str) -> tuple[int, int]:
     """Extract and return the start and end timestamps from a standardized audio filename."""
     parts = filename.split("_")
     start_str, end_str = parts[-2], parts[-1].split(".")[0]
     return int(start_str), int(end_str)
 
 
-def to_path(obj: str | bytes | os.PathLike) -> Path:
+def to_path(obj: Union[str, bytes, os.PathLike[str], os.PathLike[bytes]]) -> Path:
     """Converts input to a pathlib.Path object, handling str, bytes, and os.PathLike."""
     if isinstance(obj, Path):
         return obj
 
-    fs_path = os.fspath(obj)
+    fs_path = os.fspath(obj)  # type: ignore
     if isinstance(fs_path, (bytes, bytearray, memoryview)):
         fs_path = bytes(fs_path).decode()
     return Path(fs_path)

@@ -1,6 +1,7 @@
 import tempfile
 import wave
 from pathlib import Path
+from typing import Any
 
 import pytest
 from pydub import AudioSegment
@@ -11,7 +12,7 @@ from waddle.processing.combine import (
 from waddle.utils import format_audio_filename
 
 
-def create_dummy_segments(dir_path, timeline):
+def create_dummy_segments(dir_path: Path, timeline: Any) -> Path:
     segs_folder = dir_path / "segments"
     segs_folder.mkdir(parents=True, exist_ok=True)
 
@@ -24,7 +25,7 @@ def create_dummy_segments(dir_path, timeline):
     return segs_folder
 
 
-def get_wav_duration(filename):
+def get_wav_duration(filename: Any) -> float:
     """Returns the duration of a WAV file."""
     with wave.open(filename, "r") as wav_file:
         frames = wav_file.getnframes()
